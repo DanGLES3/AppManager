@@ -54,7 +54,7 @@ for more information.
 - Clear app data or app cache
 - View/change net policy
 - Control battery optimization
-
+ 
 ### Root-only features
 
 - Block any activities, broadcast receivers, services, or providers of an app with native import/export as well as Watt
