@@ -578,7 +578,6 @@
 \n- <a href="https://github.com/tuyafeng/Watt">Watt</a>
 \nРозробка лого: <a href="https://github.com/Atrate">Atrate</a>. </string>
     <string name="icon_picker">Вибір іконки</string>
-    <string name="insert_icon">Вставити іконку</string>
     <string name="package_name">Назва пакету</string>
     <string name="shortcut_name">Назва ярлика</string>
     <string name="starting_activity">Стартове activity: <xliff:g id="activity_name" example=".main.MainActivity">%1$s</xliff:g></string>
@@ -1204,10 +1203,10 @@
     <string name="mode_of_op_with_inferred_mode_of_op">%1$s (імовірний режим: %2$s)</string>
     <string name="scan_in_vt">Сканування в VirusTotal</string>
     <plurals name="usage_minutes">
-        <item quantity="one">%1$d хв.</item>
-        <item quantity="few">%1$d хв.</item>
-        <item quantity="many">%1$d хв.</item>
-        <item quantity="other">%1$d хв.</item>
+        <item quantity="one">%1$d хв</item>
+        <item quantity="few">%1$d хв</item>
+        <item quantity="many">%1$d хв</item>
+        <item quantity="other">%1$d хв</item>
     </plurals>
     <string name="vt_uploading">VirusTotal: завантаження…</string>
     <string name="vt_permalink">Постійне посилання на VirusTotal</string>
@@ -1216,4 +1215,24 @@
     <string name="uses_play_app_signing_description">Ця програма містить певні маркери, які вказують на те, що вона <i>можливо </i> використовує <a href="https://support.google.com/googleplay/android-developer/answer/9842756">Play App Signing</a>. За цією схемою ключі підпису зберігаються на серверах Google, і Google відповідає за підписання програми. Зауважте, що відповідність інформації підпису — це єдиний спосіб переконатися, що додаток не був змінений кимось іншим, окрім розробника (а в цьому випадку також Google).</string>
     <string name="failed_to_use_the_current_mode_of_operation">Не вдалося використати поточний режим роботи. Повернення до режиму без-root для цього сеансу.</string>
     <string name="failed_to_enable_magisk_deny_list">Не вдалося ввімкнути Magisk DenyList</string>
+    <string name="uses_play_app_signing">Play App Signing</string>
+    <string name="swap">Підкачка</string>
+    <string name="magisk_denylist">Magisk DenyList</string>
+    <string name="primary_abi">Головний ABI</string>
+    <string name="zygote_preload_name">Назва підвантаження Zygote</string>
+    <string name="hidden_api_enforcement_policy">Політика контролю прихованого API</string>
+    <string name="hidden_api_enf_default_policy">Усталено (залежно від типу застосунку)</string>
+    <string name="hidden_api_enf_policy_none">Вимкнено (повний доступ до прихованого API)</string>
+    <string name="hidden_api_enf_policy_warn">М\'яко (повний доступ до прихованого API з попередженнями)</string>
+    <string name="hidden_api_enf_policy_black">Строго (лише списки блокування)</string>
+    <string name="binary_32_bit">32 біти</string>
+    <string name="binary_64_bit">64 біти</string>
+    <string name="endianness_little_endian">Від молодшого (LE)</string>
+    <string name="endianness_big_endian">Від старшого (BE)</string>
+    <string name="so_type_shared_library">Спільна бібліотека</string>
+    <string name="so_type_executable">Виконуваний файл</string>
+    <string name="file_modified_are_you_sure">Файл було змінено. Відкинути всі ваші зміни й вийти\?</string>
+    <string name="save_and_exit">Зберегти й вийти</string>
+    <string name="donation_campaign_text">Проводимо короткострокову <b>кампанію збору коштів</b> для App Manager. <a href="https://opencollective.com/app-manager#category-ABOUT">докладніше…</a></string>
+    <string name="hidden_api_enf_policy_dark_grey_and_black">Строго (списки обмеження й блокування)</string>
 </resources>

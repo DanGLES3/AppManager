@@ -302,7 +302,6 @@
     <string name="icon_picker">Seletor de ícone</string>
     <string name="error_invalid_icon_format">Formato de ícone inválido</string>
     <string name="error_invalid_icon_resource">Recurso de ícone inválido</string>
-    <string name="insert_icon">Inserir ícone</string>
     <string name="class_name">Nome da classe</string>
     <string name="package_name">Nome do pacote</string>
     <string name="shortcut_name">Nome do atalho</string>
@@ -445,7 +444,7 @@
     <string name="refresh">Atualizar</string>
     <string name="launch">Iniciar</string>
     <string name="activities">Atividades</string>
-    <string name="require_no_permission">Nenhuma permissão requerida</string>
+    <string name="require_no_permission">Nenhuma permissão necessária</string>
     <string name="permissions">Usa permissões</string>
     <string name="uninstall">Desinstalar</string>
     <string name="battery">Bateria</string>
@@ -932,7 +931,7 @@
     <string name="state_device_io">I/O do aparelho</string>
     <string name="touchscreen_stylus">Caneta</string>
     <string name="navigation_trackball">Trackball</string>
-    <string name="navigation_dial_pad">Discador</string>
+    <string name="navigation_dial_pad">Teclado numérico</string>
     <string name="navigation_no_nav">Sem nav</string>
     <string name="keyboard_12_keys">12 teclas</string>
     <string name="keyboard_qwerty">QWERTY</string>
@@ -1143,4 +1142,9 @@
     <string name="uses_play_app_signing_description">Esta aplicação contém certos marcadores que indicam que <i>pode</i> estar a usar <a href="https://support.google.com/googleplay/android-developer/answer/9842756">Play App Signing</a>. Com esse esquema, as chaves de assinatura são armazenadas nos servidores do Google, e o Google é responsável por assinar a aplicação. Note que as informações de assinatura correspondentes são a única forma de verificar se a aplicação não foi alterada por outra pessoa que não o programador (e neste caso o Google também).</string>
     <string name="failed_to_disable_magisk_deny_list">Não foi possível desativar a Magisk DenyList</string>
     <string name="mode_of_op_with_inferred_mode_of_op">%1$s (modo inferido: %2$s)</string>
+    <string name="save_and_exit">Guardar e sair</string>
+    <string name="file_modified_are_you_sure">O ficheiro foi modificado. Descartar todas as suas alterações e sair\?</string>
+    <string name="donation_campaign_text">Estamos a realizar uma <b>campanha de financiamento</b> para o App Manager durante um período limitado. <a href="https://opencollective.com/app-manager#category-ABOUT">saiba mais…</a></string>
+    <string name="so_type_shared_library">Biblioteca partilhada</string>
+    <string name="hidden_api_enf_default_policy">Padrão (com base no tipo de aplicação)</string>
 </resources>
