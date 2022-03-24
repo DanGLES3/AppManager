@@ -85,23 +85,6 @@ public class Path {
             case ContentResolver.SCHEME_CONTENT:
                 boolean isTreeUri = uri.getPath().startsWith("/tree/");
                 documentFile = isTreeUri ? DocumentFile.fromTreeUri(context, uri) : DocumentFile.fromSingleUri(context, uri);
-                // For tree uri, the requested Uri is not always the same as the generated uri.
-                // So, make sure to navigate to the correct uri
-                if (isTreeUri && documentFile != null) {
-                    String diff = FileUtils.getRelativePath(uri.getPath(), documentFile.getUri().getPath(), File.separator);
-                    String[] files = diff.split("/");
-                    for (String file : files) {
-                        if (documentFile != null) {
-                            if (file.equals("..")) {
-                                // Tree uri doesn't always support go back
-                                DocumentFile parent = documentFile.getParentFile();
-                                if (parent != null) documentFile = parent;
-                                continue;
-                            }
-                            documentFile = documentFile.findFile(file);
-                        }
-                    }
-                }
                 break;
             case ContentResolver.SCHEME_FILE:
                 documentFile = new ProxyDocumentFile(new ProxyFile(uri.getPath()));
@@ -114,6 +97,7 @@ public class Path {
                 if (parsedUri.second.equals(File.separator)) {
                     documentFile = rootPath.mDocumentFile;
                 } else {
+                    // Find file is acceptable here since the file always exists
                     documentFile = rootPath.mDocumentFile.findFile(parsedUri.second);
                 }
                 break;
@@ -239,10 +223,9 @@ public class Path {
      *                    choose to add extension based on the mime type. If
      *                    displayName contains an extension, set it to null.
      * @return The newly created file.
-     * @throws IOException                   If the target is a mount point, a directory,
-     *                                       or failed for any other reason.
+     * @throws IOException                   If the target is a mount point, a directory, or the current file is not a
+     *                                       directory, or failed for any other reason.
      * @throws IllegalArgumentException      If the display name contains file separator.
-     * @throws UnsupportedOperationException If the current file isn't a directory.
      */
     @NonNull
     public Path createNewFile(@NonNull String displayName, @Nullable String mimeType) throws IOException {
@@ -255,10 +238,9 @@ public class Path {
      * @param displayName Display name for the directory. The name must not
      *                    contain any file separator.
      * @return The newly created directory.
-     * @throws IOException                   If the target is a mount point
-     *                                       or failed for any other reason.
-     * @throws IllegalArgumentException      If the display name contains file separator.
-     * @throws UnsupportedOperationException If the current file isn't a directory.
+     * @throws IOException              If the target is a mount point or the current file is not a directory,
+     *                                  or failed for any other reason.
+     * @throws IllegalArgumentException If the display name contains file separator.
      */
     @NonNull
     public Path createNewDirectory(@NonNull String displayName) throws IOException {
@@ -267,7 +249,7 @@ public class Path {
             throw new IllegalArgumentException("Display name contains file separator.");
         }
         if (!isDirectory()) {
-            throw new UnsupportedOperationException("Current file is not a directory.");
+            throw new IOException("Current file is not a directory.");
         }
         checkVfs(FileUtils.addSegmentAtEnd(getUri(), displayName));
         // TODO: 17/10/21 Handle already existing file/directory
@@ -289,10 +271,8 @@ public class Path {
      *                    choose to add extension based on the mime type. If
      *                    displayName contains an extension, set it to null.
      * @return The newly created file.
-     * @throws IOException                   If the target is a mount point, a directory,
-     *                                       or failed for any other reason.
+     * @throws IOException                   If the target is a mount point, a directory or failed for any other reason.
      * @throws IllegalArgumentException      If the display name is malformed.
-     * @throws UnsupportedOperationException If the current file isn't a directory.
      */
     @NonNull
     public Path createNewArbitraryFile(@NonNull String displayName, @Nullable String mimeType) throws IOException {
@@ -312,8 +292,7 @@ public class Path {
      *
      * @param displayName Relative path to the target directory.
      * @return The newly created directory.
-     * @throws IOException If the target is a mount point or failed for any
-     *                     other reason.
+     * @throws IOException If the target is a mount point or failed for any other reason.
      */
     @NonNull
     public Path createDirectories(@NonNull String displayName) throws IOException {
@@ -387,10 +366,9 @@ public class Path {
      *                    choose to add extension based on the mime type. If
      *                    displayName contains an extension, set it to null.
      * @return The existing or newly created file.
-     * @throws IOException                   If the target is a mount point, a directory,
-     *                                       or failed for any other reason.
-     * @throws IllegalArgumentException      If the display name contains file separator.
-     * @throws UnsupportedOperationException If the current file isn't a directory.
+     * @throws IOException              If the target is a mount point, a directory, or the current file is not a
+     *                                  directory, or failed for any other reason.
+     * @throws IllegalArgumentException If the display name contains file separator.
      */
     @NonNull
     public Path findOrCreateFile(@NonNull String displayName, @Nullable String mimeType) throws IOException {
@@ -399,7 +377,7 @@ public class Path {
             throw new IllegalArgumentException("Display name contains file separator.");
         }
         if (!isDirectory()) {
-            throw new UnsupportedOperationException("Current file is not a directory.");
+            throw new IOException("Current file is not a directory.");
         }
         String extension = null;
         if (mimeType != null) {
@@ -427,13 +405,10 @@ public class Path {
      * @param displayName Display name for the directory. The name must not
      *                    contain any file separator.
      * @return The existing or newly created directory or mount point.
-     * @throws IOException                   If the target directory could not
-     *                                       be created or the existing file is
-     *                                       not a directory.
+     * @throws IOException                   If the target directory could not be created, or the existing or the
+     *                                       current file is not a directory.
      * @throws IllegalArgumentException      If the display name contains file
      *                                       separator.
-     * @throws UnsupportedOperationException If the current file is not a
-     *                                       directory.
      */
     @NonNull
     public Path findOrCreateDirectory(@NonNull String displayName) throws IOException {
@@ -442,7 +417,7 @@ public class Path {
             throw new IllegalArgumentException("Display name contains file separator.");
         }
         if (!isDirectory()) {
-            throw new UnsupportedOperationException("Current file is not a directory.");
+            throw new IOException("Current file is not a directory.");
         }
         Path fsRoot = VirtualFileSystem.getFsRoot(FileUtils.addSegmentAtEnd(getUri(), displayName));
         if (fsRoot != null) return fsRoot;
@@ -873,7 +848,7 @@ public class Path {
             throw new IllegalArgumentException("Display name contains file separator.");
         }
         if (!documentFile.isDirectory()) {
-            throw new UnsupportedOperationException("Current file is not a directory.");
+            throw new IOException("Current file is not a directory.");
         }
         String extension = null;
         if (mimeType != null) {
