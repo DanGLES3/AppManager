@@ -47,7 +47,10 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.button.MaterialButton;
+import com.google.android.material.chip.Chip;
+import com.google.android.material.color.MaterialColors;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.google.android.material.divider.MaterialDivider;
 import com.google.android.material.progressindicator.LinearProgressIndicator;
 import com.google.android.material.switchmaterial.SwitchMaterial;
 
@@ -70,11 +73,13 @@ import io.github.muntashirakon.AppManager.appops.AppOpsManager;
 import io.github.muntashirakon.AppManager.appops.OpEntry;
 import io.github.muntashirakon.AppManager.details.struct.AppDetailsAppOpItem;
 import io.github.muntashirakon.AppManager.details.struct.AppDetailsComponentItem;
+import io.github.muntashirakon.AppManager.details.struct.AppDetailsDefinedPermissionItem;
 import io.github.muntashirakon.AppManager.details.struct.AppDetailsItem;
 import io.github.muntashirakon.AppManager.details.struct.AppDetailsPermissionItem;
 import io.github.muntashirakon.AppManager.details.struct.AppDetailsServiceItem;
 import io.github.muntashirakon.AppManager.imagecache.ImageLoader;
 import io.github.muntashirakon.AppManager.intercept.ActivityInterceptor;
+import io.github.muntashirakon.AppManager.main.MainRecyclerAdapter;
 import io.github.muntashirakon.AppManager.misc.AdvancedSearchView;
 import io.github.muntashirakon.AppManager.rules.RuleType;
 import io.github.muntashirakon.AppManager.rules.compontents.ComponentUtils;
@@ -632,9 +637,11 @@ public class AppDetailsFragment extends Fragment implements AdvancedSearchView.O
         private boolean mIsRootEnabled = true;
         private boolean mIsADBEnabled = true;
         private boolean mTestOnlyApp;
+        private final int mColorSurfaceVariant;
 
         AppDetailsRecyclerAdapter() {
             mAdapterList = new ArrayList<>();
+            mColorSurfaceVariant = MaterialColors.getColor(mActivity, R.attr.colorSurfaceVariant, MainRecyclerAdapter.class.getCanonicalName());
         }
 
         @UiThread
@@ -667,16 +674,18 @@ public class AppDetailsFragment extends Fragment implements AdvancedSearchView.O
             TextView textView8;
             ImageView imageView;
             MaterialButton blockBtn;
-            Button createBtn;
-            Button editBtn;
+            Button shortcutBtn;
             Button launchBtn;
             SwitchMaterial toggleSwitch;
+            MaterialDivider divider;
+            Chip chipType;
 
             public ViewHolder(@NonNull View itemView) {
                 super(itemView);
                 switch (mRequestedProperty) {
                     case ACTIVITIES:
                         imageView = itemView.findViewById(R.id.icon);
+                        textView1 = itemView.findViewById(R.id.label);
                         textView2 = itemView.findViewById(R.id.name);
                         textView3 = itemView.findViewById(R.id.taskAffinity);
                         textView4 = itemView.findViewById(R.id.launchMode);
@@ -685,22 +694,23 @@ public class AppDetailsFragment extends Fragment implements AdvancedSearchView.O
                         textView7 = itemView.findViewById(R.id.process_name);
                         launchBtn = itemView.findViewById(R.id.launch);
                         blockBtn = itemView.findViewById(R.id.block_component);
-                        createBtn = itemView.findViewById(R.id.create_shortcut_btn);
-                        editBtn = itemView.findViewById(R.id.edit_shortcut_btn);
-                        itemView.findViewById(R.id.label).setVisibility(View.GONE);
+                        shortcutBtn = itemView.findViewById(R.id.edit_shortcut_btn);
+                        divider = itemView.findViewById(R.id.divider);
+                        chipType = itemView.findViewById(R.id.type);
                         break;
                     case SERVICES:
                         imageView = itemView.findViewById(R.id.icon);
+                        textView1 = itemView.findViewById(R.id.label);
                         textView2 = itemView.findViewById(R.id.name);
                         textView3 = itemView.findViewById(R.id.orientation);
                         textView7 = itemView.findViewById(R.id.process_name);
                         launchBtn = itemView.findViewById(R.id.launch);
                         blockBtn = itemView.findViewById(R.id.block_component);
+                        divider = itemView.findViewById(R.id.divider);
+                        chipType = itemView.findViewById(R.id.type);
                         itemView.findViewById(R.id.taskAffinity).setVisibility(View.GONE);
                         itemView.findViewById(R.id.launchMode).setVisibility(View.GONE);
                         itemView.findViewById(R.id.softInput).setVisibility(View.GONE);
-                        itemView.findViewById(R.id.label).setVisibility(View.GONE);
-                        itemView.findViewById(R.id.create_shortcut_btn).setVisibility(View.GONE);
                         itemView.findViewById(R.id.edit_shortcut_btn).setVisibility(View.GONE);
                         break;
                     case RECEIVERS:
@@ -713,8 +723,9 @@ public class AppDetailsFragment extends Fragment implements AdvancedSearchView.O
                         textView6 = itemView.findViewById(R.id.softInput);
                         textView7 = itemView.findViewById(R.id.process_name);
                         blockBtn = itemView.findViewById(R.id.block_component);
+                        divider = itemView.findViewById(R.id.divider);
+                        chipType = itemView.findViewById(R.id.type);
                         itemView.findViewById(R.id.launch).setVisibility(View.GONE);
-                        itemView.findViewById(R.id.create_shortcut_btn).setVisibility(View.GONE);
                         itemView.findViewById(R.id.edit_shortcut_btn).setVisibility(View.GONE);
                         break;
                     case PROVIDERS:
@@ -727,8 +738,9 @@ public class AppDetailsFragment extends Fragment implements AdvancedSearchView.O
                         textView6 = itemView.findViewById(R.id.taskAffinity);
                         textView7 = itemView.findViewById(R.id.process_name);
                         blockBtn = itemView.findViewById(R.id.block_component);
+                        divider = itemView.findViewById(R.id.divider);
+                        chipType = itemView.findViewById(R.id.type);
                         itemView.findViewById(R.id.launch).setVisibility(View.GONE);
-                        itemView.findViewById(R.id.create_shortcut_btn).setVisibility(View.GONE);
                         itemView.findViewById(R.id.edit_shortcut_btn).setVisibility(View.GONE);
                         break;
                     case PERMISSIONS:
@@ -738,9 +750,10 @@ public class AppDetailsFragment extends Fragment implements AdvancedSearchView.O
                         textView3 = itemView.findViewById(R.id.taskAffinity);
                         textView4 = itemView.findViewById(R.id.orientation);
                         textView5 = itemView.findViewById(R.id.launchMode);
+                        divider = itemView.findViewById(R.id.divider);
+                        chipType = itemView.findViewById(R.id.type);
                         itemView.findViewById(R.id.softInput).setVisibility(View.GONE);
                         itemView.findViewById(R.id.launch).setVisibility(View.GONE);
-                        itemView.findViewById(R.id.create_shortcut_btn).setVisibility(View.GONE);
                         itemView.findViewById(R.id.edit_shortcut_btn).setVisibility(View.GONE);
                         itemView.findViewById(R.id.block_component).setVisibility(View.GONE);
                         break;
@@ -754,6 +767,7 @@ public class AppDetailsFragment extends Fragment implements AdvancedSearchView.O
                         textView7 = itemView.findViewById(R.id.op_mode_running_duration);
                         textView8 = itemView.findViewById(R.id.op_accept_reject_time);
                         toggleSwitch = itemView.findViewById(R.id.perm_toggle_btn);
+                        divider = itemView.findViewById(R.id.divider);
                         break;
                     case USES_PERMISSIONS:
                         textView1 = itemView.findViewById(R.id.perm_name);
@@ -762,6 +776,7 @@ public class AppDetailsFragment extends Fragment implements AdvancedSearchView.O
                         textView4 = itemView.findViewById(R.id.perm_package_name);
                         textView5 = itemView.findViewById(R.id.perm_group);
                         toggleSwitch = itemView.findViewById(R.id.perm_toggle_btn);
+                        divider = itemView.findViewById(R.id.divider);
                         break;
                     case FEATURES:
                         textView1 = itemView.findViewById(R.id.name);
@@ -778,7 +793,8 @@ public class AppDetailsFragment extends Fragment implements AdvancedSearchView.O
                         textView1 = itemView.findViewById(R.id.item_title);
                         textView2 = itemView.findViewById(R.id.item_subtitle);
                         launchBtn = itemView.findViewById(R.id.item_open);
-                        itemView.findViewById(R.id.item_icon).setVisibility(View.GONE);
+                        divider = itemView.findViewById(R.id.divider);
+                        chipType = itemView.findViewById(R.id.lib_type);
                         textView1.setTextIsSelectable(true);
                         textView2.setTextIsSelectable(true);
                         break;
@@ -822,7 +838,7 @@ public class AppDetailsFragment extends Fragment implements AdvancedSearchView.O
                     view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_text_view, parent, false);
                     break;
                 case SHARED_LIBRARIES:
-                    view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_icon_title_subtitle, parent, false);
+                    view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_shared_lib, parent, false);
                     break;
             }
             return new ViewHolder(view);
@@ -925,7 +941,6 @@ public class AppDetailsFragment extends Fragment implements AdvancedSearchView.O
         }
 
         private void getActivityView(@NonNull ViewHolder holder, int index) {
-            final View view = holder.itemView;
             final AppDetailsComponentItem componentItem;
             synchronized (mAdapterList) {
                 componentItem = (AppDetailsComponentItem) mAdapterList.get(index);
@@ -935,14 +950,18 @@ public class AppDetailsFragment extends Fragment implements AdvancedSearchView.O
             final boolean isDisabled = !mIsExternalApk && componentItem.isDisabled();
             // Background color: regular < tracker < disabled < blocked
             if (!mIsExternalApk && componentItem.isBlocked()) {
-                view.setBackgroundResource(R.drawable.item_red);
+                holder.divider.setDividerColor(mColorRed);
             } else if (isDisabled) {
-                view.setBackgroundResource(R.drawable.item_disabled);
+                holder.divider.setDividerColorResource(R.color.disabled_user);
             } else if (componentItem.isTracker()) {
-                view.setBackgroundResource(R.drawable.item_tracker);
+                holder.divider.setDividerColorResource(R.color.tracker);
             } else {
-                view.setBackgroundResource(index % 2 == 0 ? R.drawable.item_semi_transparent : R.drawable.item_transparent);
+                holder.divider.setDividerColor(mColorSurfaceVariant);
             }
+            if (componentItem.isTracker()) {
+                holder.chipType.setText(R.string.tracker);
+                holder.chipType.setVisibility(View.VISIBLE);
+            } else holder.chipType.setVisibility(View.GONE);
             // Name
             if (mConstraint != null && activityName.toLowerCase(Locale.ROOT).contains(mConstraint)) {
                 // Highlight searched query
@@ -967,13 +986,12 @@ public class AppDetailsFragment extends Fragment implements AdvancedSearchView.O
                     getString(R.string.soft_input), Utils.getSoftInputString(activityInfo.softInputMode),
                     (activityInfo.permission == null ? getString(R.string.require_no_permission) : activityInfo.permission)));
             // Label
-            Button launch = holder.launchBtn;
             String appLabel = activityInfo.applicationInfo.loadLabel(mPackageManager).toString();
             String activityLabel = activityInfo.loadLabel(mPackageManager).toString();
             String label = (activityLabel.equals(appLabel) || TextUtils.isEmpty(activityLabel))
                     ? Utils.camelCaseToSpaceSeparatedString(Utils.getLastComponent(activityName))
                     : activityLabel;
-            launch.setText(label);
+            holder.textView1.setText(label);
             // Process name
             String processName = activityInfo.processName;
             if (processName != null && !processName.equals(mPackageName)) {
@@ -989,9 +1007,8 @@ public class AppDetailsFragment extends Fragment implements AdvancedSearchView.O
             boolean canLaunch = !mIsExternalApk && (mIsRootEnabled || isExported)
                     && !isDisabled
                     && !componentItem.isBlocked();
-            launch.setEnabled(canLaunch);
             if (canLaunch) {
-                launch.setOnClickListener(v -> {
+                holder.launchBtn.setOnClickListener(v -> {
                     Intent intent = new Intent();
                     intent.setClassName(mPackageName, activityName);
                     intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -1006,7 +1023,7 @@ public class AppDetailsFragment extends Fragment implements AdvancedSearchView.O
                     boolean needRoot = mIsRootEnabled && (!isExported || (activityInfo.permission != null
                             && ContextCompat.checkSelfPermission(mActivity, activityInfo.permission)
                             != PackageManager.PERMISSION_GRANTED));
-                    launch.setOnLongClickListener(v -> {
+                    holder.launchBtn.setOnLongClickListener(v -> {
                         Intent intent = new Intent(mActivity, ActivityInterceptor.class);
                         intent.putExtra(ActivityInterceptor.EXTRA_PACKAGE_NAME, mPackageName);
                         intent.putExtra(ActivityInterceptor.EXTRA_CLASS_NAME, activityName);
@@ -1017,20 +1034,19 @@ public class AppDetailsFragment extends Fragment implements AdvancedSearchView.O
                         return true;
                     });
                 }
-                holder.createBtn.setOnClickListener(v -> LauncherIconCreator.createLauncherIcon(mActivity, activityInfo,
-                        label, activityInfo.loadIcon(mPackageManager)));
-                holder.editBtn.setOnClickListener(v -> {
+                holder.shortcutBtn.setOnClickListener(v -> {
                     DialogFragment dialog = new EditShortcutDialogFragment();
                     Bundle args = new Bundle();
                     args.putParcelable(EditShortcutDialogFragment.ARG_ACTIVITY_INFO, activityInfo);
+                    args.putCharSequence(EditShortcutDialogFragment.ARG_SHORTCUT_NAME, label);
                     dialog.setArguments(args);
                     dialog.show(getParentFragmentManager(), EditShortcutDialogFragment.TAG);
                 });
-                holder.createBtn.setVisibility(View.VISIBLE);
-                holder.editBtn.setVisibility(View.VISIBLE);
+                holder.shortcutBtn.setVisibility(View.VISIBLE);
+                holder.launchBtn.setVisibility(View.VISIBLE);
             } else {
-                holder.createBtn.setVisibility(View.GONE);
-                holder.editBtn.setVisibility(View.GONE);
+                holder.shortcutBtn.setVisibility(View.GONE);
+                holder.launchBtn.setVisibility(View.GONE);
             }
             // Blocking
             if (!mIsExternalApk && (Ops.isRoot() || (Ops.isPrivileged() && mTestOnlyApp))) {
@@ -1039,7 +1055,6 @@ public class AppDetailsFragment extends Fragment implements AdvancedSearchView.O
         }
 
         private void getServicesView(@NonNull ViewHolder holder, int index) {
-            View view = holder.itemView;
             final AppDetailsServiceItem serviceItem;
             synchronized (mAdapterList) {
                 serviceItem = (AppDetailsServiceItem) mAdapterList.get(index);
@@ -1048,18 +1063,22 @@ public class AppDetailsFragment extends Fragment implements AdvancedSearchView.O
             final boolean isDisabled = !mIsExternalApk && serviceItem.isDisabled();
             // Background color: regular < tracker < disabled < blocked < running
             if (serviceItem.isRunning()) {
-                view.setBackgroundResource(R.drawable.item_running);
+                holder.divider.setDividerColorResource(R.color.running);
             } else if (!mIsExternalApk && serviceItem.isBlocked()) {
-                view.setBackgroundResource(R.drawable.item_red);
+                holder.divider.setDividerColor(mColorRed);
             } else if (isDisabled) {
-                view.setBackgroundResource(R.drawable.item_disabled);
+                holder.divider.setDividerColorResource(R.color.disabled_user);
             } else if (serviceItem.isTracker()) {
-                view.setBackgroundResource(R.drawable.item_tracker);
+                holder.divider.setDividerColorResource(R.color.tracker);
             } else {
-                view.setBackgroundResource(index % 2 == 0 ? R.drawable.item_semi_transparent : R.drawable.item_transparent);
+                holder.divider.setDividerColor(mColorSurfaceVariant);
             }
+            if (serviceItem.isTracker()) {
+                holder.chipType.setText(R.string.tracker);
+                holder.chipType.setVisibility(View.VISIBLE);
+            } else holder.chipType.setVisibility(View.GONE);
             // Label
-            holder.launchBtn.setText(Utils.camelCaseToSpaceSeparatedString(Utils.getLastComponent(serviceInfo.name)));
+            holder.textView1.setText(Utils.camelCaseToSpaceSeparatedString(Utils.getLastComponent(serviceInfo.name)));
             // Name
             if (mConstraint != null && serviceInfo.name.toLowerCase(Locale.ROOT).contains(mConstraint)) {
                 // Highlight searched query
@@ -1089,7 +1108,6 @@ public class AppDetailsFragment extends Fragment implements AdvancedSearchView.O
                     && (mIsRootEnabled || (serviceInfo.exported && serviceInfo.permission == null))
                     && !isDisabled
                     && !serviceItem.isBlocked();
-            holder.launchBtn.setEnabled(canLaunch);
             if (canLaunch) {
                 holder.launchBtn.setOnClickListener(v -> {
                     Intent intent = new Intent();
@@ -1102,6 +1120,9 @@ public class AppDetailsFragment extends Fragment implements AdvancedSearchView.O
                         Toast.makeText(mActivity, e.toString(), Toast.LENGTH_LONG).show();
                     }
                 });
+                holder.launchBtn.setVisibility(View.VISIBLE);
+            } else {
+                holder.launchBtn.setVisibility(View.GONE);
             }
             // Blocking
             if (!mIsExternalApk && (Ops.isRoot() || (Ops.isPrivileged() && mTestOnlyApp))) {
@@ -1110,7 +1131,6 @@ public class AppDetailsFragment extends Fragment implements AdvancedSearchView.O
         }
 
         private void getReceiverView(@NonNull ViewHolder holder, int index) {
-            View view = holder.itemView;
             final AppDetailsComponentItem componentItem;
             synchronized (mAdapterList) {
                 componentItem = (AppDetailsComponentItem) mAdapterList.get(index);
@@ -1118,14 +1138,18 @@ public class AppDetailsFragment extends Fragment implements AdvancedSearchView.O
             final ActivityInfo activityInfo = (ActivityInfo) componentItem.vanillaItem;
             // Background color: regular < tracker < disabled < blocked
             if (!mIsExternalApk && componentItem.isBlocked()) {
-                view.setBackgroundResource(R.drawable.item_red);
+                holder.divider.setDividerColor(mColorRed);
             } else if (!mIsExternalApk && componentItem.isDisabled()) {
-                view.setBackgroundResource(R.drawable.item_disabled);
+                holder.divider.setDividerColorResource(R.color.disabled_user);
             } else if (componentItem.isTracker()) {
-                view.setBackgroundResource(R.drawable.item_tracker);
+                holder.divider.setDividerColorResource(R.color.tracker);
             } else {
-                view.setBackgroundResource(index % 2 == 0 ? R.drawable.item_semi_transparent : R.drawable.item_transparent);
+                holder.divider.setDividerColor(mColorSurfaceVariant);
             }
+            if (componentItem.isTracker()) {
+                holder.chipType.setText(R.string.tracker);
+                holder.chipType.setVisibility(View.VISIBLE);
+            } else holder.chipType.setVisibility(View.GONE);
             // Label
             holder.textView1.setText(Utils.camelCaseToSpaceSeparatedString(Utils.getLastComponent(activityInfo.name)));
             // Name
@@ -1165,7 +1189,6 @@ public class AppDetailsFragment extends Fragment implements AdvancedSearchView.O
         }
 
         private void getProviderView(@NonNull ViewHolder holder, int index) {
-            View view = holder.itemView;
             final AppDetailsComponentItem componentItem;
             synchronized (mAdapterList) {
                 componentItem = (AppDetailsComponentItem) mAdapterList.get(index);
@@ -1174,14 +1197,18 @@ public class AppDetailsFragment extends Fragment implements AdvancedSearchView.O
             final String providerName = providerInfo.name;
             // Background color: regular < tracker < disabled < blocked
             if (!mIsExternalApk && componentItem.isBlocked()) {
-                view.setBackgroundResource(R.drawable.item_red);
+                holder.divider.setDividerColor(mColorRed);
             } else if (!mIsExternalApk && componentItem.isDisabled()) {
-                view.setBackgroundResource(R.drawable.item_disabled);
+                holder.divider.setDividerColorResource(R.color.disabled_user);
             } else if (componentItem.isTracker()) {
-                view.setBackgroundResource(R.drawable.item_tracker);
+                holder.divider.setDividerColorResource(R.color.tracker);
             } else {
-                view.setBackgroundResource(index % 2 == 0 ? R.drawable.item_semi_transparent : R.drawable.item_transparent);
+                holder.divider.setDividerColor(mColorSurfaceVariant);
             }
+            if (componentItem.isTracker()) {
+                holder.chipType.setText(R.string.tracker);
+                holder.chipType.setVisibility(View.VISIBLE);
+            } else holder.chipType.setVisibility(View.GONE);
             // Label
             holder.textView1.setText(Utils.camelCaseToSpaceSeparatedString(Utils.getLastComponent(providerName)));
             // Icon
@@ -1243,7 +1270,6 @@ public class AppDetailsFragment extends Fragment implements AdvancedSearchView.O
         }
 
         private void getAppOpsView(@NonNull ViewHolder holder, int index) {
-            View view = holder.itemView;
             AppDetailsAppOpItem item;
             synchronized (mAdapterList) {
                 item = (AppDetailsAppOpItem) mAdapterList.get(index);
@@ -1339,9 +1365,9 @@ public class AppDetailsFragment extends Fragment implements AdvancedSearchView.O
             }
             // Set background
             if (item.isDangerous) {
-                view.setBackgroundResource(R.drawable.item_red);
+                holder.divider.setDividerColor(mColorRed);
             } else {
-                view.setBackgroundResource(index % 2 == 0 ? R.drawable.item_semi_transparent : R.drawable.item_transparent);
+                holder.divider.setDividerColor(mColorSurfaceVariant);
             }
             if (!mIsRootEnabled && !mIsADBEnabled) {
                 // No root or ADB, hide toggle buttons
@@ -1388,7 +1414,6 @@ public class AppDetailsFragment extends Fragment implements AdvancedSearchView.O
         }
 
         private void getUsesPermissionsView(@NonNull ViewHolder holder, int index) {
-            View view = holder.itemView;
             AppDetailsPermissionItem permissionItem;
             synchronized (mAdapterList) {
                 permissionItem = (AppDetailsPermissionItem) mAdapterList.get(index);
@@ -1413,9 +1438,9 @@ public class AppDetailsFragment extends Fragment implements AdvancedSearchView.O
             holder.textView3.setText(String.format(Locale.ROOT, "\u2691 %s", protectionLevel));
             // Set background color
             if (permissionItem.isDangerous) {
-                view.setBackgroundResource(R.drawable.item_red);
+                holder.divider.setDividerColor(mColorRed);
             } else {
-                view.setBackgroundResource(index % 2 == 0 ? R.drawable.item_semi_transparent : R.drawable.item_transparent);
+                holder.divider.setDividerColor(mColorSurfaceVariant);
             }
             // Set package name
             if (permissionInfo.packageName != null) {
@@ -1480,6 +1505,7 @@ public class AppDetailsFragment extends Fragment implements AdvancedSearchView.O
                 StringBuilder sb = new StringBuilder(Formatter.formatFileSize(mActivity, libFile.length()))
                         .append("\n").append(libFile.getAbsolutePath());
                 holder.textView2.setText(sb);
+                holder.chipType.setText(libFile.getName().endsWith(".so") ? "SO" : "JAR");
                 holder.launchBtn.setVisibility(View.VISIBLE);
                 holder.launchBtn.setOnClickListener(openAsFolderInFM(mActivity, libFile.getParent()));
             } else {
@@ -1487,16 +1513,30 @@ public class AppDetailsFragment extends Fragment implements AdvancedSearchView.O
             }
             if (item.vanillaItem instanceof NativeLibraries.NativeLib) {
                 holder.textView2.setText(((LocalizedString) item.vanillaItem).toLocalizedString(mActivity));
+                String type;
+                switch (((NativeLibraries.NativeLib) item.vanillaItem).getType()) {
+                    case NativeLibraries.NativeLib.TYPE_DYN:
+                        type = "SHARED";
+                        break;
+                    case NativeLibraries.NativeLib.TYPE_EXEC:
+                        type = "EXEC";
+                        break;
+                    default:
+                        type = "SO";
+                }
+                holder.chipType.setText(type);
             }
-            holder.itemView.setBackgroundResource(index % 2 == 0 ? R.drawable.item_semi_transparent : R.drawable.item_transparent);
+            holder.divider.setDividerColor(mColorSurfaceVariant);
         }
 
         private void getPermissionsView(@NonNull ViewHolder holder, int index) {
-            View view = holder.itemView;
-            final PermissionInfo permissionInfo;
+            AppDetailsDefinedPermissionItem permissionItem;
             synchronized (mAdapterList) {
-                permissionInfo = (PermissionInfo) mAdapterList.get(index).vanillaItem;
+                permissionItem = (AppDetailsDefinedPermissionItem) mAdapterList.get(index);
             }
+            PermissionInfo permissionInfo = permissionItem.vanillaItem;
+            // Internal or external
+            holder.chipType.setText(permissionItem.isExternal ? R.string.external : R.string.internal);
             // Label
             holder.textView1.setText(permissionInfo.loadLabel(mPackageManager));
             // Name
@@ -1517,11 +1557,9 @@ public class AppDetailsFragment extends Fragment implements AdvancedSearchView.O
             // Protection level
             String protectionLevel = Utils.getProtectionLevelString(permissionInfo);
             holder.textView5.setText(String.format(Locale.ROOT, "\u2691 %s", protectionLevel));
-            // Set background color
+            // Set border color
             if (protectionLevel.contains("dangerous")) {
-                view.setBackgroundResource(R.drawable.item_red);
-            } else {
-                view.setBackgroundResource(index % 2 == 0 ? R.drawable.item_semi_transparent : R.drawable.item_transparent);
+                holder.divider.setDividerColor(mColorRed);
             }
         }
 
