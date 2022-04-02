@@ -43,8 +43,10 @@ public class AdbUtils {
         CountDownLatch resolveHostAndPort = new CountDownLatch(1);
 
         AdbMdns adbMdnsTcp = new AdbMdns(context, AdbMdns.SERVICE_TYPE_ADB, (hostAddress, port) -> {
-            atomicHostAddress.set(hostAddress.getHostAddress());
-            atomicPort.set(port);
+            if (hostAddress != null) {
+                atomicHostAddress.set(hostAddress.getHostAddress());
+                atomicPort.set(port);
+            }
             resolveHostAndPort.countDown();
         });
         adbMdnsTcp.start();
@@ -52,8 +54,10 @@ public class AdbUtils {
         AdbMdns adbMdnsTls;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
             adbMdnsTls = new AdbMdns(context, AdbMdns.SERVICE_TYPE_TLS_CONNECT, (hostAddress, port) -> {
-                atomicHostAddress.set(hostAddress.getHostAddress());
-                atomicPort.set(port);
+                if (hostAddress != null) {
+                    atomicHostAddress.set(hostAddress.getHostAddress());
+                    atomicPort.set(port);
+                }
                 resolveHostAndPort.countDown();
             });
             adbMdnsTls.start();
@@ -78,6 +82,7 @@ public class AdbUtils {
         return new Pair<>(host, port);
     }
 
+    @RequiresApi(Build.VERSION_CODES.R)
     @WorkerThread
     @NonNull
     public static Pair<String, Integer> getLatestAdbPairingDaemon(@NonNull Context context, long timeout, @NonNull TimeUnit unit)
@@ -87,8 +92,10 @@ public class AdbUtils {
         CountDownLatch resolveHostAndPort = new CountDownLatch(1);
 
         AdbMdns adbMdnsPairing = new AdbMdns(context, AdbMdns.SERVICE_TYPE_TLS_PAIRING, (hostAddress, port) -> {
-            atomicHostAddress.set(hostAddress.getHostAddress());
-            atomicPort.set(port);
+            if (hostAddress != null) {
+                atomicHostAddress.set(hostAddress.getHostAddress());
+                atomicPort.set(port);
+            }
             resolveHostAndPort.countDown();
         });
         adbMdnsPairing.start();
@@ -111,7 +118,7 @@ public class AdbUtils {
 
     @RequiresApi(Build.VERSION_CODES.R)
     @UiThread
-    public static void configureWirelessDebugging(FragmentActivity activity, AdbConnectionCallback callback) {
+    public static void configureWirelessDebugging(@NonNull FragmentActivity activity, @NonNull AdbConnectionCallback callback) {
         new MaterialAlertDialogBuilder(activity)
                 .setTitle(R.string.wireless_debugging)
                 .setMessage(R.string.choose_what_to_do)
@@ -154,7 +161,7 @@ public class AdbUtils {
     }
 
     @UiThread
-    public static void displayAdbConnect(FragmentActivity activity, AdbConnectionCallback callback) {
+    public static void displayAdbConnect(@NonNull FragmentActivity activity, @NonNull AdbConnectionCallback callback) {
         AlertDialog alertDialog = new TextInputDialogBuilder(activity, R.string.port_number)
                 .setTitle(R.string.wireless_debugging)
                 .setInputText(String.valueOf(ServerConfig.getAdbPort()))

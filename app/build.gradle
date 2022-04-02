@@ -11,8 +11,8 @@ android {
         applicationId 'io.github.muntashirakon.AppManager'
         minSdkVersion rootProject.ext.minSdk
         targetSdkVersion rootProject.ext.targetSdk
-        versionCode 400
-        versionName "3.0.0-alpha01"
+        versionCode 401
+        versionName "3.0.0-alpha02"
         javaCompileOptions {
             annotationProcessorOptions {
                 arguments = ["room.schemaLocation": "$projectDir/schemas".toString()]
@@ -90,7 +90,7 @@ dependencies {
     implementation 'com.github.MuntashirAkon:apksig-android:178a05e4c9'
     implementation 'com.github.MuntashirAkon:unapkm-android:1.2'
     implementation 'com.github.MuntashirAkon:sun-security-android:1.1'
-    implementation 'com.github.MuntashirAkon:libadb-android:2.1.0'
+    implementation 'com.github.MuntashirAkon:libadb-android:2.2.0'
     implementation 'org.bouncycastle:bcprov-jdk15on:1.69'
     implementation 'org.smali:baksmali:2.5.2'
     implementation 'org.smali:smali:2.5.2'
