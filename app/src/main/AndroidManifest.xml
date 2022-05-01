@@ -85,6 +85,7 @@
         </activity>
         <activity
             android:name=".sharedpref.SharedPrefsActivity"
+            android:taskAffinity=""
             android:exported="false" />
         <activity
             android:name=".usage.AppUsageActivity"
@@ -356,6 +357,7 @@
 
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
+                <category android:name="android.intent.category.OPENABLE" />
 
                 <data android:mimeType="*/*" />
             </intent-filter>
@@ -370,6 +372,7 @@
 
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
+                <category android:name="android.intent.category.OPENABLE" />
             </intent-filter>
             <!-- scheme-intents without mime (mime==null) -->
             <intent-filter>
@@ -382,6 +385,7 @@
 
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
+                <category android:name="android.intent.category.OPENABLE" />
 
                 <data android:scheme="http" />
                 <data android:scheme="https" />
@@ -401,6 +405,7 @@
                 <data android:scheme="smsto" />
                 <data android:scheme="mms" />
                 <data android:scheme="mmsto" />
+                <data android:scheme="zxing" />
                 <data android:scheme="spotify" />
                 <data android:scheme="tel" />
                 <data android:scheme="voicemail" />
@@ -423,6 +428,7 @@
 
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
+                <category android:name="android.intent.category.OPENABLE" />
 
                 <data android:scheme="http" />
                 <data android:scheme="https" />
@@ -442,6 +448,7 @@
                 <data android:scheme="smsto" />
                 <data android:scheme="mms" />
                 <data android:scheme="mmsto" />
+                <data android:scheme="zxing" />
                 <data android:scheme="spotify" />
                 <data android:scheme="tel" />
                 <data android:scheme="voicemail" />
