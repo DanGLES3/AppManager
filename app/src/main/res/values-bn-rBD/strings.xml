@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- SPDX-License-Identifier: GPL-3.0-or-later --><resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
-    <string name="_lang_tag" translatable="false">bn-BD</string>
     <string name="uninstall">আনইনস্টল</string>
     <string name="require_no_permission">কোন অনুমতির প্রয়োজন নেই</string>
     <string name="activities">কার্যকলাপ</string>
@@ -361,7 +360,7 @@
     <string name="skip_signature_checks">স্বাক্ষর চেকগুলি এড়িয়ে যান</string>
     <string name="backup_options">Backup Options</string>
     <string name="components">উপাদানগুলো</string>
-    <string name="clear_data_from_uninstalled_apps_description">DONT_DELETE_DATA ফ্ল্যাগ দ্বারা আনইনস্টলড অ্যাপগুলো থেকে ডাটা মুছুন</string>
+    <string name="clear_data_from_uninstalled_apps_description"><tt>DONT_DELETE_DATA</tt> ফ্ল্যাগ দ্বারা আনইনস্টলড অ্যাপগুলো থেকে ডাটা মুছুন</string>
     <string name="manifest_viewer">ম্যানিফেস্ট ভিউয়ার</string>
     <string name="sort_by_target_sdk">টার্গেট SDK</string>
     <string name="sort_by_sha">স্বাক্ষর</string>
@@ -410,7 +409,7 @@
     <string name="import_options">অপসন গুলো ইম্পোর্ট করুন</string>
     <string name="pref_export">এক্সপোর্ট</string>
     <string name="pref_import">ইম্পোর্ট</string>
-    <string name="pref_import_export_blocking_rules_msg">ইম্পোর্ট/এক্সপোর্ট বিধি, ওয়াট বা ব্লকার থেকে বহিঃস্থ বিধি ইম্পোর্ট করুন</string>
+    <string name="pref_import_export_blocking_rules_msg">ইম্পোর্ট/এক্সপোর্ট বিধি, ওয়াট বা ব্লকার থেকে বহিঃস্থ বিধি ইম্পোর্ট করুন।</string>
     <string name="str_logo">লোগো</string>
     <string name="class_viewer">ক্লাস ভিউয়ার</string>
     <string name="failed_to_enable_op">অনুরোধকৃত অ্যাপ অপটিকে সক্রিয় করা যায়নি</string>
