@@ -45,6 +45,7 @@ import io.github.muntashirakon.AppManager.R;
 import io.github.muntashirakon.AppManager.backup.BackupDialogFragment;
 import io.github.muntashirakon.AppManager.batchops.BatchOpsManager;
 import io.github.muntashirakon.AppManager.batchops.BatchOpsService;
+import io.github.muntashirakon.AppManager.compat.NetworkPolicyManagerCompat;
 import io.github.muntashirakon.AppManager.logcat.LogViewerActivity;
 import io.github.muntashirakon.AppManager.misc.AdvancedSearchView;
 import io.github.muntashirakon.AppManager.misc.HelpActivity;
@@ -54,7 +55,6 @@ import io.github.muntashirakon.AppManager.profiles.ProfileMetaManager;
 import io.github.muntashirakon.AppManager.profiles.ProfilesActivity;
 import io.github.muntashirakon.AppManager.rules.RulesTypeSelectionDialogFragment;
 import io.github.muntashirakon.AppManager.runningapps.RunningAppsActivity;
-import io.github.muntashirakon.AppManager.servermanager.NetworkPolicyManagerCompat;
 import io.github.muntashirakon.AppManager.servermanager.ServerConfig;
 import io.github.muntashirakon.AppManager.settings.FeatureController;
 import io.github.muntashirakon.AppManager.settings.Ops;
@@ -491,14 +491,14 @@ public class MainActivity extends BaseActivity implements AdvancedSearchView.OnQ
         exportRulesMenu.setEnabled(nonZeroSelection);
         addToProfileMenu.setEnabled(nonZeroSelection);
         /* === Visible/Invisible === */
-        boolean isRootEnabled = Ops.isRoot();
-        boolean isRootOrAdbEnabled = Ops.isPrivileged();
-        enableDisableMenu.setVisible(isRootOrAdbEnabled);
-        forceStopMenu.setVisible(isRootOrAdbEnabled);
-        clearDataCacheMenu.setVisible(isRootOrAdbEnabled);
-        preventBackgroundMenu.setVisible(isRootOrAdbEnabled);
-        netPolicyMenu.setVisible(isRootOrAdbEnabled);
-        blockUnblockTrackersMenu.setVisible(isRootEnabled);
+        boolean privileged = Ops.isPrivileged();
+        uninstallMenu.setVisible(privileged);
+        enableDisableMenu.setVisible(privileged);
+        forceStopMenu.setVisible(privileged);
+        clearDataCacheMenu.setVisible(privileged);
+        preventBackgroundMenu.setVisible(privileged);
+        netPolicyMenu.setVisible(privileged);
+        blockUnblockTrackersMenu.setVisible(privileged);
     }
 
     @Override
