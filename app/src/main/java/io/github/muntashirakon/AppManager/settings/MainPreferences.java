@@ -147,17 +147,31 @@ public class MainPreferences extends PreferenceFragment {
                     .setSingleChoiceItems(themes, THEME_CONST.indexOf(currentTheme),
                             (dialog, which) -> currentTheme = THEME_CONST.get(which))
                     .setPositiveButton(R.string.apply, (dialog, which) -> {
-                        AppPref.set(AppPref.PrefKey.PREF_APP_THEME_INT, currentTheme);
-                        AppCompatDelegate.setDefaultNightMode(currentTheme);
-                        appTheme.setSummary(themes[THEME_CONST.indexOf(currentTheme)]);
+                        if (AppPref.getInt(AppPref.PrefKey.PREF_APP_THEME_INT) != currentTheme) {
+                            AppPref.set(AppPref.PrefKey.PREF_APP_THEME_INT, currentTheme);
+                            AppCompatDelegate.setDefaultNightMode(currentTheme);
+                            activity.getSupportFragmentManager().popBackStackImmediate();
+                            appTheme.setSummary(themes[THEME_CONST.indexOf(currentTheme)]);
+                        }
                     })
                     .setNegativeButton(R.string.cancel, null)
                     .show();
             return true;
         });
+        // Black theme/custom theme
+        SwitchPreferenceCompat fullBlackTheme = Objects.requireNonNull(findPreference("app_theme_pure_black"));
+        fullBlackTheme.setVisible(BuildConfig.DEBUG);
+        fullBlackTheme.setChecked(AppPref.isPureBlackTheme());
+        fullBlackTheme.setOnPreferenceChangeListener((preference, newValue) -> {
+            boolean enabled = (boolean) newValue;
+            AppPref.setPureBlackTheme(enabled);
+            activity.recreate();
+            activity.getSupportFragmentManager().popBackStackImmediate();
+            return true;
+        });
         // Layout orientation
         final String[] layoutOrientations = getResources().getStringArray(R.array.layout_orientations);
-        currentLayoutOrientation = AppPref.getInt(AppPref.PrefKey.PREF_LAYOUT_ORIENTATION_INT);
+        currentLayoutOrientation = AppPref.getLayoutOrientation();
         Preference layoutOrientation = Objects.requireNonNull(findPreference("layout_orientation"));
         layoutOrientation.setSummary(layoutOrientations[LAYOUT_ORIENTATION_CONST.indexOf(currentLayoutOrientation)]);
         layoutOrientation.setOnPreferenceClickListener(preference -> {
