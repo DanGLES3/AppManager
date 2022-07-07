@@ -30,6 +30,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import io.github.muntashirakon.AppManager.AppManager;
 import io.github.muntashirakon.AppManager.apk.ApkUtils;
@@ -101,7 +102,11 @@ public class BatchOpsManager {
      * {@link String} value, {@link String} representation of {@link Uri}. To be used with {@link #OP_IMPORT_BACKUPS}.
      */
     public static final String ARG_URI = "uri";
-
+    /**
+     * {@link Boolean} value denoting if the imported backups should be removed after a successful operation.
+     * To be used with {@link #OP_IMPORT_BACKUPS}.
+     */
+    public static final String ARG_REMOVE_IMPORTED = "remove_imported";
     /**
      * {@link Integer} value. One of the {@link NetPolicy network policies}. To be used with {@link #OP_NET_POLICY}.
      */
@@ -299,6 +304,7 @@ public class BatchOpsManager {
     private Result opBackupRestore(@BackupRestoreDialogFragment.ActionMode int mode) {
         List<UserPackagePair> failedPackages = new ArrayList<>();
         MultithreadedExecutor executor = MultithreadedExecutor.getNewInstance();
+        AtomicBoolean requiresRestart = new AtomicBoolean();
         try {
             String[] backupNames = args.getStringArray(ARG_BACKUP_NAMES);
             for (UserPackagePair pair : userPackagePairs) {
@@ -314,6 +320,7 @@ public class BatchOpsManager {
                                 break;
                             case BackupRestoreDialogFragment.MODE_RESTORE:
                                 backupManager.restore(backupNames);
+                                requiresRestart.set(requiresRestart.get() | backupManager.requiresRestart());
                                 break;
                         }
                     } catch (BackupException e) {
@@ -328,7 +335,9 @@ public class BatchOpsManager {
             log("====> op=BACKUP_RESTORE, mode=" + mode, th);
         }
         executor.awaitCompletion();
-        return lastResult = new Result(failedPackages);
+        lastResult = new Result(failedPackages);
+        lastResult.setRequiresRestart(requiresRestart.get());
+        return lastResult;
     }
 
     @NonNull
@@ -336,6 +345,7 @@ public class BatchOpsManager {
         @ImportType
         int backupType = args.getInt(ARG_BACKUP_TYPE, ImportType.OAndBackup);
         Uri uri = Objects.requireNonNull(args.getParcelable(ARG_URI));
+        boolean removeImported = args.getBoolean(ARG_REMOVE_IMPORTED, false);
         int userHandle = UserHandleHidden.myUserId();
         Path[] files;
         final List<UserPackagePair> failedPkgList = new ArrayList<>();
@@ -347,6 +357,10 @@ public class BatchOpsManager {
                     Converter converter = ConvertUtils.getConversionUtil(backupType, file);
                     try {
                         converter.convert();
+                        if (removeImported) {
+                            // Since the conversion was successful, remove the files for it.
+                            converter.cleanup();
+                        }
                     } catch (BackupException e) {
                         log("====> op=IMPORT_BACKUP, pkg=" + converter.getPackageName(), e);
                         synchronized (failedPkgList) {
@@ -653,6 +667,8 @@ public class BatchOpsManager {
         private final List<UserPackagePair> mUserPackagePairs;
         private final boolean mIsSuccessful;
 
+        private boolean mRequiresRestart;
+
         public Result(@NonNull List<UserPackagePair> failedUserPackagePairs) {
             this(failedUserPackagePairs, failedUserPackagePairs.isEmpty());
         }
@@ -666,6 +682,14 @@ public class BatchOpsManager {
                 mAssociatedUserHandles.add(userPackagePair.getUserHandle());
             }
             mIsSuccessful = isSuccessful;
+        }
+
+        public boolean requiresRestart() {
+            return mRequiresRestart;
+        }
+
+        public void setRequiresRestart(boolean requiresRestart) {
+            mRequiresRestart = requiresRestart;
         }
 
         public boolean isSuccessful() {
