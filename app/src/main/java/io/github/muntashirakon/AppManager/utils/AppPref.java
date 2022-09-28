@@ -30,6 +30,7 @@ import java.util.Objects;
 import io.github.muntashirakon.AppManager.AppManager;
 import io.github.muntashirakon.AppManager.R;
 import io.github.muntashirakon.AppManager.apk.signing.SigSchemes;
+import io.github.muntashirakon.AppManager.apk.signing.Signer;
 import io.github.muntashirakon.AppManager.backup.BackupFlags;
 import io.github.muntashirakon.AppManager.backup.CryptoUtils;
 import io.github.muntashirakon.AppManager.crypto.auth.AuthManager;
@@ -74,10 +75,16 @@ public class AppPref {
          */
         PREF_CONCURRENCY_THREAD_COUNT_INT,
         PREF_CUSTOM_LOCALE_STR,
+
+        PREF_DISPLAY_CHANGELOG_BOOL,
+        PREF_DISPLAY_CHANGELOG_LAST_VERSION_LONG,
+
         PREF_ENABLE_KILL_FOR_SYSTEM_BOOL,
         PREF_ENABLE_SCREEN_LOCK_BOOL,
         PREF_ENABLED_FEATURES_INT,
         PREF_ENCRYPTION_STR,
+
+        PREF_FREEZE_TYPE_INT,
 
         PREF_GLOBAL_BLOCKING_ENABLED_BOOL,
         PREF_DEFAULT_BLOCKING_METHOD_STR,
@@ -260,6 +267,20 @@ public class AppPref {
         return path;
     }
 
+    public static boolean backupDirectoryExists(Context context) {
+        Uri uri = getSelectedDirectory();
+        Path path;
+        if (uri.getScheme().equals(ContentResolver.SCHEME_FILE)) {
+            // Append AppManager only if storage permissions are granted
+            String newPath = uri.getPath();
+            if (PermissionUtils.hasStoragePermission(context) || Ops.isPrivileged()) {
+                newPath += File.separator + "AppManager";
+            }
+            path = Paths.get(newPath);
+        } else path = Paths.get(uri);
+        return path.exists();
+    }
+
     public static Uri getSelectedDirectory() {
         String uriOrBareFile = getString(PrefKey.PREF_BACKUP_VOLUME_STR);
         if (uriOrBareFile.startsWith("/")) {
@@ -317,6 +338,15 @@ public class AppPref {
         return selectedStatus;
     }
 
+    @FreezeUtils.FreezeType
+    public static int getDefaultFreezingMethod() {
+        int freezeType = getInt(PrefKey.PREF_FREEZE_TYPE_INT);
+        if (freezeType == FreezeUtils.FREEZE_HIDE && !Ops.isRoot()) {
+            return FreezeUtils.FREEZE_DISABLE;
+        }
+        return freezeType;
+    }
+
     public static int getLayoutOrientation() {
         return getInt(PrefKey.PREF_LAYOUT_ORIENTATION_INT);
     }
@@ -347,6 +377,14 @@ public class AppPref {
 
     public static void setPureBlackTheme(boolean enabled) {
         set(PrefKey.PREF_APP_THEME_CUSTOM_INT, enabled ? 1 : 0);
+    }
+
+    public static boolean canSignApk() {
+        if (!getBoolean(PrefKey.PREF_INSTALLER_SIGN_APK_BOOL)) {
+            // Signing not enabled
+            return false;
+        }
+        return Signer.canSign();
     }
 
     public static void set(PrefKey key, Object value) {
@@ -462,6 +500,7 @@ public class AppPref {
             case PREF_LOG_VIEWER_EXPAND_BY_DEFAULT_BOOL:
             case PREF_LOG_VIEWER_OMIT_SENSITIVE_INFO_BOOL:
             case PREF_APP_THEME_PURE_BLACK_BOOL:
+            case PREF_DISPLAY_CHANGELOG_BOOL:
                 return false;
             case PREF_APP_OP_SHOW_DEFAULT_BOOL:
             case PREF_SHOW_DISCLAIMER_BOOL:
@@ -473,6 +512,7 @@ public class AppPref {
             case PREF_APP_THEME_CUSTOM_INT:
                 return 0;
             case PREF_LAST_VERSION_CODE_LONG:
+            case PREF_DISPLAY_CHANGELOG_LAST_VERSION_LONG:
                 return 0L;
             case PREF_ENABLED_FEATURES_INT:
                 return 0xffff_ffff;  /* All features enabled */
@@ -529,6 +569,8 @@ public class AppPref {
                 return "%label%_%version%";
             case PREF_AUTHORIZATION_KEY_STR:
                 return AuthManager.generateKey();
+            case PREF_FREEZE_TYPE_INT:
+                return FreezeUtils.FREEZE_DISABLE;
         }
         throw new IllegalArgumentException("Pref key not found.");
     }

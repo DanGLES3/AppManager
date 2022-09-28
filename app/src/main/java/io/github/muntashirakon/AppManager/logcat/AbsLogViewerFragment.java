@@ -2,6 +2,7 @@
 
 package io.github.muntashirakon.AppManager.logcat;
 
+import android.content.Context;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -12,6 +13,7 @@ import android.view.ViewGroup;
 import android.widget.CheckBox;
 import android.widget.Filter;
 
+import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.CallSuper;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -71,6 +73,17 @@ public abstract class AbsLogViewerFragment extends Fragment implements LogViewer
             }
         }
     };
+    private final OnBackPressedCallback mOnBackPressedCallback = new OnBackPressedCallback(true) {
+        @Override
+        public void handleOnBackPressed() {
+            if (mLogListAdapter.isInSelectionMode()) {
+                mMultiSelectionView.cancel();
+            } else {
+                setEnabled(false);
+                requireActivity().onBackPressed();
+            }
+        }
+    };
 
     @Nullable
     @Override
@@ -119,6 +132,12 @@ public abstract class AbsLogViewerFragment extends Fragment implements LogViewer
                 mLogListAdapter.setLogLevelLimit(logLevel));
     }
 
+    @Override
+    public void onAttach(@NonNull Context context) {
+        super.onAttach(context);
+        requireActivity().getOnBackPressedDispatcher().addCallback(this, mOnBackPressedCallback);
+    }
+
     @CallSuper
     @Override
     public void onDestroy() {
@@ -134,10 +153,10 @@ public abstract class AbsLogViewerFragment extends Fragment implements LogViewer
         MenuItem expandMenu = menu.findItem(R.id.action_expand_collapse);
         if (expandMenu != null) {
             if (mViewModel.isCollapsedMode()) {
-                expandMenu.setIcon(R.drawable.ic_expand_more_white_24dp);
+                expandMenu.setIcon(R.drawable.ic_expand_more);
                 expandMenu.setTitle(R.string.expand_all);
             } else {
-                expandMenu.setIcon(R.drawable.ic_expand_less_white_24dp);
+                expandMenu.setIcon(R.drawable.ic_expand_less);
                 expandMenu.setTitle(R.string.collapse_all);
             }
         }

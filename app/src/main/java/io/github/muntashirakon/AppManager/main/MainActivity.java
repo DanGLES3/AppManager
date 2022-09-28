@@ -9,9 +9,9 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.net.NetworkPolicyManager;
+import android.net.Uri;
 import android.os.Bundle;
 import android.text.SpannableStringBuilder;
-import android.text.Spanned;
 import android.text.TextUtils;
 import android.view.Gravity;
 import android.view.Menu;
@@ -26,7 +26,6 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBar;
 import androidx.collection.ArrayMap;
 import androidx.core.content.ContextCompat;
-import androidx.core.text.HtmlCompat;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -34,7 +33,11 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.material.checkbox.MaterialCheckBox;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.progressindicator.LinearProgressIndicator;
+import com.google.android.material.snackbar.Snackbar;
 
+import org.xmlpull.v1.XmlPullParserException;
+
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -45,6 +48,9 @@ import io.github.muntashirakon.AppManager.R;
 import io.github.muntashirakon.AppManager.backup.dialog.BackupRestoreDialogFragment;
 import io.github.muntashirakon.AppManager.batchops.BatchOpsManager;
 import io.github.muntashirakon.AppManager.batchops.BatchOpsService;
+import io.github.muntashirakon.AppManager.changelog.Changelog;
+import io.github.muntashirakon.AppManager.changelog.ChangelogParser;
+import io.github.muntashirakon.AppManager.changelog.ChangelogRecyclerAdapter;
 import io.github.muntashirakon.AppManager.compat.NetworkPolicyManagerCompat;
 import io.github.muntashirakon.AppManager.logcat.LogViewerActivity;
 import io.github.muntashirakon.AppManager.misc.AdvancedSearchView;
@@ -55,7 +61,6 @@ import io.github.muntashirakon.AppManager.profiles.ProfileMetaManager;
 import io.github.muntashirakon.AppManager.profiles.ProfilesActivity;
 import io.github.muntashirakon.AppManager.rules.RulesTypeSelectionDialogFragment;
 import io.github.muntashirakon.AppManager.runningapps.RunningAppsActivity;
-import io.github.muntashirakon.AppManager.servermanager.ServerConfig;
 import io.github.muntashirakon.AppManager.settings.FeatureController;
 import io.github.muntashirakon.AppManager.settings.Ops;
 import io.github.muntashirakon.AppManager.settings.SettingsActivity;
@@ -65,11 +70,9 @@ import io.github.muntashirakon.AppManager.usage.AppUsageActivity;
 import io.github.muntashirakon.AppManager.users.Users;
 import io.github.muntashirakon.AppManager.utils.AppPref;
 import io.github.muntashirakon.AppManager.utils.DateUtils;
-import io.github.muntashirakon.AppManager.utils.FileUtils;
 import io.github.muntashirakon.AppManager.utils.StoragePermission;
 import io.github.muntashirakon.AppManager.utils.UIUtils;
-import io.github.muntashirakon.AppManager.utils.Utils;
-import io.github.muntashirakon.dialog.ScrollableDialogBuilder;
+import io.github.muntashirakon.dialog.AlertDialogBuilder;
 import io.github.muntashirakon.reflow.ReflowMenuViewWrapper;
 import io.github.muntashirakon.util.UiUtils;
 import io.github.muntashirakon.widget.MultiSelectionView;
@@ -102,7 +105,7 @@ public class MainActivity extends BaseActivity implements AdvancedSearchView.OnQ
     private final StoragePermission storagePermission = StoragePermission.init(this);
 
     private final ActivityResultLauncher<String> batchExportRules = registerForActivityResult(
-            new ActivityResultContracts.CreateDocument(),
+            new ActivityResultContracts.CreateDocument("text/tab-separated-values"),
             uri -> {
                 if (uri == null) {
                     // Back button pressed.
@@ -116,7 +119,6 @@ public class MainActivity extends BaseActivity implements AdvancedSearchView.OnQ
                 args.putIntArray(RulesTypeSelectionDialogFragment.ARG_USERS, Users.getUsersIds());
                 dialogFragment.setArguments(args);
                 dialogFragment.show(getSupportFragmentManager(), RulesTypeSelectionDialogFragment.TAG);
-                multiSelectionView.cancel();
             });
 
     private final BroadcastReceiver mBatchOpsBroadCastReceiver = new BroadcastReceiver() {
@@ -151,6 +153,14 @@ public class MainActivity extends BaseActivity implements AdvancedSearchView.OnQ
                     UiUtils.hideKeyboard(v);
                 }
             });
+            // Check for market://search/?q=<query>
+            Uri marketUri = getIntent().getData();
+            if (marketUri != null && "market".equals(marketUri.getScheme()) && "search".equals(marketUri.getHost())) {
+                String query = marketUri.getQueryParameter("q");
+                if (query != null) {
+                    mSearchView.setQuery(query, true);
+                }
+            }
         }
 
         mProgressIndicator = findViewById(R.id.progress_linear);
@@ -183,14 +193,12 @@ public class MainActivity extends BaseActivity implements AdvancedSearchView.OnQ
                         if (((MaterialCheckBox) view.findViewById(R.id.agree_forever)).isChecked()) {
                             AppPref.set(AppPref.PrefKey.PREF_SHOW_DISCLAIMER_BOOL, false);
                         }
-                        checkFirstRun();
-                        checkAppUpdate();
+                        displayChangelogIfRequired();
                     })
                     .setNegativeButton(R.string.disclaimer_exit, (dialog, which) -> finishAndRemoveTask())
                     .show();
         } else {
-            checkFirstRun();
-            checkAppUpdate();
+            displayChangelogIfRequired();
         }
 
         // Set observer
@@ -271,7 +279,7 @@ public class MainActivity extends BaseActivity implements AdvancedSearchView.OnQ
                 mModel.loadApplicationItems();
             }
         } else if (id == R.id.action_settings) {
-            Intent settingsIntent = new Intent(this, SettingsActivity.class);
+            Intent settingsIntent = SettingsActivity.getIntent(this);
             startActivity(settingsIntent);
         } else if (id == R.id.action_app_usage) {
             Intent usageIntent = new Intent(this, AppUsageActivity.class);
@@ -325,7 +333,6 @@ public class MainActivity extends BaseActivity implements AdvancedSearchView.OnQ
                 fragment.setOnActionBeginListener(mode -> showProgressIndicator(true));
                 fragment.setOnActionCompleteListener((mode, failedPackages) -> showProgressIndicator(false));
                 fragment.show(getSupportFragmentManager(), BackupRestoreDialogFragment.TAG);
-                multiSelectionView.cancel();
             }
         } else if (id == R.id.action_save_apk) {
             storagePermission.request(granted -> {
@@ -351,15 +358,16 @@ public class MainActivity extends BaseActivity implements AdvancedSearchView.OnQ
                     .setNeutralButton(R.string.clear_data, (dialog, which) ->
                             handleBatchOp(BatchOpsManager.OP_CLEAR_DATA))
                     .show();
-        } else if (id == R.id.action_enable_disable) {
+        } else if (id == R.id.action_freeze_unfreeze) {
             new MaterialAlertDialogBuilder(this)
-                    .setTitle(R.string.enable_disable)
+                    .setIcon(R.drawable.ic_snowflake)
+                    .setTitle(R.string.freeze_unfreeze)
                     .setMessage(R.string.choose_what_to_do)
-                    .setPositiveButton(R.string.disable, (dialog, which) ->
-                            handleBatchOp(BatchOpsManager.OP_DISABLE))
+                    .setPositiveButton(R.string.freeze, (dialog, which) ->
+                            handleBatchOp(BatchOpsManager.OP_FREEZE))
                     .setNegativeButton(R.string.cancel, null)
-                    .setNeutralButton(R.string.enable, (dialog, which) ->
-                            handleBatchOp(BatchOpsManager.OP_ENABLE))
+                    .setNeutralButton(R.string.unfreeze, (dialog, which) ->
+                            handleBatchOp(BatchOpsManager.OP_UNFREEZE))
                     .show();
         } else if (id == R.id.action_disable_background) {
             new MaterialAlertDialogBuilder(this)
@@ -411,21 +419,17 @@ public class MainActivity extends BaseActivity implements AdvancedSearchView.OnQ
                     .setNegativeButton(R.string.cancel, null)
                     .setPositiveButton(R.string.add, (dialog, which, selectedItems) -> {
                         for (ProfileMetaManager metaManager : selectedItems) {
-                            if (metaManager.profile != null) {
-                                try {
-                                    metaManager.appendPackages(mModel.getSelectedPackages().keySet());
-                                    multiSelectionView.cancel();
-                                    metaManager.writeProfile();
-                                } catch (Throwable e) {
-                                    e.printStackTrace();
-                                }
+                            try {
+                                metaManager.appendPackages(mModel.getSelectedPackages().keySet());
+                                metaManager.writeProfile();
+                            } catch (Throwable e) {
+                                e.printStackTrace();
                             }
                         }
                         UIUtils.displayShortToast(R.string.done);
                     })
                     .show();
         } else {
-            multiSelectionView.cancel();
             return false;
         }
         return true;
@@ -439,7 +443,7 @@ public class MainActivity extends BaseActivity implements AdvancedSearchView.OnQ
         //  2. Check for properties during selection
         ArrayList<ApplicationItem> selectedItems = mModel.getSelectedApplicationItems();
         MenuItem uninstallMenu = selectionMenu.findItem(R.id.action_uninstall);
-        MenuItem enableDisableMenu = selectionMenu.findItem(R.id.action_enable_disable);
+        MenuItem enableDisableMenu = selectionMenu.findItem(R.id.action_freeze_unfreeze);
         MenuItem forceStopMenu = selectionMenu.findItem(R.id.action_force_stop);
         MenuItem clearDataCacheMenu = selectionMenu.findItem(R.id.action_clear_data_cache);
         MenuItem saveApkMenu = selectionMenu.findItem(R.id.action_save_apk);
@@ -528,15 +532,13 @@ public class MainActivity extends BaseActivity implements AdvancedSearchView.OnQ
             }
         }
         // Check for backup volume
-        if (!AppPref.getAppManagerDirectory().exists()) {
+        if (!AppPref.backupDirectoryExists(this)) {
             new MaterialAlertDialogBuilder(this)
                     .setTitle(R.string.backup_volume)
                     .setMessage(R.string.backup_volume_unavailable_warning)
                     .setPositiveButton(R.string.close, null)
                     .setNeutralButton(R.string.change_backup_volume, (dialog, which) -> {
-                        Intent intent = new Intent(this, SettingsActivity.class);
-                        intent.putExtra(SettingsActivity.EXTRA_KEY, "backup_restore_prefs");
-                        intent.putExtra(SettingsActivity.EXTRA_SUB_KEY, "backup_volume");
+                        Intent intent = SettingsActivity.getIntent(this, "backup_restore_prefs", "backup_volume");
                         startActivity(intent);
                     })
                     .show();
@@ -556,30 +558,36 @@ public class MainActivity extends BaseActivity implements AdvancedSearchView.OnQ
         unregisterReceiver(mBatchOpsBroadCastReceiver);
     }
 
-    private void checkFirstRun() {
-        if (Utils.isAppInstalled()) {
-            // TODO(4/1/21): Do something relevant and useful
-            AppPref.set(AppPref.PrefKey.PREF_LAST_VERSION_CODE_LONG, (long) BuildConfig.VERSION_CODE);
+    private void displayChangelogIfRequired() {
+        if (!AppPref.getBoolean(AppPref.PrefKey.PREF_DISPLAY_CHANGELOG_BOOL)) {
+            return;
         }
-    }
-
-    private void checkAppUpdate() {
-        if (Utils.isAppUpdated()) {
-            // Clean old am.jar
-            FileUtils.deleteSilently(ServerConfig.getDestJarFile());
-            mModel.executor.submit(() -> {
-                final Spanned spannedChangelog = HtmlCompat.fromHtml(FileUtils.getContentFromAssets(this, "changelog.html"), HtmlCompat.FROM_HTML_MODE_COMPACT);
-                runOnUiThread(() -> new ScrollableDialogBuilder(this, spannedChangelog)
-                        .linkifyAll()
-                        .setTitle(R.string.changelog)
-                        .setNegativeButton(R.string.ok, null)
-                        .setNeutralButton(R.string.instructions, (dialog, which, isChecked) -> {
-                            Intent helpIntent = new Intent(this, HelpActivity.class);
-                            startActivity(helpIntent);
-                        }).show());
-            });
-            AppPref.set(AppPref.PrefKey.PREF_LAST_VERSION_CODE_LONG, (long) BuildConfig.VERSION_CODE);
-        }
+        Snackbar.make(findViewById(android.R.id.content), R.string.view_changelog, 3 * 60 * 1000)
+                .setAction(R.string.ok, v -> {
+                    long lastVersion = (long) AppPref.get(AppPref.PrefKey.PREF_DISPLAY_CHANGELOG_LAST_VERSION_LONG);
+                    AppPref.set(AppPref.PrefKey.PREF_DISPLAY_CHANGELOG_BOOL, false);
+                    AppPref.set(AppPref.PrefKey.PREF_DISPLAY_CHANGELOG_LAST_VERSION_LONG, (long) BuildConfig.VERSION_CODE);
+                    mModel.executor.submit(() -> {
+                        Changelog changelog;
+                        try {
+                            changelog = new ChangelogParser(getApplication(), R.raw.changelog, lastVersion).parse();
+                        } catch (IOException | XmlPullParserException e) {
+                            return;
+                        }
+                        runOnUiThread(() -> {
+                            RecyclerView recyclerView = (RecyclerView) View.inflate(this, R.layout.dialog_whats_new, null);
+                            recyclerView.setHasFixedSize(true);
+                            recyclerView.setLayoutManager(new LinearLayoutManager(recyclerView.getContext()));
+                            ChangelogRecyclerAdapter adapter = new ChangelogRecyclerAdapter();
+                            recyclerView.setAdapter(adapter);
+                            adapter.setAdapterList(changelog.getChangelogItems());
+                            new AlertDialogBuilder(this, true)
+                                    .setTitle(R.string.changelog)
+                                    .setView(recyclerView)
+                                    .show();
+                        });
+                    });
+                }).show();
     }
 
     private void handleBatchOp(@BatchOpsManager.OpType int op) {
@@ -596,7 +604,6 @@ public class MainActivity extends BaseActivity implements AdvancedSearchView.OnQ
         intent.putExtra(BatchOpsService.EXTRA_OP, op);
         intent.putExtra(BatchOpsService.EXTRA_OP_EXTRA_ARGS, args);
         ContextCompat.startForegroundService(this, intent);
-        multiSelectionView.cancel();
     }
 
     private void handleBatchOpWithWarning(@BatchOpsManager.OpType int op) {

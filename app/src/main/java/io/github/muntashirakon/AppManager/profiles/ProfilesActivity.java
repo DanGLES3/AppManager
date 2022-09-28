@@ -3,7 +3,6 @@
 package io.github.muntashirakon.AppManager.profiles;
 
 import android.content.Intent;
-import android.graphics.Color;
 import android.os.Bundle;
 import android.os.RemoteException;
 import android.text.TextUtils;
@@ -12,10 +11,8 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.BaseAdapter;
 import android.widget.Filter;
 import android.widget.Filterable;
-import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -26,6 +23,7 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.widget.PopupMenu;
 import androidx.core.content.ContextCompat;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.recyclerview.widget.LinearLayoutManager;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
@@ -50,6 +48,7 @@ import io.github.muntashirakon.AppManager.utils.UIUtils;
 import io.github.muntashirakon.AppManager.utils.appearance.ColorCodes;
 import io.github.muntashirakon.dialog.TextInputDialogBuilder;
 import io.github.muntashirakon.util.UiUtils;
+import io.github.muntashirakon.widget.RecyclerView;
 
 public class ProfilesActivity extends BaseActivity {
     private static final String TAG = "ProfilesActivity";
@@ -61,7 +60,7 @@ public class ProfilesActivity extends BaseActivity {
     private String profileName;
 
     private final ActivityResultLauncher<String> exportProfile = registerForActivityResult(
-            new ActivityResultContracts.CreateDocument(),
+            new ActivityResultContracts.CreateDocument("application/json"),
             uri -> {
                 if (uri == null) {
                     // Back button pressed.
@@ -115,7 +114,8 @@ public class ProfilesActivity extends BaseActivity {
         model = new ViewModelProvider(this).get(ProfilesViewModel.class);
         progressIndicator = findViewById(R.id.progress_linear);
         progressIndicator.setVisibilityAfterHide(View.GONE);
-        ListView listView = findViewById(android.R.id.list);
+        RecyclerView listView = findViewById(android.R.id.list);
+        listView.setLayoutManager(new LinearLayoutManager(this));
         listView.setEmptyView(findViewById(android.R.id.empty));
         UiUtils.applyWindowInsetsAsPaddingNoTop(listView);
         adapter = new ProfilesAdapter(this);
@@ -145,8 +145,14 @@ public class ProfilesActivity extends BaseActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        progressIndicator.show();
-        new Thread(() -> model.loadProfiles()).start();
+        if (progressIndicator != null) {
+            progressIndicator.show();
+        }
+        new Thread(() -> {
+            if (model != null) {
+                model.loadProfiles();
+            }
+        }).start();
     }
 
     @Override
@@ -194,30 +200,29 @@ public class ProfilesActivity extends BaseActivity {
         return true;
     }
 
-    static class ProfilesAdapter extends BaseAdapter implements Filterable {
-        private final LayoutInflater mLayoutInflater;
+    static class ProfilesAdapter extends RecyclerView.Adapter<ProfilesAdapter.ViewHolder> implements Filterable {
         private Filter mFilter;
         private String mConstraint;
         private String[] mDefaultList;
         private String[] mAdapterList;
         private HashMap<String, CharSequence> mAdapterMap;
         private final ProfilesActivity activity;
-
-        private final int mColorTransparent;
-        private final int mColorSemiTransparent;
         private final int mQueryStringHighlightColor;
 
-        static class ViewHolder {
-            TextView item_name;
-            TextView item_value;
+        static class ViewHolder extends RecyclerView.ViewHolder {
+            TextView title;
+            TextView summary;
+
+            public ViewHolder(@NonNull View itemView) {
+                super(itemView);
+                title = itemView.findViewById(android.R.id.title);
+                summary = itemView.findViewById(android.R.id.summary);
+                itemView.findViewById(R.id.icon_frame).setVisibility(View.GONE);
+            }
         }
 
         ProfilesAdapter(@NonNull ProfilesActivity activity) {
             this.activity = activity;
-            mLayoutInflater = activity.getLayoutInflater();
-
-            mColorTransparent = Color.TRANSPARENT;
-            mColorSemiTransparent = ContextCompat.getColor(activity, R.color.semi_transparent);
             mQueryStringHighlightColor = ColorCodes.getQueryStringHighlightColor(activity);
         }
 
@@ -229,50 +234,40 @@ public class ProfilesActivity extends BaseActivity {
         }
 
         @Override
-        public int getCount() {
+        public int getItemCount() {
             return mAdapterList == null ? 0 : mAdapterList.length;
         }
 
         @Override
-        public String getItem(int position) {
-            return mAdapterList[position];
-        }
-
-        @Override
         public long getItemId(int position) {
-            return position;
+            return mAdapterList[position].hashCode();
+        }
+
+        @NonNull
+        @Override
+        public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+            View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.m3_preference, parent, false);
+            return new ViewHolder(view);
         }
 
         @Override
-        public View getView(int position, View convertView, ViewGroup parent) {
-            ViewHolder viewHolder;
-            if (convertView == null) {
-                convertView = mLayoutInflater.inflate(R.layout.item_shared_pref, parent, false);
-                viewHolder = new ViewHolder();
-                viewHolder.item_name = convertView.findViewById(R.id.item_title);
-                viewHolder.item_value = convertView.findViewById(R.id.item_subtitle);
-                convertView.setTag(viewHolder);
-            } else {
-                viewHolder = (ViewHolder) convertView.getTag();
-            }
+        public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
             String profName = mAdapterList[position];
             if (mConstraint != null && profName.toLowerCase(Locale.ROOT).contains(mConstraint)) {
                 // Highlight searched query
-                viewHolder.item_name.setText(UIUtils.getHighlightedText(profName, mConstraint, mQueryStringHighlightColor));
+                holder.title.setText(UIUtils.getHighlightedText(profName, mConstraint, mQueryStringHighlightColor));
             } else {
-                viewHolder.item_name.setText(profName);
+                holder.title.setText(profName);
             }
             CharSequence value = mAdapterMap.get(profName);
-            viewHolder.item_value.setText(value != null ? value : "");
-            convertView.setBackgroundColor(position % 2 == 0 ? mColorSemiTransparent : mColorTransparent);
-            convertView.setOnClickListener(v -> {
+            holder.summary.setText(value != null ? value : "");
+            holder.itemView.setOnClickListener(v -> {
                 Intent intent = new Intent(activity, AppsProfileActivity.class);
                 intent.putExtra(AppsProfileActivity.EXTRA_PROFILE_NAME, profName);
                 activity.startActivity(intent);
             });
-            View finalConvertView = convertView;
-            convertView.setOnLongClickListener(v -> {
-                PopupMenu popupMenu = new PopupMenu(activity, finalConvertView);
+            holder.itemView.setOnLongClickListener(v -> {
+                PopupMenu popupMenu = new PopupMenu(activity, v);
                 popupMenu.inflate(R.menu.activity_profiles_popup_actions);
                 popupMenu.setOnMenuItemClickListener(item -> {
                     int id = item.getItemId();
@@ -348,7 +343,6 @@ public class ProfilesActivity extends BaseActivity {
                 popupMenu.show();
                 return true;
             });
-            return convertView;
         }
 
         @Override

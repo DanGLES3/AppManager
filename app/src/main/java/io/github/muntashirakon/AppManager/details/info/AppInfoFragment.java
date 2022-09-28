@@ -90,7 +90,7 @@ import io.github.muntashirakon.AppManager.compat.PackageManagerCompat;
 import io.github.muntashirakon.AppManager.details.AppDetailsActivity;
 import io.github.muntashirakon.AppManager.details.AppDetailsFragment;
 import io.github.muntashirakon.AppManager.details.AppDetailsViewModel;
-import io.github.muntashirakon.AppManager.details.ManifestViewerActivity;
+import io.github.muntashirakon.AppManager.details.manifest.ManifestViewerActivity;
 import io.github.muntashirakon.AppManager.details.struct.AppDetailsItem;
 import io.github.muntashirakon.AppManager.fm.FmProvider;
 import io.github.muntashirakon.AppManager.logcat.LogViewerActivity;
@@ -121,6 +121,7 @@ import io.github.muntashirakon.AppManager.utils.BetterActivityResult;
 import io.github.muntashirakon.AppManager.utils.DateUtils;
 import io.github.muntashirakon.AppManager.utils.DigestUtils;
 import io.github.muntashirakon.AppManager.utils.FileUtils;
+import io.github.muntashirakon.AppManager.utils.FreezeUtils;
 import io.github.muntashirakon.AppManager.utils.IntentUtils;
 import io.github.muntashirakon.AppManager.utils.KeyStoreUtils;
 import io.github.muntashirakon.AppManager.utils.LangUtils;
@@ -189,7 +190,7 @@ public class AppInfoFragment extends Fragment implements SwipeRefreshLayout.OnRe
     @GuardedBy("mListItems")
     private final List<ListItem> mListItems = new ArrayList<>();
     private final BetterActivityResult<String, Uri> export = BetterActivityResult
-            .registerForActivityResult(this, new ActivityResultContracts.CreateDocument());
+            .registerForActivityResult(this, new ActivityResultContracts.CreateDocument("*/*"));
     private final BetterActivityResult<String, Boolean> requestPerm = BetterActivityResult
             .registerForActivityResult(this, new ActivityResultContracts.RequestPermission());
     private final BetterActivityResult<Intent, ActivityResult> activityLauncher = BetterActivityResult
@@ -479,13 +480,11 @@ public class AppInfoFragment extends Fragment implements SwipeRefreshLayout.OnRe
                     .setNegativeButton(R.string.cancel, null)
                     .setPositiveButton(R.string.add, (dialog, which, selectedItems) -> {
                         for (ProfileMetaManager metaManager : selectedItems) {
-                            if (metaManager.profile != null) {
-                                try {
-                                    metaManager.appendPackages(Collections.singletonList(mPackageName));
-                                    metaManager.writeProfile();
-                                } catch (Throwable e) {
-                                    e.printStackTrace();
-                                }
+                            try {
+                                metaManager.appendPackages(Collections.singletonList(mPackageName));
+                                metaManager.writeProfile();
+                            } catch (Throwable e) {
+                                e.printStackTrace();
                             }
                         }
                     })
@@ -874,10 +873,11 @@ public class AppInfoFragment extends Fragment implements SwipeRefreshLayout.OnRe
     private void setHorizontalActions() {
         mHorizontalLayout.removeAllViews();
         if (mainModel != null && !mainModel.getIsExternalApk()) {
+            boolean isFrozen = FreezeUtils.isFrozen(mApplicationInfo);
             // Set open
             final Intent launchIntentForPackage = mPackageManager.getLaunchIntentForPackage(mPackageName);
-            if (launchIntentForPackage != null) {
-                addToHorizontalLayout(R.string.launch_app, R.drawable.ic_open_in_new_black_24dp)
+            if (launchIntentForPackage != null && !isFrozen) {
+                addToHorizontalLayout(R.string.launch_app, R.drawable.ic_open_in_new)
                         .setOnClickListener(v -> {
                             try {
                                 startActivity(launchIntentForPackage);
@@ -887,21 +887,19 @@ public class AppInfoFragment extends Fragment implements SwipeRefreshLayout.OnRe
                         });
             }
             // Set disable
-            if (isRootEnabled || isAdbEnabled) {
-                if (mApplicationInfo.enabled) {
-                    addToHorizontalLayout(R.string.disable, R.drawable.ic_block_black_24dp).setOnClickListener(v -> {
-                        if (BuildConfig.APPLICATION_ID.equals(mPackageName)) {
-                            new MaterialAlertDialogBuilder(mActivity)
-                                    .setMessage(R.string.are_you_sure)
-                                    .setPositiveButton(R.string.yes, (d, w) -> disable())
-                                    .setNegativeButton(R.string.no, null)
-                                    .show();
-                        } else disable();
-                    });
-                }
+            if (Ops.isPrivileged() && !isFrozen) {
+                addToHorizontalLayout(R.string.freeze, R.drawable.ic_snowflake).setOnClickListener(v -> {
+                    if (BuildConfig.APPLICATION_ID.equals(mPackageName)) {
+                        new MaterialAlertDialogBuilder(mActivity)
+                                .setMessage(R.string.are_you_sure)
+                                .setPositiveButton(R.string.yes, (d, w) -> freeze(true))
+                                .setNegativeButton(R.string.no, null)
+                                .show();
+                    } else freeze(true);
+                });
             }
             // Set uninstall
-            addToHorizontalLayout(R.string.uninstall, R.drawable.ic_trash_can_outline).setOnClickListener(v -> {
+            addToHorizontalLayout(R.string.uninstall, R.drawable.ic_trash_can).setOnClickListener(v -> {
                 final boolean isSystemApp = (mApplicationInfo.flags & ApplicationInfo.FLAG_SYSTEM) != 0;
                 if (Ops.isPrivileged()) {
                     ScrollableDialogBuilder builder = new ScrollableDialogBuilder(mActivity,
@@ -942,26 +940,16 @@ public class AppInfoFragment extends Fragment implements SwipeRefreshLayout.OnRe
                 }
             });
             // Enable/disable app (root/ADB only)
-            if (isRootEnabled || isAdbEnabled) {
-                if (!mApplicationInfo.enabled) {
-                    // Enable app
-                    addToHorizontalLayout(R.string.enable, R.drawable.ic_baseline_get_app_24).setOnClickListener(v -> {
-                        try {
-                            PackageManagerCompat.setApplicationEnabledSetting(mPackageName,
-                                    PackageManager.COMPONENT_ENABLED_STATE_ENABLED, 0,
-                                    mainModel.getUserHandle());
-                        } catch (RemoteException | SecurityException e) {
-                            Log.e(TAG, e);
-                            displayLongToast(R.string.failed_to_enable, mPackageLabel);
-                        }
-                    });
-                }
+            if (Ops.isPrivileged() && isFrozen) {
+                // Enable app
+                addToHorizontalLayout(R.string.unfreeze, R.drawable.ic_snowflake_off)
+                        .setOnClickListener(v -> freeze(false));
             }
-            if (isAdbEnabled || isRootEnabled || ServiceHelper.checkIfServiceIsRunning(mActivity,
+            if (Ops.isPrivileged() || ServiceHelper.checkIfServiceIsRunning(mActivity,
                     NoRootAccessibilityService.class)) {
                 // Force stop
                 if ((mApplicationInfo.flags & ApplicationInfo.FLAG_STOPPED) == 0) {
-                    addToHorizontalLayout(R.string.force_stop, R.drawable.ic_baseline_power_settings_new_24)
+                    addToHorizontalLayout(R.string.force_stop, R.drawable.ic_power_settings)
                             .setOnClickListener(v -> {
                                 if (isAdbEnabled || isRootEnabled) {
                                     executor.submit(() -> {
@@ -1033,13 +1021,13 @@ public class AppInfoFragment extends Fragment implements SwipeRefreshLayout.OnRe
                         });
             } else {
                 // Display Android settings button
-                addToHorizontalLayout(R.string.view_in_settings, R.drawable.ic_baseline_settings_24)
+                addToHorizontalLayout(R.string.view_in_settings, R.drawable.ic_settings)
                         .setOnClickListener(v -> startActivity(IntentUtils.getAppDetailsSettings(mPackageName)));
             }
         } else if (FeatureController.isInstallerEnabled()) {
             if (mInstalledPackageInfo == null) {
                 // App not installed
-                addToHorizontalLayout(R.string.install, R.drawable.ic_baseline_get_app_24)
+                addToHorizontalLayout(R.string.install, R.drawable.ic_get_app)
                         .setOnClickListener(v -> install());
             } else {
                 // App is installed
@@ -1047,7 +1035,7 @@ public class AppInfoFragment extends Fragment implements SwipeRefreshLayout.OnRe
                 long thisVersionCode = PackageInfoCompat.getLongVersionCode(mPackageInfo);
                 if (installedVersionCode < thisVersionCode) {
                     // Needs update
-                    addToHorizontalLayout(R.string.whats_new, R.drawable.ic_information_variant)
+                    addToHorizontalLayout(R.string.whats_new, R.drawable.ic_information)
                             .setOnClickListener(v -> {
                                 Bundle args = new Bundle();
                                 args.putParcelable(WhatsNewDialogFragment.ARG_NEW_PKG_INFO, mPackageInfo);
@@ -1056,16 +1044,16 @@ public class AppInfoFragment extends Fragment implements SwipeRefreshLayout.OnRe
                                 dialogFragment.setArguments(args);
                                 dialogFragment.show(mActivity.getSupportFragmentManager(), WhatsNewDialogFragment.TAG);
                             });
-                    addToHorizontalLayout(R.string.update, R.drawable.ic_baseline_get_app_24)
+                    addToHorizontalLayout(R.string.update, R.drawable.ic_get_app)
                             .setOnClickListener(v -> install());
                 } else if (installedVersionCode == thisVersionCode) {
                     // Needs reinstall
-                    addToHorizontalLayout(R.string.reinstall, R.drawable.ic_baseline_get_app_24)
+                    addToHorizontalLayout(R.string.reinstall, R.drawable.ic_get_app)
                             .setOnClickListener(v -> install());
                 } else {
                     // Needs downgrade
                     if (Ops.isPrivileged()) {
-                        addToHorizontalLayout(R.string.downgrade, R.drawable.ic_baseline_get_app_24)
+                        addToHorizontalLayout(R.string.downgrade, R.drawable.ic_get_app)
                                 .setOnClickListener(v -> install());
                     }
                 }
@@ -1073,14 +1061,14 @@ public class AppInfoFragment extends Fragment implements SwipeRefreshLayout.OnRe
         }
         // Set manifest
         if (FeatureController.isManifestEnabled()) {
-            addToHorizontalLayout(R.string.manifest, R.drawable.ic_package_variant).setOnClickListener(v -> {
+            addToHorizontalLayout(R.string.manifest, R.drawable.ic_package).setOnClickListener(v -> {
                 Intent intent = new Intent(mActivity, ManifestViewerActivity.class);
                 startActivityForSplit(intent);
             });
         }
         // Set scanner
         if (FeatureController.isScannerEnabled()) {
-            addToHorizontalLayout(R.string.scanner, R.drawable.ic_baseline_security_24).setOnClickListener(v -> {
+            addToHorizontalLayout(R.string.scanner, R.drawable.ic_security).setOnClickListener(v -> {
                 Intent intent = new Intent(mActivity, ScannerActivity.class);
                 intent.putExtra(ScannerActivity.EXTRA_IS_EXTERNAL, isExternalApk);
                 startActivityForSplit(intent);
@@ -1101,7 +1089,7 @@ public class AppInfoFragment extends Fragment implements SwipeRefreshLayout.OnRe
                 for (int i = 0; i < sharedPrefs.size(); ++i) {
                     sharedPrefNames[i] = sharedPrefs.get(i).getName();
                 }
-                addToHorizontalLayout(R.string.shared_prefs, R.drawable.ic_view_list_black_24dp)
+                addToHorizontalLayout(R.string.shared_prefs, R.drawable.ic_view_list)
                         .setOnClickListener(v -> new MaterialAlertDialogBuilder(mActivity)
                                 .setTitle(R.string.shared_prefs)
                                 .setItems(sharedPrefNames, (dialog, which) -> {
@@ -1148,7 +1136,7 @@ public class AppInfoFragment extends Fragment implements SwipeRefreshLayout.OnRe
         fdroid_intent.setData(Uri.parse("https://f-droid.org/packages/" + mPackageName));
         List<ResolveInfo> resolvedActivities = mPackageManager.queryIntentActivities(fdroid_intent, 0);
         if (resolvedActivities.size() > 0) {
-            addToHorizontalLayout(R.string.fdroid, R.drawable.ic_frost_fdroid_black_24dp)
+            addToHorizontalLayout(R.string.fdroid, R.drawable.ic_frost_fdroid)
                     .setOnClickListener(v -> {
                         try {
                             startActivity(fdroid_intent);
@@ -1163,7 +1151,7 @@ public class AppInfoFragment extends Fragment implements SwipeRefreshLayout.OnRe
                 // Aurora Store is disabled or the installed version has promotional apps
                 throw new PackageManager.NameNotFoundException();
             }
-            addToHorizontalLayout(R.string.store, R.drawable.ic_frost_aurorastore_black_24dp)
+            addToHorizontalLayout(R.string.store, R.drawable.ic_frost_aurorastore)
                     .setOnClickListener(v -> {
                         Intent intent = new Intent(Intent.ACTION_VIEW);
                         intent.setPackage(PACKAGE_NAME_AURORA_STORE);
@@ -1256,7 +1244,6 @@ public class AppInfoFragment extends Fragment implements SwipeRefreshLayout.OnRe
                 mListItems.add(ListItem.newSelectableRegularItem(getString(R.string.native_library_dir), appInfo.jniDir,
                         openAsFolderInFM(requireContext(), appInfo.jniDir)));
             }
-            mListItems.add(ListItem.newGroupEnd());
         }
     }
 
@@ -1275,7 +1262,7 @@ public class AppInfoFragment extends Fragment implements SwipeRefreshLayout.OnRe
                                     UserHandleHidden.myUserId());
                             mActivity.startActivity(appDetailsIntent);
                         });
-                listItem.setActionIcon(R.drawable.ic_information_variant);
+                listItem.setActionIcon(R.drawable.ic_information);
                 mListItems.add(listItem);
             }
 
@@ -1343,7 +1330,6 @@ public class AppInfoFragment extends Fragment implements SwipeRefreshLayout.OnRe
                             view -> startActivity(appInfo.mainActivity)));
                 }
             }
-            mListItems.add(ListItem.newGroupEnd());
         }
     }
 
@@ -1372,7 +1358,6 @@ public class AppInfoFragment extends Fragment implements SwipeRefreshLayout.OnRe
             mListItems.add(ListItem.newGroupStart(getString(R.string.data_usage_msg)));
             mListItems.add(ListItem.newInlineItem(getString(R.string.data_transmitted), getReadableSize(dataUsage.getTx())));
             mListItems.add(ListItem.newInlineItem(getString(R.string.data_received), getReadableSize(dataUsage.getRx())));
-            mListItems.add(ListItem.newGroupEnd());
         }
     }
 
@@ -1455,6 +1440,7 @@ public class AppInfoFragment extends Fragment implements SwipeRefreshLayout.OnRe
     @NonNull
     private MaterialButton addToHorizontalLayout(@StringRes int stringResId, @DrawableRes int iconResId) {
         MaterialButton button = (MaterialButton) getLayoutInflater().inflate(R.layout.item_app_info_action, mHorizontalLayout, false);
+        button.setBackgroundTintList(ColorStateList.valueOf(ColorCodes.getListItemColor1(requireContext())));
         button.setText(stringResId);
         button.setIconResource(iconResId);
         mHorizontalLayout.addView(button);
@@ -1510,7 +1496,6 @@ public class AppInfoFragment extends Fragment implements SwipeRefreshLayout.OnRe
                 mListItems.add(ListItem.newInlineItem(getString(R.string.media_size), getReadableSize(sizeInfo.mediaSize)));
             }
             mListItems.add(ListItem.newInlineItem(getString(R.string.total_size), getReadableSize(sizeInfo.getTotalSize())));
-            mListItems.add(ListItem.newGroupEnd());
         }
     }
 
@@ -1536,15 +1521,17 @@ public class AppInfoFragment extends Fragment implements SwipeRefreshLayout.OnRe
     }
 
     @MainThread
-    private void disable() {
+    private void freeze(boolean freeze) {
         if (mainModel == null) return;
         try {
-            PackageManagerCompat.setApplicationEnabledSetting(mPackageName,
-                    PackageManager.COMPONENT_ENABLED_STATE_DISABLED_USER,
-                    0, mainModel.getUserHandle());
+            if (freeze) {
+                FreezeUtils.freeze(mPackageName, mainModel.getUserHandle());
+            } else {
+                FreezeUtils.unfreeze(mPackageName, mainModel.getUserHandle());
+            }
         } catch (RemoteException | SecurityException e) {
             Log.e(TAG, e);
-            displayLongToast(R.string.failed_to_disable, mPackageLabel);
+            displayLongToast(freeze ? R.string.failed_to_freeze : R.string.failed_to_unfreeze, mPackageLabel);
         }
     }
 

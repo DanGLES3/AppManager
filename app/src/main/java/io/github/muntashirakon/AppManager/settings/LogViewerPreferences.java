@@ -7,11 +7,13 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 
+import androidx.annotation.Nullable;
 import androidx.fragment.app.FragmentActivity;
 import androidx.preference.Preference;
-import androidx.preference.SwitchPreference;
+import androidx.preference.SwitchPreferenceCompat;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.google.android.material.transition.MaterialSharedAxis;
 
 import java.util.Arrays;
 import java.util.List;
@@ -47,13 +49,13 @@ public class LogViewerPreferences extends PreferenceFragment {
 
         FragmentActivity activity = requireActivity();
 
-        SwitchPreference expandByDefault = Objects.requireNonNull(findPreference("log_viewer_expand_by_default"));
+        SwitchPreferenceCompat expandByDefault = Objects.requireNonNull(findPreference("log_viewer_expand_by_default"));
         expandByDefault.setChecked(AppPref.getBoolean(AppPref.PrefKey.PREF_LOG_VIEWER_EXPAND_BY_DEFAULT_BOOL));
 
-        SwitchPreference showPidTidTimestamp = Objects.requireNonNull(findPreference("log_viewer_show_pid_tid_timestamp"));
+        SwitchPreferenceCompat showPidTidTimestamp = Objects.requireNonNull(findPreference("log_viewer_show_pid_tid_timestamp"));
         showPidTidTimestamp.setChecked(AppPref.getBoolean(AppPref.PrefKey.PREF_LOG_VIEWER_SHOW_PID_TID_TIMESTAMP_BOOL));
 
-        SwitchPreference omitSensitiveInfo = Objects.requireNonNull(findPreference("log_viewer_omit_sensitive_info"));
+        SwitchPreferenceCompat omitSensitiveInfo = Objects.requireNonNull(findPreference("log_viewer_omit_sensitive_info"));
         omitSensitiveInfo.setChecked(AppPref.getBoolean(AppPref.PrefKey.PREF_LOG_VIEWER_OMIT_SENSITIVE_INFO_BOOL));
         omitSensitiveInfo.setOnPreferenceChangeListener((preference, newValue) -> {
             LogLine.omitSensitiveInfo = (boolean) newValue;
@@ -188,14 +190,20 @@ public class LogViewerPreferences extends PreferenceFragment {
         });
     }
 
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setEnterTransition(new MaterialSharedAxis(MaterialSharedAxis.Z, true));
+        setReturnTransition(new MaterialSharedAxis(MaterialSharedAxis.Z, false));
+    }
+
     public static void sendBufferChanged(FragmentActivity activity) {
         Intent intent = new Intent().putExtra("bufferChanged", true);
         activity.setResult(Activity.RESULT_FIRST_USER, intent);
     }
 
     @Override
-    public void onResume() {
-        super.onResume();
-        requireActivity().setTitle(R.string.log_viewer);
+    public int getTitle() {
+        return R.string.log_viewer;
     }
 }

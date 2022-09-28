@@ -46,6 +46,7 @@ public class ProfileViewModel extends AndroidViewModel {
     private final MutableLiveData<Pair<Integer, Boolean>> toast = new MutableLiveData<>();
     private final MutableLiveData<ArrayList<Pair<CharSequence, ApplicationInfo>>> installedApps = new MutableLiveData<>();
     private final MutableLiveData<Boolean> profileLoaded = new MutableLiveData<>();
+    private final MutableLiveData<String> logs = new MutableLiveData<>();
     @GuardedBy("profileLock")
     private String profileName;
     private boolean isNew;
@@ -70,6 +71,10 @@ public class ProfileViewModel extends AndroidViewModel {
 
     public LiveData<Boolean> observeProfileLoaded() {
         return profileLoaded;
+    }
+
+    public LiveData<String> getLogs() {
+        return logs;
     }
 
     @AnyThread
@@ -122,13 +127,17 @@ public class ProfileViewModel extends AndroidViewModel {
         });
     }
 
+    @AnyThread
+    public void loadLogs() {
+        executor.submit(() -> logs.postValue(ProfileLogger.getAllLogs(profileName)));
+    }
+
     @WorkerThread
     @GuardedBy("profileLock")
     private void loadProfileInternal() {
         synchronized (profileLock) {
             profileMetaManager = new ProfileMetaManager(profileName);
-            profile = profileMetaManager.profile;
-            if (profile == null) profile = profileMetaManager.newProfile(new String[]{});
+            profile = profileMetaManager.getProfile();
         }
     }
 
@@ -145,13 +154,9 @@ public class ProfileViewModel extends AndroidViewModel {
                     profileMetaManager = new ProfileMetaManager(profileName);
                 }
             } else {
-                ProfileMetaManager.Profile profile1 = profile;
-                profileMetaManager = null;
-                profileMetaManager = new ProfileMetaManager(profileName);
-                profileMetaManager.profile = profile1;
+                profileMetaManager = new ProfileMetaManager(profileName, profile);
             }
-            profile = profileMetaManager.profile;
-            if (profile == null) profile = profileMetaManager.newProfile(new String[]{});
+            profile = profileMetaManager.getProfile();
         }
     }
 
@@ -168,7 +173,9 @@ public class ProfileViewModel extends AndroidViewModel {
     @AnyThread
     public void loadAndCloneProfile(String profileName, boolean isPreset, String oldProfileName) {
         executor.submit(() -> {
-            if (profileMetaManager == null) loadProfileInternal();
+            if (profileMetaManager == null) {
+                loadProfileInternal();
+            }
             cloneProfileInternal(profileName, isPreset, oldProfileName);
             profileLoaded.postValue(profileMetaManager == null);
         });
@@ -199,7 +206,6 @@ public class ProfileViewModel extends AndroidViewModel {
     public void save() {
         executor.submit(() -> {
             synchronized (profileLock) {
-                profileMetaManager.profile = profile;
                 try {
                     profileMetaManager.writeProfile();
                     toast.postValue(new Pair<>(R.string.saved_successfully, false));
@@ -257,8 +263,8 @@ public class ProfileViewModel extends AndroidViewModel {
 
     public void putBoolean(@NonNull String key, boolean value) {
         switch (key) {
-            case "disable":
-                profile.disable = value;
+            case "freeze":
+                profile.freeze = value;
                 break;
             case "force_stop":
                 profile.forceStop = value;
@@ -283,8 +289,8 @@ public class ProfileViewModel extends AndroidViewModel {
 
     public boolean getBoolean(@NonNull String key, boolean defValue) {
         switch (key) {
-            case "disable":
-                return profile.disable;
+            case "freeze":
+                return profile.freeze;
             case "force_stop":
                 return profile.forceStop;
             case "clear_cache":

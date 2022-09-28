@@ -47,9 +47,9 @@ import java.util.Locale;
 import java.util.Objects;
 import java.util.Set;
 
-import io.github.muntashirakon.AppManager.AppManager;
 import io.github.muntashirakon.AppManager.BaseActivity;
 import io.github.muntashirakon.AppManager.R;
+import io.github.muntashirakon.AppManager.db.AppsDb;
 import io.github.muntashirakon.AppManager.db.dao.LogFilterDao;
 import io.github.muntashirakon.AppManager.db.entity.LogFilter;
 import io.github.muntashirakon.AppManager.fm.FmProvider;
@@ -113,7 +113,7 @@ public class LogViewerActivity extends BaseActivity implements SearchView.OnQuer
             BetterActivityResult.registerActivityForResult(this);
     private final StoragePermission storagePermission = StoragePermission.init(this);
     private final BetterActivityResult<String, Uri> saveLauncher = BetterActivityResult
-            .registerForActivityResult(this, new ActivityResultContracts.CreateDocument());
+            .registerForActivityResult(this, new ActivityResultContracts.CreateDocument("*/*"));
 
     public static void startChooser(@NonNull Context context, @Nullable String subject,
                                     @NonNull String attachmentType, @NonNull Path attachment) {
@@ -228,12 +228,10 @@ public class LogViewerActivity extends BaseActivity implements SearchView.OnQuer
 
     @Override
     public void onBackPressed() {
-        if (getSupportFragmentManager().getBackStackEntryCount() > 1) {
-            if (!mSearchView.isIconified()) {
-                mSearchView.setIconified(true);
-            }
-            super.onBackPressed();
-        } else this.finish();
+        if (!mSearchView.isIconified()) {
+            mSearchView.setIconified(true);
+        }
+        super.onBackPressed();
     }
 
     public void loadNewFragment(Fragment fragment) {
@@ -261,7 +259,7 @@ public class LogViewerActivity extends BaseActivity implements SearchView.OnQuer
 
     @WorkerThread
     private void addFiltersToSuggestions() {
-        for (LogFilter logFilter : AppManager.getAppsDb().logFilterDao().getAll()) {
+        for (LogFilter logFilter : AppsDb.getInstance().logFilterDao().getAll()) {
             addToAutocompleteSuggestions(logFilter.name);
         }
     }
@@ -337,17 +335,14 @@ public class LogViewerActivity extends BaseActivity implements SearchView.OnQuer
         mProgressIndicator.hide();
         mProgressIndicator.setIndeterminate(true);
         mProgressIndicator.show();
-        if (getSupportFragmentManager().getBackStackEntryCount() > 0) {
-            if (getSupportFragmentManager().findFragmentByTag(LiveLogViewerFragment.TAG) != null) {
-                // Fragment already exists, just restart logcat
-                mViewModel.restartLogcat();
-                return;
-            }
+        if (getSupportFragmentManager().findFragmentByTag(LiveLogViewerFragment.TAG) != null) {
+            // Fragment already exists, just restart logcat
+            mViewModel.restartLogcat();
+            return;
         }
         getSupportFragmentManager()
                 .beginTransaction()
                 .replace(R.id.main_layout, new LiveLogViewerFragment(), LiveLogViewerFragment.TAG)
-                .addToBackStack(null)
                 .commit();
     }
 
@@ -456,8 +451,7 @@ public class LogViewerActivity extends BaseActivity implements SearchView.OnQuer
     }
 
     void displayLogViewerSettings() {
-        Intent intent = new Intent(this, SettingsActivity.class);
-        intent.putExtra(SettingsActivity.EXTRA_KEY, "log_viewer_prefs");
+        Intent intent = SettingsActivity.getIntent(this, "log_viewer_prefs");
         activityLauncher.launch(intent, result -> {
             // Preferences may have changed
             mViewModel.setCollapsedMode(!AppPref.getBoolean(AppPref.PrefKey.PREF_LOG_VIEWER_EXPAND_BY_DEFAULT_BOOL));
@@ -544,7 +538,7 @@ public class LogViewerActivity extends BaseActivity implements SearchView.OnQuer
         final String trimmed = text.trim();
         if (!TextUtils.isEmpty(trimmed)) {
             executor.submit(() -> {
-                LogFilterDao dao = AppManager.getAppsDb().logFilterDao();
+                LogFilterDao dao = AppsDb.getInstance().logFilterDao();
                 long id = dao.insert(trimmed);
                 LogFilter logFilter = dao.get(id);
                 UiThreadHandler.run(() -> {

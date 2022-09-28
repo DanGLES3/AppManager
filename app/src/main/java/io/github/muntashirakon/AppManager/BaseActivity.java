@@ -12,10 +12,13 @@ import android.view.Menu;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.CallSuper;
+import androidx.annotation.IdRes;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.view.menu.MenuBuilder;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
 import androidx.lifecycle.ViewModelProvider;
 
 import java.util.Objects;
@@ -46,7 +49,7 @@ public abstract class BaseActivity extends AppCompatActivity {
             new ActivityResultContracts.StartActivityForResult(), result -> {
                 if (result.getResultCode() == RESULT_OK) {
                     // Success
-                    handleSecurityAndModeOfOp();
+                    handleMigrationAndModeOfOp();
                 } else {
                     // Authentication failed
                     finishAndRemoveTask();
@@ -55,8 +58,8 @@ public abstract class BaseActivity extends AppCompatActivity {
 
     @Override
     protected final void onCreate(@Nullable Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
         AppearanceUtils.applyToActivity(this, getTransparentBackground());
+        super.onCreate(savedInstanceState);
         if (Ops.isAuthenticated()) {
             Log.d(TAG, "Already authenticated.");
             onAuthenticated(savedInstanceState);
@@ -143,6 +146,24 @@ public abstract class BaseActivity extends AppCompatActivity {
         super.onStop();
     }
 
+    protected void clearBackStack() {
+        FragmentManager fragmentManager = getSupportFragmentManager();
+        if (fragmentManager.getBackStackEntryCount() > 0) {
+            FragmentManager.BackStackEntry entry = fragmentManager.getBackStackEntryAt(0);
+            fragmentManager.popBackStackImmediate(entry.getId(), FragmentManager.POP_BACK_STACK_INCLUSIVE);
+        }
+    }
+
+    protected void removeCurrentFragment(@IdRes int id) {
+        Fragment fragment = getSupportFragmentManager().findFragmentById(id);
+        if (fragment != null) {
+            getSupportFragmentManager()
+                    .beginTransaction()
+                    .remove(fragment)
+                    .commit();
+        }
+    }
+
     private void authenticate() {
         // Check KeyStore
         if (KeyStoreManager.hasKeyStorePassword()) {
@@ -159,7 +180,7 @@ public abstract class BaseActivity extends AppCompatActivity {
     private void ensureSecurityAndModeOfOp() {
         if (!AppPref.getBoolean(AppPref.PrefKey.PREF_ENABLE_SCREEN_LOCK_BOOL)) {
             // No security enabled
-            handleSecurityAndModeOfOp();
+            handleMigrationAndModeOfOp();
             return;
         }
         Log.d(TAG, "Security enabled.");
@@ -175,7 +196,7 @@ public abstract class BaseActivity extends AppCompatActivity {
         }
     }
 
-    private void handleSecurityAndModeOfOp() {
+    private void handleMigrationAndModeOfOp() {
         // Authentication was successful
         Log.d(TAG, "Authenticated");
         // Set mode of operation

@@ -21,6 +21,7 @@ import androidx.lifecycle.MutableLiveData;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -33,6 +34,9 @@ import java.util.concurrent.TimeUnit;
 import io.github.muntashirakon.AppManager.appops.AppOpsManager;
 import io.github.muntashirakon.AppManager.appops.AppOpsService;
 import io.github.muntashirakon.AppManager.compat.PackageManagerCompat;
+import io.github.muntashirakon.AppManager.ipc.ps.DeviceMemoryInfo;
+import io.github.muntashirakon.AppManager.logs.Log;
+import io.github.muntashirakon.AppManager.misc.AdvancedSearchView;
 import io.github.muntashirakon.AppManager.runner.Runner;
 import io.github.muntashirakon.AppManager.scanner.vt.VirusTotal;
 import io.github.muntashirakon.AppManager.scanner.vt.VtFileReport;
@@ -55,8 +59,8 @@ public class RunningAppsViewModel extends AndroidViewModel {
 
     public RunningAppsViewModel(@NonNull Application application) {
         super(application);
-        mSortOrder = (int) AppPref.get(AppPref.PrefKey.PREF_RUNNING_APPS_SORT_ORDER_INT);
-        mFilter = (int) AppPref.get(AppPref.PrefKey.PREF_RUNNING_APPS_FILTER_FLAGS_INT);
+        mSortOrder = AppPref.getInt(AppPref.PrefKey.PREF_RUNNING_APPS_SORT_ORDER_INT);
+        mFilter = AppPref.getInt(AppPref.PrefKey.PREF_RUNNING_APPS_FILTER_FLAGS_INT);
         mVt = VirusTotal.getInstance();
     }
 
@@ -136,18 +140,18 @@ public class RunningAppsViewModel extends AndroidViewModel {
         });
     }
 
-    private MutableLiveData<List<ProcessItem>> mProcessLiveData;
+    @NonNull
+    private final MutableLiveData<List<ProcessItem>> mProcessLiveData = new MutableLiveData<>();
 
+    @NonNull
     public LiveData<List<ProcessItem>> getProcessLiveData() {
-        if (mProcessLiveData == null) {
-            mProcessLiveData = new MutableLiveData<>();
-        }
         return mProcessLiveData;
     }
 
-
+    @NonNull
     private final MutableLiveData<ProcessItem> mProcessItemLiveData = new MutableLiveData<>();
 
+    @NonNull
     public LiveData<ProcessItem> observeProcessDetails() {
         return mProcessItemLiveData;
     }
@@ -159,17 +163,39 @@ public class RunningAppsViewModel extends AndroidViewModel {
 
     @NonNull
     private final List<ProcessItem> mProcessList = new ArrayList<>();
-    @NonNull
-    private final List<ProcessItem> mFilteredProcessList = new ArrayList<>();
 
     @AnyThread
     public void loadProcesses() {
         mExecutor.submit(() -> {
             synchronized (mProcessList) {
-                mProcessList.clear();
-                mProcessList.addAll(new ProcessParser().parse());
-                filterAndSort();
+                try {
+                    mProcessList.clear();
+                    mProcessList.addAll(new ProcessParser().parse());
+                    filterAndSort();
+                } catch (Throwable th) {
+                    Log.e("RunningApps", th);
+                }
             }
+        });
+    }
+
+    @NonNull
+    private final MutableLiveData<DeviceMemoryInfo> mDeviceMemoryInfo = new MutableLiveData<>();
+
+    @NonNull
+    public MutableLiveData<DeviceMemoryInfo> getDeviceMemoryInfo() {
+        return mDeviceMemoryInfo;
+    }
+
+    @AnyThread
+    public void loadMemoryInfo() {
+        mExecutor.submit(() -> {
+            DeviceMemoryInfo deviceMemoryInfo = mDeviceMemoryInfo.getValue();
+            if (deviceMemoryInfo == null) {
+                deviceMemoryInfo = new DeviceMemoryInfo();
+            }
+            deviceMemoryInfo.reload();
+            mDeviceMemoryInfo.postValue(deviceMemoryInfo);
         });
     }
 
@@ -237,7 +263,7 @@ public class RunningAppsViewModel extends AndroidViewModel {
                 canRun |= (mode != AppOpsManager.MODE_IGNORED && mode != AppOpsManager.MODE_ERRORED);
             }
             return canRun;
-        } catch (RemoteException e) {
+        } catch (RemoteException | SecurityException e) {
             return true;
         }
     }
@@ -271,9 +297,18 @@ public class RunningAppsViewModel extends AndroidViewModel {
     }
 
     private String mQuery;
+    @AdvancedSearchView.SearchType
+    private int mQueryType;
 
-    public void setQuery(@Nullable String query) {
-        this.mQuery = query == null ? null : query.toLowerCase(Locale.ROOT);
+    public void setQuery(@Nullable String query, int searchType) {
+        if (query == null) {
+            mQuery = null;
+        } else if (searchType == AdvancedSearchView.SEARCH_TYPE_PREFIX) {
+            mQuery = query;
+        } else {
+            mQuery = query.toLowerCase(Locale.ROOT);
+        }
+        mQueryType = searchType;
         mExecutor.submit(this::filterAndSort);
     }
 
@@ -309,19 +344,14 @@ public class RunningAppsViewModel extends AndroidViewModel {
 
     @WorkerThread
     public void filterAndSort() {
-        mFilteredProcessList.clear();
+        List<ProcessItem> filteredProcessList = new ArrayList<>();
         // Apply filters
-        // There are 3 filters with “and” relations: query > apps > user apps
-        boolean hasQuery = !TextUtils.isEmpty(mQuery);
+        // There are 3 filters with “and” relations: apps > user apps > query
         boolean filterUserApps = (mFilter & RunningAppsActivity.FILTER_USER_APPS) != 0;
         // If user apps filter is enabled, disable it since it'll be just an overhead
         boolean filterApps = !filterUserApps && (mFilter & RunningAppsActivity.FILTER_APPS) != 0;
         ApplicationInfo info;
         for (ProcessItem item : mProcessList) {
-            // Filter by query
-            if (hasQuery && !item.name.toLowerCase(Locale.ROOT).contains(mQuery)) {
-                continue;
-            }
             // Filter by apps
             if (filterApps && !(item instanceof AppProcessItem)) {
                 continue;
@@ -334,14 +364,25 @@ public class RunningAppsViewModel extends AndroidViewModel {
                     // else it's an user app
                 } else continue;
             }
-            mFilteredProcessList.add(item);
+            filteredProcessList.add(item);
+        }
+        // Apply searching
+        if (!TextUtils.isEmpty(mQuery)) {
+            filteredProcessList = AdvancedSearchView.matches(mQuery, filteredProcessList,
+                    (AdvancedSearchView.ChoicesGenerator<ProcessItem>) item -> {
+                        if (item instanceof AppProcessItem) {
+                            return Arrays.asList(item.name.toLowerCase(Locale.getDefault()),
+                                    ((AppProcessItem) item).packageInfo.packageName.toLowerCase(Locale.getDefault()));
+                        }
+                        return Collections.singletonList(item.name.toLowerCase(Locale.getDefault()));
+                    }, mQueryType);
         }
         // Apply sorts
         // Sort by pid first
         //noinspection ComparatorCombinators
-        Collections.sort(mFilteredProcessList, (o1, o2) -> Integer.compare(o1.pid, o2.pid));
+        Collections.sort(filteredProcessList, (o1, o2) -> Integer.compare(o1.pid, o2.pid));
         if (mSortOrder != RunningAppsActivity.SORT_BY_PID) {
-            Collections.sort(mFilteredProcessList, (o1, o2) -> {
+            Collections.sort(filteredProcessList, (o1, o2) -> {
                 ProcessItem p1 = Objects.requireNonNull(o1);
                 ProcessItem p2 = Objects.requireNonNull(o2);
                 switch (mSortOrder) {
@@ -357,7 +398,7 @@ public class RunningAppsViewModel extends AndroidViewModel {
                 }
             });
         }
-        mProcessLiveData.postValue(mFilteredProcessList);
+        mProcessLiveData.postValue(filteredProcessList);
     }
 
     private final Set<ProcessItem> mSelectedItems = new HashSet<>();

@@ -2,30 +2,36 @@
 
 package io.github.muntashirakon.AppManager.settings;
 
-import android.annotation.SuppressLint;
-import android.content.pm.PackageInfo;
+import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.Bundle;
 import android.text.SpannableStringBuilder;
+import android.view.View;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.core.util.Pair;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.preference.Preference;
 import androidx.preference.SwitchPreferenceCompat;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.google.android.material.transition.MaterialSharedAxis;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
+import io.github.muntashirakon.AppManager.BuildConfig;
 import io.github.muntashirakon.AppManager.R;
+import io.github.muntashirakon.AppManager.apk.signing.Signer;
 import io.github.muntashirakon.AppManager.utils.AppPref;
 import io.github.muntashirakon.AppManager.utils.PackageUtils;
 import io.github.muntashirakon.AppManager.utils.Utils;
+import io.github.muntashirakon.dialog.ScrollableDialogBuilder;
 import io.github.muntashirakon.dialog.TextInputDialogBuilder;
 
-import static io.github.muntashirakon.AppManager.utils.PackageUtils.flagMatchUninstalled;
 import static io.github.muntashirakon.AppManager.utils.UIUtils.getSecondaryText;
 import static io.github.muntashirakon.AppManager.utils.UIUtils.getSmallerText;
 
@@ -39,27 +45,30 @@ public class InstallerPreferences extends PreferenceFragment {
     private SettingsActivity activity;
     private PackageManager pm;
     private String installerApp;
+    private Preference installerAppPref;
+    private MainPreferencesViewModel model;
 
     @Override
     public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
         setPreferencesFromResource(R.xml.preferences_installer, rootKey);
         getPreferenceManager().setPreferenceDataStore(new SettingsDataStore());
+        model = new ViewModelProvider(requireActivity()).get(MainPreferencesViewModel.class);
         activity = (SettingsActivity) requireActivity();
         pm = activity.getPackageManager();
         // Display users in installer
         ((SwitchPreferenceCompat) Objects.requireNonNull(findPreference("installer_display_users")))
-                .setChecked((boolean) AppPref.get(AppPref.PrefKey.PREF_INSTALLER_DISPLAY_USERS_BOOL));
-        // Set install locations
+                .setChecked(AppPref.getBoolean(AppPref.PrefKey.PREF_INSTALLER_DISPLAY_USERS_BOOL));
+        // Set installation locations
         Preference installLocationPref = Objects.requireNonNull(findPreference("installer_install_location"));
-        int installLocation = (int) AppPref.get(AppPref.PrefKey.PREF_INSTALLER_INSTALL_LOCATION_INT);
+        int installLocation = AppPref.getInt(AppPref.PrefKey.PREF_INSTALLER_INSTALL_LOCATION_INT);
         installLocationPref.setSummary(installLocationNames[installLocation]);
         installLocationPref.setOnPreferenceClickListener(preference -> {
             CharSequence[] installLocationTexts = new CharSequence[installLocationNames.length];
             for (int i = 0; i < installLocationNames.length; ++i) {
                 installLocationTexts[i] = getString(installLocationNames[i]);
             }
-            int choice = (int) AppPref.get(AppPref.PrefKey.PREF_INSTALLER_INSTALL_LOCATION_INT);
-            new MaterialAlertDialogBuilder(activity)
+            int choice = AppPref.getInt(AppPref.PrefKey.PREF_INSTALLER_INSTALL_LOCATION_INT);
+            new MaterialAlertDialogBuilder(requireActivity())
                     .setTitle(R.string.install_location)
                     .setSingleChoiceItems(installLocationTexts, choice, (dialog, newInstallLocation) -> {
                         AppPref.set(AppPref.PrefKey.PREF_INSTALLER_INSTALL_LOCATION_INT, newInstallLocation);
@@ -74,52 +83,19 @@ public class InstallerPreferences extends PreferenceFragment {
             return true;
         });
         // Set installer app
-        Preference installerAppPref = Objects.requireNonNull(findPreference("installer_installer_app"));
-        installerApp = (String) AppPref.get(AppPref.PrefKey.PREF_INSTALLER_INSTALLER_APP_STR);
+        installerAppPref = Objects.requireNonNull(findPreference("installer_installer_app"));
+        installerApp = AppPref.getString(AppPref.PrefKey.PREF_INSTALLER_INSTALLER_APP_STR);
         installerAppPref.setSummary(PackageUtils.getPackageLabel(pm, installerApp));
         installerAppPref.setOnPreferenceClickListener(preference -> {
-            new MaterialAlertDialogBuilder(activity)
+            new MaterialAlertDialogBuilder(requireActivity())
                     .setTitle(R.string.installer_app)
                     .setMessage(R.string.installer_app_message)
                     .setPositiveButton(R.string.choose, (dialog1, which1) -> {
                         activity.progressIndicator.show();
-                        new Thread(() -> {
-                            // List apps
-                            @SuppressLint("WrongConstant")
-                            List<PackageInfo> packageInfoList = pm.getInstalledPackages(flagMatchUninstalled);
-                            ArrayList<Pair<CharSequence, String>> appInfo = new ArrayList<>(packageInfoList.size());
-                            for (PackageInfo info : packageInfoList) {
-                                if (isDetached()) return;
-                                appInfo.add(new Pair<>(info.applicationInfo.loadLabel(pm), info.packageName));
-                            }
-                            Collections.sort(appInfo, (o1, o2) -> o1.first.toString().compareTo(o2.first.toString()));
-                            ArrayList<String> items = new ArrayList<>(packageInfoList.size());
-                            ArrayList<CharSequence> itemNames = new ArrayList<>(packageInfoList.size());
-                            for (Pair<CharSequence, String> pair : appInfo) {
-                                if (isDetached()) return;
-                                items.add(pair.second);
-                                itemNames.add(new SpannableStringBuilder(pair.first)
-                                        .append("\n").append(getSecondaryText(activity, getSmallerText(pair.second))));
-                            }
-                            int selectedApp = itemNames.indexOf(installerApp);
-                            activity.runOnUiThread(() -> {
-                                if (isDetached()) return;
-                                activity.progressIndicator.hide();
-                                new MaterialAlertDialogBuilder(activity)
-                                        .setTitle(R.string.installer_app)
-                                        .setSingleChoiceItems(itemNames.toArray(new CharSequence[0]),
-                                                selectedApp, (dialog, which) -> installerApp = items.get(which))
-                                        .setPositiveButton(R.string.ok, (dialog, which) -> {
-                                            AppPref.set(AppPref.PrefKey.PREF_INSTALLER_INSTALLER_APP_STR, installerApp);
-                                            installerAppPref.setSummary(PackageUtils.getPackageLabel(pm, installerApp));
-                                        })
-                                        .setNegativeButton(R.string.cancel, null)
-                                        .show();
-                            });
-                        }).start();
+                        model.loadPackageNameLabelPair();
                     })
                     .setNegativeButton(R.string.specify_custom_name, (dialog, which) ->
-                            new TextInputDialogBuilder(activity, R.string.installer_app)
+                            new TextInputDialogBuilder(requireActivity(), R.string.installer_app)
                                     .setTitle(R.string.installer_app)
                                     .setInputText(installerApp)
                                     .setPositiveButton(R.string.ok, (dialog1, which1, inputText, isChecked) -> {
@@ -131,31 +107,84 @@ public class InstallerPreferences extends PreferenceFragment {
                                     .setNegativeButton(R.string.cancel, null)
                                     .show())
                     .setNeutralButton(R.string.reset_to_default, (dialog, which) -> {
-                        AppPref.set(AppPref.PrefKey.PREF_INSTALLER_INSTALLER_APP_STR, installerApp = activity.getPackageName());
+                        AppPref.set(AppPref.PrefKey.PREF_INSTALLER_INSTALLER_APP_STR, installerApp = BuildConfig.APPLICATION_ID);
                         installerAppPref.setSummary(PackageUtils.getPackageLabel(pm, installerApp));
                     })
                     .show();
             return true;
         });
-        // Sign apk before install
-        ((SwitchPreferenceCompat) Objects.requireNonNull(findPreference("installer_sign_apk")))
-                .setChecked((boolean) AppPref.get(AppPref.PrefKey.PREF_INSTALLER_SIGN_APK_BOOL));
+        // Sign apk before installing
+        SwitchPreferenceCompat signApk = Objects.requireNonNull(findPreference("installer_sign_apk"));
+        signApk.setChecked(AppPref.canSignApk());
+        signApk.setOnPreferenceChangeListener((preference, enabled) -> {
+            if ((boolean) enabled && !Signer.canSign()) {
+                new ScrollableDialogBuilder(requireActivity())
+                        .setTitle(R.string.pref_sign_apk_no_signing_key)
+                        .setMessage(R.string.pref_sign_apk_error_signing_key_not_added)
+                        .enableAnchors()
+                        .setPositiveButton(R.string.add, (dialog, which, isChecked) -> {
+                            Intent intent = new Intent()
+                                    .setData(Uri.parse("app-manager://settings/apk_signing_prefs/signing_keys"));
+                            startActivity(intent);
+                        })
+                        .setNegativeButton(R.string.cancel, null)
+                        .show();
+                return false;
+            }
+            return true;
+        });
         // Display changes
         ((SwitchPreferenceCompat) Objects.requireNonNull(findPreference("installer_display_changes")))
-                .setChecked((boolean) AppPref.get(AppPref.PrefKey.PREF_INSTALLER_DISPLAY_CHANGES_BOOL));
+                .setChecked(AppPref.getBoolean(AppPref.PrefKey.PREF_INSTALLER_DISPLAY_CHANGES_BOOL));
         // Block trackers
         SwitchPreferenceCompat blockTrackersPref = Objects.requireNonNull(findPreference("installer_block_trackers"));
         blockTrackersPref.setVisible(Ops.isRoot());
-        blockTrackersPref.setChecked((boolean) AppPref.get(AppPref.PrefKey.PREF_INSTALLER_BLOCK_TRACKERS_BOOL));
+        blockTrackersPref.setChecked(AppPref.getBoolean(AppPref.PrefKey.PREF_INSTALLER_BLOCK_TRACKERS_BOOL));
         // Running installer in the background
         SwitchPreferenceCompat backgroundPref = Objects.requireNonNull(findPreference("installer_always_on_background"));
-        backgroundPref.setVisible(Utils.canDisplayNotification(activity));
-        backgroundPref.setChecked((boolean) AppPref.get(AppPref.PrefKey.PREF_INSTALLER_ALWAYS_ON_BACKGROUND_BOOL));
+        backgroundPref.setVisible(Utils.canDisplayNotification(requireContext()));
+        backgroundPref.setChecked(AppPref.getBoolean(AppPref.PrefKey.PREF_INSTALLER_ALWAYS_ON_BACKGROUND_BOOL));
     }
 
     @Override
-    public void onResume() {
-        super.onResume();
-        requireActivity().setTitle(R.string.installer);
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+        // Observe installer app selection
+        model.getPackageNameLabelPairLiveData().observe(getViewLifecycleOwner(), this::displayInstallerAppSelectionDialog);
+    }
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setEnterTransition(new MaterialSharedAxis(MaterialSharedAxis.Z, true));
+        setReturnTransition(new MaterialSharedAxis(MaterialSharedAxis.Z, false));
+    }
+
+    @Override
+    public int getTitle() {
+        return R.string.installer;
+    }
+
+    public void displayInstallerAppSelectionDialog(@NonNull List<Pair<String, CharSequence>> appInfo) {
+        ArrayList<String> items = new ArrayList<>(appInfo.size());
+        ArrayList<CharSequence> itemNames = new ArrayList<>(appInfo.size());
+        for (Pair<String, CharSequence> pair : appInfo) {
+            items.add(pair.first);
+            itemNames.add(new SpannableStringBuilder(pair.second)
+                    .append("\n")
+                    .append(getSecondaryText(requireContext(), getSmallerText(pair.first))));
+        }
+        int selectedApp = itemNames.indexOf(installerApp);
+        activity.progressIndicator.hide();
+        new MaterialAlertDialogBuilder(requireActivity())
+                .setTitle(R.string.installer_app)
+                .setSingleChoiceItems(itemNames.toArray(new CharSequence[0]),
+                        selectedApp, (dialog, which) -> installerApp = items.get(which))
+                .setPositiveButton(R.string.ok, (dialog, which) -> {
+                    AppPref.set(AppPref.PrefKey.PREF_INSTALLER_INSTALLER_APP_STR, installerApp);
+                    installerAppPref.setSummary(PackageUtils.getPackageLabel(pm, installerApp));
+                })
+                .setNegativeButton(R.string.cancel, null)
+                .show();
     }
 }

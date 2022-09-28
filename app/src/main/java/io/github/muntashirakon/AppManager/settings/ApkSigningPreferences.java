@@ -3,20 +3,21 @@
 package io.github.muntashirakon.AppManager.settings;
 
 import android.os.Bundle;
+import android.view.View;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.preference.Preference;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.google.android.material.transition.MaterialSharedAxis;
 
-import java.security.cert.Certificate;
 import java.util.Objects;
 
 import io.github.muntashirakon.AppManager.R;
 import io.github.muntashirakon.AppManager.apk.signing.SigSchemes;
 import io.github.muntashirakon.AppManager.apk.signing.Signer;
-import io.github.muntashirakon.AppManager.crypto.ks.KeyPair;
-import io.github.muntashirakon.AppManager.crypto.ks.KeyStoreManager;
-import io.github.muntashirakon.AppManager.logs.Log;
 import io.github.muntashirakon.AppManager.settings.crypto.RSACryptoSelectionDialogFragment;
 import io.github.muntashirakon.AppManager.utils.AppPref;
 import io.github.muntashirakon.AppManager.utils.DigestUtils;
@@ -24,12 +25,14 @@ import io.github.muntashirakon.AppManager.utils.DigestUtils;
 public class ApkSigningPreferences extends PreferenceFragment {
     public static final String TAG = "ApkSigningPreferences";
     private SettingsActivity activity;
-    private Preference customSig;
+    private Preference customSigPref;
+    private MainPreferencesViewModel model;
 
     @Override
     public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
         setPreferencesFromResource(R.xml.preferences_signature, rootKey);
         getPreferenceManager().setPreferenceDataStore(new SettingsDataStore());
+        model = new ViewModelProvider(requireActivity()).get(MainPreferencesViewModel.class);
         activity = (SettingsActivity) requireActivity();
         // Set signature schemes
         Preference sigSchemes = Objects.requireNonNull(findPreference("signature_schemes"));
@@ -49,14 +52,9 @@ public class ApkSigningPreferences extends PreferenceFragment {
                     .show();
             return true;
         });
-        customSig = Objects.requireNonNull(findPreference("signing_keys"));
-        new Thread(this::updateSigningPref).start();
-        customSig.setOnPreferenceClickListener(preference -> {
-            RSACryptoSelectionDialogFragment fragment = new RSACryptoSelectionDialogFragment();
-            Bundle args = new Bundle();
-            args.putString(RSACryptoSelectionDialogFragment.EXTRA_ALIAS, Signer.SIGNING_KEY_ALIAS);
-            args.putBoolean(RSACryptoSelectionDialogFragment.EXTRA_ALLOW_DEFAULT, true);
-            fragment.setArguments(args);
+        customSigPref = Objects.requireNonNull(findPreference("signing_keys"));
+        customSigPref.setOnPreferenceClickListener(preference -> {
+            RSACryptoSelectionDialogFragment fragment = RSACryptoSelectionDialogFragment.getInstance(Signer.SIGNING_KEY_ALIAS);
             fragment.setOnKeyPairUpdatedListener((keyPair, certificateBytes) -> {
                 if (keyPair != null && certificateBytes != null) {
                     String hash = DigestUtils.getHexDigest(DigestUtils.SHA_256, certificateBytes);
@@ -64,9 +62,9 @@ public class ApkSigningPreferences extends PreferenceFragment {
                         keyPair.destroy();
                     } catch (Exception ignore) {
                     }
-                    activity.runOnUiThread(() -> customSig.setSummary(hash));
+                    customSigPref.setSummary(hash);
                 } else {
-                    customSig.setSummary(R.string.key_not_set);
+                    customSigPref.setSummary(R.string.key_not_set);
                 }
             });
             fragment.show(getParentFragmentManager(), RSACryptoSelectionDialogFragment.TAG);
@@ -75,30 +73,27 @@ public class ApkSigningPreferences extends PreferenceFragment {
     }
 
     @Override
-    public void onResume() {
-        super.onResume();
-        requireActivity().setTitle(R.string.apk_signing);
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setEnterTransition(new MaterialSharedAxis(MaterialSharedAxis.Z, true));
+        setReturnTransition(new MaterialSharedAxis(MaterialSharedAxis.Z, false));
     }
 
-    private void updateSigningPref() {
-        try {
-            KeyStoreManager keyStoreManager = KeyStoreManager.getInstance();
-            if (keyStoreManager.containsKey(Signer.SIGNING_KEY_ALIAS)) {
-                KeyPair keyPair = keyStoreManager.getKeyPair(Signer.SIGNING_KEY_ALIAS);
-                if (keyPair != null) {
-                    Certificate certificate = keyPair.getCertificate();
-                    String hash = DigestUtils.getHexDigest(DigestUtils.SHA_256, certificate.getEncoded());
-                    try {
-                        keyPair.destroy();
-                    } catch (Exception ignore) {
-                    }
-                    activity.runOnUiThread(() -> customSig.setSummary(hash));
-                    return;
-                }
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+        model.getSigningKeySha256HashLiveData().observe(getViewLifecycleOwner(), hash -> {
+            if (hash != null) {
+                customSigPref.setSummary(hash);
+            } else {
+                customSigPref.setSummary(R.string.key_not_set);
             }
-        } catch (Exception e) {
-            Log.e(TAG, e);
-        }
-        activity.runOnUiThread(() -> customSig.setSummary(R.string.key_not_set));
+        });
+        model.loadSigningKeySha256Hash();
+    }
+
+    @Override
+    public int getTitle() {
+        return R.string.apk_signing;
     }
 }

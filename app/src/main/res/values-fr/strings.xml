@@ -549,16 +549,19 @@
     <string name="class_viewer">Visualiseur de classe</string>
     <string name="word_wrap">Activer/Désactiver la coupure de mots</string>
     <string name="credits_message">À ces auteurs
-\n- Projet Open Source Android
+\n- Le projet open-source Android
+\n- <a href="https://github.com/zhaobozhen/libraries">Absinthe\'s libraries</a>
 \n- <a href="https://github.com/butzist/ActivityLauncher">Activity Launcher</a>
-\n- <a href="https://bitbucket.org/oF2pks/fdroid-applications-info">Infos Apps_packages</a>
+\n- <a href="https://bitbucket.org/oF2pks/fdroid-applications-info">Apps_packages Info</a>
 \n- <a href="https://github.com/zhaobao/AppsMonitor">AppsMonitor</a>
 \n- <a href="https://github.com/8enet/AppOpsX">AppOpsX</a>
+\n- <a href="https://github.com/gabrielemariotti/changeloglib">ChangeLog Library</a>
 \n- <a href="https://bitbucket.org/oF2pks/fdroid-classyshark3xodus">ClassySharkAndroid</a>
-\n- <a href="https://github.com/billthefarmer/editor">Editeur</a>
+\n- <a href="https://github.com/billthefarmer/editor">Editor</a>
 \n- <a href="https://github.com/nex3z/FlowLayout">FlowLayout</a>
 \n- <a href="https://github.com/k3b/intent-intercept">Intent Intercept</a>
-\n- <a href="https://github.com/nex3z/FlowLayout">FlowLayout</a>
+\n- <a href="https://github.com/YarikSOffice/lingver">Lingver</a>
+\n- <a href="https://github.com/topjohnwu/Magisk">Magisk</a>
 \n- <a href="https://github.com/zhanghai/MaterialFiles">Material Files</a>
 \n- <a href="https://github.com/pluscubed/matlog">MatLog</a>
 \n- <a href="https://github.com/matrix-org/matrix-android-sdk">Matrix Android SDK</a>
@@ -567,8 +570,7 @@
 \n- <a href="https://github.com/Aefyr/SAI">SAI</a>
 \n- <a href="https://github.com/RikkaApps/Shizuku">Shizuku</a>
 \n- <a href="https://github.com/tuyafeng/Watt">Watt</a>
-\n- <a href="https://github.com/zhaobozhen/librariest">Absinthe\'s libraries</a>
-\nCrédits logo original : <a href="https://github.com/Atrate">Atrate</a>. </string>
+\nCrédits pour le logo original : <a href="https://github.com/Atrate">Atrate</a>. </string>
     <string name="credits">Crédits</string>
     <string name="third_party">Bibliothèques tierces et icônes</string>
     <string name="license">Licence</string>
@@ -701,7 +703,6 @@
     <string name="orientation_sensor_landscape">Capteur mode paysage</string>
     <string name="text_include_device_info">Inclure les informations de l\'appareil</string>
     <string name="record_log">Journaux d\'enregistrement</string>
-    <string name="default_key_used">Clé par défaut utilisée.</string>
     <string name="disable_background_run_description">Défini le mode <i>Ignore</i> pour les opérations d\'application suivantes : <tt>RUN_IN_BACKGROUND</tt> (depuis Android 7.0) et <tt>RUN_ANY_IN_BACKGROUND</tt> (depuis Android 9).</string>
     <string name="community_links">Telegram : https://t.me/AppManagerChannel
 \nTwitter : https://twitter.com/AppManagerNews</string>
@@ -749,9 +750,9 @@
     <string name="new_alias_password">Nouveau mot de passe d\'alias</string>
     <string name="import_key">Importer la clé</string>
     <string name="pem_file">Fichier PEM</string>
-    <string name="pk8_file">PKCS #8 (PK8) file</string>
+    <string name="pk8_file">Fichier PKCS #8 (PK8)</string>
     <string name="pem_and_pk8">PEM and PKCS #8 (PK8)</string>
-    <string name="pkcs12_keystore">PKCS #12 KeyStore (P12)</string>
+    <string name="pkcs12_keystore">Magasin de clefs PKCS #12 (P12)</string>
     <string name="type_long_array">Tableau d\'entiers longs</string>
     <string name="type_int_array_list">Liste d\'entiers</string>
     <string name="type_int_array">Tableau d\'entiers</string>
@@ -821,7 +822,7 @@
     <string name="next">Suivant</string>
     <string name="installer_app_installed">Application installée</string>
     <string name="paste">Coller</string>
-    <string name="paired_successfully">Appairé.</string>
+    <string name="paired_successfully">Couplé.</string>
     <string name="adb_wifi_paring_code">Code d\'appairage Wi-Fi</string>
     <string name="invalid_password">Mot de passe invalide, réessayez.</string>
     <string name="pref_log_viewer_msg">Configurer l\'affichage des journaux.</string>
@@ -977,7 +978,7 @@
     <string name="screen_lock_msg">Verrouiller App Manager en utilisant le verrouillage d\'écran Android</string>
     <string name="no_battery_optimization">Pas d\'optimisation de batterie</string>
     <string name="unlock_app_manager">Déverrouiller App Manager</string>
-    <string name="type_null">Pas de données</string>
+    <string name="type_null">Pas de valeur</string>
     <string name="restore_not_installed_msg">Restaurer la sauvegarde de base pour les applications qui ne sont pas actuellement installées.</string>
     <string name="battery_optimization">Optimisation de batterie</string>
     <string name="has_net_policy">Politique réseau</string>
@@ -1195,4 +1196,15 @@
     <string name="usage_mobile_data">Données mobiles</string>
     <string name="usage_wifi_data">Données Wi-Fi</string>
     <string name="usage_times_opened">Nombre d\'ouvertures</string>
+    <string name="pref_reload_apps">Recharger les applications</string>
+    <string name="troubleshooting">Problèmes</string>
+    <string name="changelog_type_improve">Améliorer</string>
+    <string name="pref_reload_apps_msg">Recharge la liste des applications enregistrées dans la base du Gestionnaire d\'Applications en cas de comportement inattendu.</string>
+    <string name="changelog_type_new">Nouveau</string>
+    <string name="changelog_type_fix">Corriger</string>
+    <string name="unsupported_split_apk">Non pris en charge</string>
+    <string name="view_changelog">Découvrez les nouveautés de cette version</string>
+    <string name="sort_by_total_size">Taille totale</string>
+    <string name="pref_sign_apk_error_signing_key_not_added">Une clé de signature valide est nécessaire pour signer un fichier APK.</string>
+    <string name="pref_sign_apk_no_signing_key">Aucune clé de signature</string>
 </resources>

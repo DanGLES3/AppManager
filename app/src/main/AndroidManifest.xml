@@ -12,9 +12,11 @@
         android:required="false" />
 
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-    <uses-permission android:name="android.permission.CLEAR_APP_CACHE"
+    <uses-permission
+        android:name="android.permission.CLEAR_APP_CACHE"
         tools:ignore="ProtectedPermissions" />
-    <uses-permission android:name="android.permission.DELETE_CACHE_FILES"
+    <uses-permission
+        android:name="android.permission.DELETE_CACHE_FILES"
         tools:ignore="ProtectedPermissions" />
     <uses-permission
         android:name="android.permission.DUMP"
@@ -57,6 +59,7 @@
     <application
         android:name=".AppManager"
         android:allowBackup="false"
+        android:dataExtractionRules="@xml/backup_rules"
         android:banner="@mipmap/ic_banner"
         android:extractNativeLibs="true"
         android:hasFragileUserData="true"
@@ -67,7 +70,7 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
-        tools:ignore="UnusedAttribute">
+        tools:ignore="DataExtractionRules,UnusedAttribute">
         <activity
             android:name=".oneclickops.OneClickOpsActivity"
             android:exported="false"
@@ -85,6 +88,14 @@
                 <action android:name="android.intent.action.APPLICATION_PREFERENCES" />
 
                 <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+
+                <data android:scheme="app-manager" />
+                <data android:host="settings" />
             </intent-filter>
         </activity>
         <activity
@@ -150,11 +161,21 @@
         </activity>
         <activity
             android:name=".main.MainActivity"
-            android:exported="false" />
-        <activity
-            android:name=".details.AppDetailsActivity"
+            android:exported="true">
+            <intent-filter android:label="@string/search">
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data android:scheme="market" android:host="search" />
+            </intent-filter>
+        </activity>
+        <activity-alias
+            android:name=".details.AppInfoActivity"
             android:exported="true"
-            android:label="@string/app_info">
+            android:label="@string/app_info"
+            android:targetActivity=".details.AppDetailsActivity">
             <intent-filter>
                 <action android:name="android.intent.action.SEND" />
 
@@ -211,9 +232,12 @@
                 <data android:pathPattern=".*\\..*\\..*\\..*\\..*\\..*\\.xapk" />
                 <data android:pathPattern=".*\\..*\\..*\\..*\\..*\\..*\\..*\\.xapk" />
             </intent-filter>
-        </activity>
+        </activity-alias>
         <activity
-            android:name=".details.ManifestViewerActivity"
+            android:name=".details.AppDetailsActivity"
+            android:exported="false" />
+        <activity
+            android:name=".details.manifest.ManifestViewerActivity"
             android:exported="true"
             android:label="@string/manifest_viewer">
             <intent-filter>
@@ -735,6 +759,8 @@
             android:authorities="${applicationId}.file"
             android:exported="false"
             android:grantUriPermissions="true" />
+
+        <meta-data android:name="android.permission.INTERNET.mode" android:value="runtime" />
     </application>
 
 </manifest>

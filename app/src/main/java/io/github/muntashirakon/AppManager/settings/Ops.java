@@ -2,6 +2,7 @@
 
 package io.github.muntashirakon.AppManager.settings;
 
+import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
@@ -42,6 +43,7 @@ import io.github.muntashirakon.AppManager.runner.RunnerUtils;
 import io.github.muntashirakon.AppManager.servermanager.LocalServer;
 import io.github.muntashirakon.AppManager.servermanager.ServerConfig;
 import io.github.muntashirakon.AppManager.utils.AppPref;
+import io.github.muntashirakon.AppManager.utils.PermissionUtils;
 import io.github.muntashirakon.AppManager.utils.UIUtils;
 import io.github.muntashirakon.AppManager.utils.UiThreadHandler;
 import io.github.muntashirakon.dialog.DialogTitleBuilder;
@@ -142,11 +144,25 @@ public class Ops {
         }
     }
 
+    public static String getMode(Context context) {
+        String mode = AppPref.getString(AppPref.PrefKey.PREF_MODE_OF_OPS_STR);
+        // Backward compatibility for v2.6.0
+        if (mode.equals("adb")) {
+            mode = Ops.MODE_ADB_OVER_TCP;
+        }
+        if ((MODE_ADB_OVER_TCP.equals(mode) || MODE_ADB_WIFI.equals(mode))
+                && !PermissionUtils.hasPermission(context, Manifest.permission.INTERNET)) {
+            // ADB enabled but the INTERNET permission is not granted, replace current with auto.
+            return MODE_AUTO;
+        }
+        return mode;
+    }
+
     @WorkerThread
     @NoOps // Although we've used Ops checks, its overall usage does not affect anything
     @Status
     public static int init(@NonNull Context context, boolean force) {
-        String mode = AppPref.getString(AppPref.PrefKey.PREF_MODE_OF_OPS_STR);
+        String mode = getMode(context);
         if (MODE_AUTO.equals(mode)) {
             autoDetectRootOrAdb(context);
             return STATUS_SUCCESS;
@@ -173,12 +189,6 @@ public class Ops {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                         return STATUS_AUTO_CONNECT_WIRELESS_DEBUGGING;
                     } // else fallback to ADB over TCP
-                case "adb":
-                    if (mode.equals("adb")) {
-                        // Backward compatibility for v2.6.0 or earlier
-                        AppPref.set(AppPref.PrefKey.PREF_MODE_OF_OPS_STR, MODE_ADB_OVER_TCP);
-                    }
-                    // fallback to ADB over TCP
                 case MODE_ADB_OVER_TCP:
                     sIsAdb = true;
                     sIsRoot = false;
@@ -221,16 +231,21 @@ public class Ops {
             sIsRoot = LocalServer.isAMServiceAlive();
             return;
         }
-        // Root not granted, check ADB
+        // Root not granted
+        if (!PermissionUtils.hasPermission(context, Manifest.permission.INTERNET)) {
+            // INTERNET permission is not granted, skip checking for ADB.
+            return;
+        }
+        // Check for ADB
         sIsAdb = true; // First enable ADB
         try {
             ServerConfig.setAdbPort(findAdbPortNoThrow(context, 7, ServerConfig.getAdbPort()));
             LocalServer.restart();
-        } catch (RemoteException | IOException e) {
+        } catch (Throwable e) {
             Log.e("ADB", e);
         }
-        //noinspection AssignmentUsedAsCondition
-        if (sIsAdb = LocalServer.isAMServiceAlive()) {
+        sIsAdb = LocalServer.isAMServiceAlive();
+        if (sIsAdb) {
             UiThreadHandler.run(() -> UIUtils.displayShortToast(R.string.working_on_adb_mode));
         }
     }
@@ -242,7 +257,7 @@ public class Ops {
                                                 @NonNull AdbConnectionInterface callback) {
         DialogTitleBuilder builder = new DialogTitleBuilder(activity)
                 .setTitle(R.string.wireless_debugging)
-                .setEndIcon(R.drawable.ic_open_in_new_black_24dp, v -> {
+                .setEndIcon(R.drawable.ic_open_in_new, v -> {
                     Intent intent = new Intent(android.provider.Settings.ACTION_APPLICATION_DEVELOPMENT_SETTINGS)
                             .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                     activity.startActivity(intent);

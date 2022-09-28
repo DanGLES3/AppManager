@@ -7,21 +7,24 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.text.SpannableStringBuilder;
-import android.widget.Toast;
+import android.view.View;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.annotation.StringRes;
 import androidx.annotation.UiThread;
 import androidx.appcompat.app.AlertDialog;
 import androidx.collection.ArrayMap;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.DialogFragment;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.preference.Preference;
 import androidx.preference.SwitchPreferenceCompat;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.google.android.material.transition.MaterialSharedAxis;
 
 import java.util.Collections;
 import java.util.List;
@@ -29,7 +32,6 @@ import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
-import io.github.muntashirakon.AppManager.AppManager;
 import io.github.muntashirakon.AppManager.R;
 import io.github.muntashirakon.AppManager.backup.BackupFlags;
 import io.github.muntashirakon.AppManager.backup.CryptoUtils;
@@ -38,13 +40,13 @@ import io.github.muntashirakon.AppManager.backup.convert.ImportType;
 import io.github.muntashirakon.AppManager.batchops.BatchOpsManager;
 import io.github.muntashirakon.AppManager.batchops.BatchOpsService;
 import io.github.muntashirakon.AppManager.crypto.RSACrypto;
-import io.github.muntashirakon.AppManager.db.utils.AppDb;
 import io.github.muntashirakon.AppManager.settings.crypto.AESCryptoSelectionDialogFragment;
+import io.github.muntashirakon.AppManager.settings.crypto.ECCCryptoSelectionDialogFragment;
 import io.github.muntashirakon.AppManager.settings.crypto.OpenPgpKeySelectionDialogFragment;
 import io.github.muntashirakon.AppManager.settings.crypto.RSACryptoSelectionDialogFragment;
+import io.github.muntashirakon.AppManager.types.SearchableMultiChoiceDialogBuilder;
 import io.github.muntashirakon.AppManager.utils.AppPref;
 import io.github.muntashirakon.AppManager.utils.ArrayUtils;
-import io.github.muntashirakon.AppManager.utils.StorageUtils;
 import io.github.muntashirakon.dialog.DialogTitleBuilder;
 import io.github.muntashirakon.io.Path;
 
@@ -58,7 +60,7 @@ public class BackupRestorePreferences extends PreferenceFragment {
             R.string.open_pgp_provider,
             R.string.aes,
             R.string.rsa,
-            /* R.string.ecc, // TODO(01/04/21): Implement ECC */
+            R.string.ecc,
     };
 
     private SettingsActivity activity;
@@ -67,6 +69,7 @@ public class BackupRestorePreferences extends PreferenceFragment {
     @ImportType
     private int importType;
     private boolean deleteBackupsAfterImport;
+    private MainPreferencesViewModel model;
 
     private final ActivityResultLauncher<Intent> safSelectBackupVolume = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),
@@ -82,7 +85,7 @@ public class BackupRestorePreferences extends PreferenceFragment {
                     requireContext().getContentResolver().takePersistableUriPermission(treeUri, takeFlags);
                 } finally {
                     // Display backup volumes again
-                    displayVolumeSelectionDialog();
+                    model.loadStorageVolumes();
                 }
             });
     private final ActivityResultLauncher<Intent> safSelectImportDirectory = registerForActivityResult(
@@ -103,6 +106,7 @@ public class BackupRestorePreferences extends PreferenceFragment {
     public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
         setPreferencesFromResource(R.xml.preferences_backup_restore, rootKey);
         getPreferenceManager().setPreferenceDataStore(new SettingsDataStore());
+        model = new ViewModelProvider(requireActivity()).get(MainPreferencesViewModel.class);
         activity = (SettingsActivity) requireActivity();
         // Backup compression method
         String[] tarTypes = MetadataManager.TAR_TYPES;
@@ -127,17 +131,19 @@ public class BackupRestorePreferences extends PreferenceFragment {
         BackupFlags flags = BackupFlags.fromPref();
         ((Preference) Objects.requireNonNull(findPreference("backup_flags"))).setOnPreferenceClickListener(preference -> {
             List<Integer> supportedBackupFlags = BackupFlags.getSupportedBackupFlagsAsArray();
-            new MaterialAlertDialogBuilder(activity)
+            new SearchableMultiChoiceDialogBuilder<>(requireActivity(), supportedBackupFlags, BackupFlags.getFormattedFlagNames(requireContext(), supportedBackupFlags))
                     .setTitle(R.string.backup_options)
-                    .setMultiChoiceItems(BackupFlags.getFormattedFlagNames(activity, supportedBackupFlags),
-                            flags.flagsToCheckedItems(supportedBackupFlags),
-                            (dialog, index, isChecked) -> {
-                                if (isChecked) {
-                                    flags.addFlag(supportedBackupFlags.get(index));
-                                } else flags.removeFlag(supportedBackupFlags.get(index));
-                            })
-                    .setPositiveButton(R.string.save, (dialog, which) ->
-                            AppPref.set(AppPref.PrefKey.PREF_BACKUP_FLAGS_INT, flags.getFlags()))
+                    .addSelections(flags.flagsToCheckedIndexes(supportedBackupFlags))
+                    .hideSearchBar(true)
+                    .showSelectAll(false)
+                    .setPositiveButton(R.string.save, (dialog, which, selectedItems) -> {
+                        int flagsInt = 0;
+                        for (int flag : selectedItems) {
+                            flagsInt |= flag;
+                        }
+                        flags.setFlags(flagsInt);
+                        AppPref.set(AppPref.PrefKey.PREF_BACKUP_FLAGS_INT, flags.getFlags());
+                    })
                     .setNegativeButton(R.string.cancel, null)
                     .show();
             return true;
@@ -166,11 +172,7 @@ public class BackupRestorePreferences extends PreferenceFragment {
                                 break;
                             }
                             case CryptoUtils.MODE_RSA: {
-                                RSACryptoSelectionDialogFragment fragment = new RSACryptoSelectionDialogFragment();
-                                Bundle args = new Bundle();
-                                args.putString(RSACryptoSelectionDialogFragment.EXTRA_ALIAS, RSACrypto.RSA_KEY_ALIAS);
-                                args.putBoolean(RSACryptoSelectionDialogFragment.EXTRA_ALLOW_DEFAULT, false);
-                                fragment.setArguments(args);
+                                RSACryptoSelectionDialogFragment fragment = RSACryptoSelectionDialogFragment.getInstance(RSACrypto.RSA_KEY_ALIAS);
                                 fragment.setOnKeyPairUpdatedListener((keyPair, certificateBytes) -> {
                                     if (keyPair != null) {
                                         AppPref.set(AppPref.PrefKey.PREF_ENCRYPTION_STR, CryptoUtils.MODE_RSA);
@@ -180,8 +182,13 @@ public class BackupRestorePreferences extends PreferenceFragment {
                                 break;
                             }
                             case CryptoUtils.MODE_ECC: {
-                                // TODO(01/04/21): Implement ECC
-                                Toast.makeText(activity, "Not implemented yet.", Toast.LENGTH_SHORT).show();
+                                ECCCryptoSelectionDialogFragment fragment = new ECCCryptoSelectionDialogFragment();
+                                fragment.setOnKeyPairUpdatedListener((keyPair, certificateBytes) -> {
+                                    if (keyPair != null) {
+                                        AppPref.set(AppPref.PrefKey.PREF_ENCRYPTION_STR, CryptoUtils.MODE_ECC);
+                                    }
+                                });
+                                fragment.show(getParentFragmentManager(), RSACryptoSelectionDialogFragment.TAG);
                                 break;
                             }
                             case CryptoUtils.MODE_OPEN_PGP: {
@@ -199,7 +206,7 @@ public class BackupRestorePreferences extends PreferenceFragment {
         this.backupVolume = AppPref.getSelectedDirectory();
         ((Preference) Objects.requireNonNull(findPreference("backup_volume")))
                 .setOnPreferenceClickListener(preference -> {
-                    displayVolumeSelectionDialog();
+                    model.loadStorageVolumes();
                     return true;
                 });
         // Import backups
@@ -247,9 +254,21 @@ public class BackupRestorePreferences extends PreferenceFragment {
     }
 
     @Override
-    public void onResume() {
-        super.onResume();
-        requireActivity().setTitle(R.string.backup_restore);
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setEnterTransition(new MaterialSharedAxis(MaterialSharedAxis.Z, true));
+        setReturnTransition(new MaterialSharedAxis(MaterialSharedAxis.Z, false));
+    }
+
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+        model.getStorageVolumesLiveData().observe(getViewLifecycleOwner(), this::displayVolumeSelectionDialog);
+    }
+
+    @Override
+    public int getTitle() {
+        return R.string.backup_restore;
     }
 
     @UiThread
@@ -268,61 +287,59 @@ public class BackupRestorePreferences extends PreferenceFragment {
         ContextCompat.startForegroundService(activity, intent);
     }
 
-    private void displayVolumeSelectionDialog() {
+    private void displayVolumeSelectionDialog(@NonNull ArrayMap<String, Uri> storageLocations) {
+        // TODO: 13/8/22 Move to a separate BottomSheet dialog fragment
         AtomicReference<AlertDialog> alertDialog = new AtomicReference<>(null);
         DialogTitleBuilder titleBuilder = new DialogTitleBuilder(activity)
                 .setTitle(R.string.backup_volume)
                 .setSubtitle(R.string.backup_volume_dialog_description)
                 .setStartIcon(R.drawable.ic_zip_disk)
-                .setEndIcon(R.drawable.ic_baseline_add_24, v -> new MaterialAlertDialogBuilder(activity)
+                .setEndIcon(R.drawable.ic_add, v -> new MaterialAlertDialogBuilder(activity)
                         .setTitle(R.string.notice)
                         .setMessage(R.string.notice_saf)
                         .setPositiveButton(R.string.go, (dialog1, which1) -> {
-                            if (alertDialog.get() != null) alertDialog.get().dismiss();
+                            if (alertDialog.get() != null) {
+                                alertDialog.get().dismiss();
+                            }
                             safSelectBackupVolume.launch(getSafIntent("AppManager"));
                         })
                         .setNeutralButton(R.string.cancel, null)
                         .show());
-        new Thread(() -> {
-            ArrayMap<String, Uri> storageLocations = StorageUtils.getAllStorageLocations(activity, false);
-            if (storageLocations.size() == 0) {
-                activity.runOnUiThread(() -> {
-                    if (isDetached()) return;
-                    alertDialog.set(new MaterialAlertDialogBuilder(activity)
-                            .setCustomTitle(titleBuilder.build())
-                            .setMessage(R.string.no_volumes_found)
-                            .setNegativeButton(R.string.ok, null)
-                            .show());
-                });
-            } else {
-                Uri[] backupVolumes = new Uri[storageLocations.size()];
-                CharSequence[] backupVolumesStr = new CharSequence[storageLocations.size()];
-                AtomicInteger selectedIndex = new AtomicInteger(-1);
-                for (int i = 0; i < storageLocations.size(); ++i) {
-                    backupVolumes[i] = storageLocations.valueAt(i);
-                    backupVolumesStr[i] = new SpannableStringBuilder(storageLocations.keyAt(i)).append("\n")
-                            .append(getSecondaryText(activity, getSmallerText(backupVolumes[i].getPath())));
-                    if (backupVolumes[i].equals(this.backupVolume)) {
-                        selectedIndex.set(i);
-                    }
+
+        if (storageLocations.size() == 0) {
+            alertDialog.set(new MaterialAlertDialogBuilder(activity)
+                    .setCustomTitle(titleBuilder.build())
+                    .setMessage(R.string.no_volumes_found)
+                    .setNegativeButton(R.string.ok, null)
+                    .show());
+        } else {
+            Uri[] backupVolumes = new Uri[storageLocations.size()];
+            CharSequence[] backupVolumesStr = new CharSequence[storageLocations.size()];
+            AtomicInteger selectedIndex = new AtomicInteger(-1);
+            for (int i = 0; i < storageLocations.size(); ++i) {
+                backupVolumes[i] = storageLocations.valueAt(i);
+                backupVolumesStr[i] = new SpannableStringBuilder(storageLocations.keyAt(i)).append("\n")
+                        .append(getSecondaryText(activity, getSmallerText(backupVolumes[i].getPath())));
+                if (backupVolumes[i].equals(backupVolume)) {
+                    selectedIndex.set(i);
                 }
-                activity.runOnUiThread(() -> {
-                    if (isDetached()) return;
-                    alertDialog.set(new MaterialAlertDialogBuilder(activity)
-                            .setCustomTitle(titleBuilder.build())
-                            .setSingleChoiceItems(backupVolumesStr, selectedIndex.get(), (dialog, which) -> {
-                                this.backupVolume = backupVolumes[which];
-                                selectedIndex.set(which);
-                            })
-                            .setNegativeButton(R.string.cancel, null)
-                            .setPositiveButton(R.string.save, (dialog, which) -> {
-                                AppPref.set(AppPref.PrefKey.PREF_BACKUP_VOLUME_STR, this.backupVolume.toString());
-                                new Thread(() -> new AppDb().updateBackups(AppManager.getContext())).start();
-                            })
-                            .show());
-                });
             }
-        }).start();
+            alertDialog.set(new MaterialAlertDialogBuilder(activity)
+                    .setCustomTitle(titleBuilder.build())
+                    .setSingleChoiceItems(backupVolumesStr, selectedIndex.get(), (dialog, which) -> {
+                        backupVolume = backupVolumes[which];
+                        selectedIndex.set(which);
+                    })
+                    .setNegativeButton(R.string.cancel, null)
+                    .setPositiveButton(R.string.save, (dialog, which) -> {
+                        Uri lastBackupVolume = AppPref.getSelectedDirectory();
+                        if (!lastBackupVolume.equals(backupVolume)) {
+                            AppPref.set(AppPref.PrefKey.PREF_BACKUP_VOLUME_STR, backupVolume.toString());
+                            model.updateBackups();
+                        }
+                    })
+                    .show());
+        }
     }
 
     private Intent getSafIntent(String path) {

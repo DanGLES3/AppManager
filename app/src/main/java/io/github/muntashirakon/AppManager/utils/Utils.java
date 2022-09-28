@@ -58,8 +58,8 @@ import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathFactory;
 
+import aosp.libcore.util.EmptyArray;
 import aosp.libcore.util.HexEncoding;
-import io.github.muntashirakon.AppManager.BuildConfig;
 import io.github.muntashirakon.AppManager.R;
 import io.github.muntashirakon.AppManager.logs.Log;
 import io.github.muntashirakon.AppManager.misc.OsEnvironment;
@@ -92,10 +92,10 @@ public class Utils {
         return builder.toString().toLowerCase(Locale.ROOT);
     }
 
-    // https://commons.apache.org/proper/commons-lang/javadocs/api-3.1/src-html/org/apache/commons/lang3/StringUtils.html#line.3164
+    // https://github.com/apache/commons-lang/blob/master/src/main/java/org/apache/commons/lang3/StringUtils.java#L7514
     @NonNull
     public static String[] splitByCharacterType(@NonNull String str, boolean camelCase) {
-        if (str.length() == 0) return new String[]{};
+        if (str.length() == 0) return EmptyArray.STRING;
         char[] c = str.toCharArray();
         List<String> list = new ArrayList<>();
         int tokenStart = 0;
@@ -277,7 +277,7 @@ public class Utils {
 
     // FIXME Add translation support
     @NonNull
-    public static String getServiceFlagsString(int flag) {
+    public static CharSequence getServiceFlagsString(int flag) {
         StringBuilder builder = new StringBuilder();
         if ((flag & ServiceInfo.FLAG_STOP_WITH_TASK) != 0)
             builder.append("Stop with task, ");
@@ -298,7 +298,7 @@ public class Utils {
         }
         checkStringBuilderEnd(builder);
         String result = builder.toString();
-        return result.equals("") ? "\u2690" : "\u2691 " + result;
+        return TextUtils.isEmpty(result) ? "" : ("\u2691 " + result);
     }
 
     // FIXME Add translation support
@@ -576,16 +576,6 @@ public class Utils {
             Log.e("Utils", "Could not get proper XML.", e);
             return dirtyXml;
         }
-    }
-
-    public static boolean isAppUpdated() {
-        long newVersionCode = BuildConfig.VERSION_CODE;
-        long oldVersionCode = (long) AppPref.get(AppPref.PrefKey.PREF_LAST_VERSION_CODE_LONG);
-        return oldVersionCode != 0 && oldVersionCode < newVersionCode;
-    }
-
-    public static boolean isAppInstalled() { // or data cleared
-        return (long) AppPref.get(AppPref.PrefKey.PREF_LAST_VERSION_CODE_LONG) == 0;
     }
 
     /**

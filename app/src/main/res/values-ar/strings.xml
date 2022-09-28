@@ -46,15 +46,18 @@
     <string name="word_wrap">تفعيل التفاف النص</string>
     <string name="credits_message">لمؤلفي
 \n- مشروع Android مفتوح المصدر
+\n- <a href="https://github.com/zhaobozhen/libraries"> مكتبات شراب مسكر </a>
 \n- <a href="https://github.com/butzist/ActivityLauncher"> مشغل النشاط </a>
 \n- <a href="https://bitbucket.org/oF2pks/fdroid-applications-info"> معلومات Apps_packages </a>
 \n- <a href="https://github.com/zhaobao/AppsMonitor"> AppsMonitor </a>
 \n- <a href="https://github.com/8enet/AppOpsX"> AppOpsX </a>
+\n- مكتبة سجل التغيير <a href="https://github.com/gabrielemariotti/changeloglib"> </a>
 \n- <a href="https://bitbucket.org/oF2pks/fdroid-classyshark3xodus"> ClassySharkAndroid </a>
-\n- <a href="https://github.com/billthefarmer/editor"> محرر </a>
+\n- محرر <a href="https://github.com/billthefarmer/editor"> </a>
 \n- <a href="https://github.com/nex3z/FlowLayout"> FlowLayout </a>
 \n- <a href="https://github.com/k3b/intent-intercept"> اعتراض النية </a>
 \n- <a href="https://github.com/YarikSOffice/lingver"> Lingver </a>
+\n- <a href="https://github.com/topjohnwu/Magisk"> ماجيسك </a>
 \n- <a href="https://github.com/zhanghai/MaterialFiles"> ملفات المواد </a>
 \n- <a href="https://github.com/pluscubed/matlog"> MatLog </a>
 \n- <a href="https://github.com/matrix-org/matrix-android-sdk"> Matrix Android SDK </a>
@@ -63,7 +66,6 @@
 \n- <a href="https://github.com/Aefyr/SAI"> SAI </a>
 \n- <a href="https://github.com/RikkaApps/Shizuku"> شيزوكو </a>
 \n- <a href="https://github.com/tuyafeng/Watt"> واط </a>
-\n- <a href="https://github.com/zhaobozhen/librariest"> Absinthe\'s libraries </a>
 \nمصدر الشعار الأصلي: <a href="https://github.com/Atrate"> Atrate </a>. </string>
     <string name="credits">الإشادات</string>
     <string name="third_party">مكتبات وأيقونات الطرف الثالث</string>
@@ -532,7 +534,7 @@
     <string name="apps">التطبيقات</string>
     <string name="routine_ops">العمليات الروتينية</string>
     <string name="apply_now">تطبيق الان…</string>
-    <string name="keystore">تخزين المفاتيح</string>
+    <string name="keystore">مخزن المفتاح</string>
     <string name="no_profiles">لا توجد ملفات تعريف</string>
     <string name="profiles">الأوضاع</string>
     <string name="open_pgp_provider">موفر OpenPGP</string>
@@ -635,7 +637,7 @@
     <string name="failed">فشل</string>
     <string name="pref_rules_msg">حظر فوري، استيراد / تصدير / إزالة القواعد، الخ.</string>
     <string name="saf">SAF</string>
-    <string name="java_keystore">مخزن مفاتيح الجافا (JKS)</string>
+    <string name="java_keystore">مخزن المفتاح الجافا (JKS)</string>
     <string name="update_uninstalled_successfully">التحديثات الخاصة ب <xliff:g id="app_name" example="App Manager"> %1$s </xliff:g>تم إلغاء تثبيتها.</string>
     <plurals name="alert_failed_to_set_app_ops">
         <item quantity="zero">تعذر تعيين عمليات التطبيق لتطبيق %1$d</item>
@@ -1030,7 +1032,6 @@
     <string name="invalid_rsa_key_size">حجم المفتاح غير صالح لتشفير RSA. يسمح أن يكون حجم المفتاح 1024 أو 2048 أو 4096 بت.</string>
     <string name="use_default">استخدم الافتراضيّ</string>
     <string name="key_not_set">لم يتم تعيينه.</string>
-    <string name="default_key_used">يتم استخدام المفتاح الافتراضي.</string>
     <string name="failed_to_load_key">تعذر تحميل المفتاح.</string>
     <string name="input_key_password">كلمة السر الرئيسية</string>
     <string name="common_name">الاسم الشائع (CN)</string>
@@ -1039,8 +1040,8 @@
     <string name="locality_name">اسم المنطقة (المدينة) (L)</string>
     <string name="state_name">اسم الدولة (ST)</string>
     <string name="country_name" tools:ignore="TypographyOther">اسم الدولة (ج)</string>
-    <string name="keystore_file">ملف سجل المفاتيح</string>
-    <string name="keystore_pass">كلمة مرور سجل المفاتيح</string>
+    <string name="keystore_file">ملف مخزن المفتاح</string>
+    <string name="keystore_pass">كلمة مرور مخزن المفتاح</string>
     <string name="bouncy_castle_keystore">سجل مفاتيح قلعة النطاط (BKS)</string>
     <string name="pkcs12_keystore">PKCS # 12 سجل مفاتيح (P12)</string>
     <string name="pem_and_pk8">#8 PEM و PKCS (PK8)</string>
@@ -1184,8 +1185,8 @@
     <string name="adb_pair">اقتران</string>
     <string name="adb_wifi_paring_code">رمز اقتران Wi-Fi</string>
     <string name="invalid_password">كلمة مرور غير صالحة، حاول مرة أخرى.</string>
-    <string name="keystore_pass_cannot_be_empty">لا يمكن أن تكون كلمة مرور سجل المفاتيح فارغة.</string>
-    <string name="keystore_password_info">فيما يلي كلمة مرور سجل المفاتيح لمدير التطبيقات. يرجى تخزينه في مكان آمن إذا كنت تريد إجراء نسخة احتياطية / استعادة مدير التطبيقات KeyStore.<b> لن يتم عرض هذه الرسالة مرة أخرى.</b></string>
+    <string name="keystore_pass_cannot_be_empty">لا يمكن أن تكون كلمة مرور مخزن المفتاح فارغة.</string>
+    <string name="keystore_password_info">فيما يلي كلمة مرور مخزن المفتاح لمدير التطبيقات. يرجى تخزينه في مكان آمن إذا كنت تريد إجراء نسخة احتياطية / استعادة مدير التطبيقات KeyStore.<b> لن يتم عرض هذه الرسالة مرة أخرى.</b></string>
     <plurals name="pref_thread_count_msg">
         <item quantity="zero">قم بتنفيذ على الاقل %1$d عملية او أكثر بالتوازي</item>
         <item quantity="one">قم بتنفيذ على الاقل %1$d عملية او أكثر بالتوازي</item>
@@ -1347,4 +1348,16 @@
     <string name="backup_no_backups_present">لا توجد نسخ احتياطية.</string>
     <string name="restore_dots">يستعيد…</string>
     <string name="import_backups_warning_delete_backups_after_import">حذف النسخ الاحتياطية بعد استيرادها إلى مدير التطبيقات؟ يتم حذف كل نسخة احتياطية بشكل فردي بعد استيرادها بنجاح. حدد <b> No</b> إذا لم تكن متأكدا.</string>
+    <string name="troubleshooting">استكشاف الاخطاء</string>
+    <string name="pref_reload_apps">إعادة تحميل التطبيقات</string>
+    <string name="pref_reload_apps_msg">أعد تحميل قائمة التطبيقات المخزنة في قاعدة بيانات مدير التطبيقات في حالة حدوث سلوك غير متوقع.</string>
+    <string name="changelog_type_new">جديد</string>
+    <string name="changelog_type_fix">اصلاح</string>
+    <string name="changelog_type_improve">تحسين</string>
+    <string name="unsupported_split_apk">غير مدعوم</string>
+    <string name="view_changelog">اكتشف الجديد في هذا الإصدار</string>
+    <string name="sort_by_total_size">الحجم الإجمالي</string>
+    <string name="am_command">الأمر <tt>am</tt></string>
+    <string name="pref_sign_apk_error_signing_key_not_added">مطلوب مفتاح توقيع صالح لتوقيع ملف APK.</string>
+    <string name="pref_sign_apk_no_signing_key">لا يوجد مفتاح توقيع</string>
 </resources>

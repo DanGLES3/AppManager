@@ -24,11 +24,9 @@ public class RSACrypto extends AESCrypto {
     public static final String TAG = "RSACrypto";
 
     public static final String RSA_EXT = ".rsa";
-
     public static final String RSA_KEY_ALIAS = "backup_rsa";
 
     private static final String RSA_CIPHER_TYPE = "RSA/NONE/OAEPPadding";  // 42 bytes padding
-
     private static final int AES_KEY_SIZE_BITS = 256;
 
     public RSACrypto(@NonNull byte[] iv, @Nullable byte[] encryptedAesKey) throws CryptoException {
@@ -36,6 +34,7 @@ public class RSACrypto extends AESCrypto {
         super(iv, CryptoUtils.MODE_RSA, encryptedAesKey);
     }
 
+    @Override
     @Nullable
     public byte[] getEncryptedAesKey() {
         return super.getEncryptedAesKey();

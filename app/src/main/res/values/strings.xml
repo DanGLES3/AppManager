@@ -118,10 +118,12 @@
     <string name="credits">Credits</string>
     <string name="credits_message">To the authors of
         \n- The Android Open Source Project
+        \n- <a href="https://github.com/zhaobozhen/libraries">Absinthe\'s libraries</a>
         \n- <a href="https://github.com/butzist/ActivityLauncher">Activity Launcher</a>
         \n- <a href="https://bitbucket.org/oF2pks/fdroid-applications-info">Apps_packages Info</a>
         \n- <a href="https://github.com/zhaobao/AppsMonitor">AppsMonitor</a>
         \n- <a href="https://github.com/8enet/AppOpsX">AppOpsX</a>
+        \n- <a href="https://github.com/gabrielemariotti/changeloglib">ChangeLog Library</a>
         \n- <a href="https://bitbucket.org/oF2pks/fdroid-classyshark3xodus">ClassySharkAndroid</a>
         \n- <a href="https://github.com/billthefarmer/editor">Editor</a>
         \n- <a href="https://github.com/nex3z/FlowLayout">FlowLayout</a>
@@ -136,7 +138,6 @@
         \n- <a href="https://github.com/Aefyr/SAI">SAI</a>
         \n- <a href="https://github.com/RikkaApps/Shizuku">Shizuku</a>
         \n- <a href="https://github.com/tuyafeng/Watt">Watt</a>
-        \n- <a href="https://github.com/zhaobozhen/librariest">Absinthe\'s libraries</a>
         \nOriginal logo credit: <a href="https://github.com/Atrate">Atrate</a>.
     </string>
     <string name="word_wrap">Toggle word wrap</string>
@@ -243,8 +244,6 @@
     <string name="stopped">Stopped</string>
     <string name="disable">Disable</string>
     <string name="enable">Enable</string>
-    <string name="failed_to_disable">Could not disable <xliff:g id="app_name" example="App Manager">%1$s</xliff:g>.</string>
-    <string name="failed_to_enable">Could not enable <xliff:g id="app_name" example="App Manager">%1$s</xliff:g>.</string>
     <string name="force_stop">Force-stop</string>
     <string name="failed_to_stop">Could not stop <xliff:g id="app_name" example="App Manager">%1$s</xliff:g>.</string>
     <string name="storage_and_cache">Storage and Cache</string>
@@ -263,7 +262,6 @@
     <string name="usage_yesterday">Yesterday</string>
     <string name="exodus_link">\u03b5xodus Link</string>
     <string name="second_degree_tracker_note">² prefix indicates that the trackers are in the <a href="https://etip.exodus-privacy.eu.org/">ETIP stand-by list</a> i.e. whether they are actual trackers are still being investigated.</string>
-    <string name="sort_by_disabled_app">Disabled first</string>
     <string name="sort_by_blocked_components">Blocked first</string>
     <string name="external_data_dir">External Data Directory</string>
     <string name="external_multiple_data_dir">External Data Directory <xliff:g id="dir_no" example="1">%1$d</xliff:g></string>
@@ -301,10 +299,6 @@
     <plurals name="alert_failed_to_clear_data">
         <item quantity="one">Could not clear data from %1$d app</item>
         <item quantity="other">Could not clear data from %1$d apps</item>
-    </plurals>
-    <plurals name="alert_failed_to_disable">
-        <item quantity="one">Could not disable %1$d app</item>
-        <item quantity="other">Could not disable %1$d apps</item>
     </plurals>
     <plurals name="alert_failed_to_uninstall">
         <item quantity="one">Could not uninstall %1$d app</item>
@@ -389,13 +383,13 @@
     <string name="install">Install</string>
     <string name="update">Update</string>
     <string name="source_code">Source Code</string>
-    <string name="source_code_links">GitHub: https://github.com/MuntashirAkon/AppManager
-        \nGitLab: https://gitlab.com/muntashir/AppManager
-        \nRiseup: https://0xacab.org/muntashir/AppManager
-        \nCodeberg: https://codeberg.org/muntashir/AppManager</string>
+    <string name="source_code_links"><a href="https://github.com/MuntashirAkon/AppManager">GitHub</a> •
+        <a href="https://gitlab.com/muntashir/AppManager">GitLab</a> •
+        <a href="https://0xacab.org/muntashir/AppManager">Riseup</a> •
+        <a href="https://codeberg.org/muntashir/AppManager">Codeberg</a></string>
     <string name="community">Community</string>
-    <string name="community_links">Telegram: https://t.me/AppManagerChannel
-        \nTwitter: https://twitter.com/AppManagerNews</string>
+    <string name="community_links"><a href="https://t.me/AppManagerChannel">Telegram channel</a> •
+        <a href="https://twitter.com/AppManagerNews">Twitter</a></string>
     <string name="pref_import_existing">Import existing rules</string>
     <string name="pref_import_existing_msg">Add components disabled by others apps to App Manager.
         Be careful when using this tool as there can be many false positives. Choose only the apps you\'re certain about.</string>
@@ -429,7 +423,6 @@
     <string name="filter_system_apps">System apps</string>
     <string name="filter_apps_with_rules">Apps with rules</string>
     <string name="select_all">Select All</string>
-    <string name="filter_disabled_apps">Disabled apps</string>
     <string name="installed_version">Installed Version</string>
     <string name="trackers">Trackers</string>
     <string name="components">Components</string>
@@ -472,10 +465,6 @@
         <item quantity="one">Could not set app ops for %1$d app</item>
         <item quantity="other">Could not set app ops for %1$d apps</item>
     </plurals>
-    <plurals name="alert_failed_to_enable">
-        <item quantity="one">Could not enable %1$d app</item>
-        <item quantity="other">Could not enable %1$d apps</item>
-    </plurals>
     <plurals name="backup_exists_are_you_sure">
         <item quantity="one">Backup already exists. Are you sure?</item>
         <item quantity="other">More than one app has a backup already. Are you sure?</item>
@@ -516,6 +505,7 @@
     <string name="run_in_termux">Run in Termux</string>
     <string name="website">Website</string>
     <string name="website_message" translatable="false">https://muntashirakon.github.io/AppManager</string>
+    <string name="discussions_site" translatable="false">https://github.com/MuntashirAkon/AppManager/discussions</string>
     <string name="pref_remove_all_rules">Remove all rules</string>
     <string name="pref_remove_all_rules_msg">Permissions will be granted, app ops and components will return to their default values.</string>
     <string name="are_you_sure">Are you sure?</string>
@@ -710,7 +700,6 @@
     <string name="allow_routine_ops">Allow routine ops</string>
     <string name="profile_state">Profile state</string>
     <string name="allow_routine_ops_msg">Allow the profile to be used in the routine operations</string>
-    <string name="profile_disable_msg">Disables or enables apps based on state</string>
     <string name="profile_force_stop_msg">Force-stops apps</string>
     <string name="profile_clear_cache_msg">Clears the app cache of apps</string>
     <string name="profile_clear_data_msg">Clears the data of apps</string>
@@ -905,7 +894,6 @@
     <string name="invalid_rsa_key_size">Invalid key size for RSA encryption. Key size can be 1024, 2048 or 4096 bits.</string>
     <string name="use_default">Use default</string>
     <string name="key_not_set">Not set.</string>
-    <string name="default_key_used">Default key is used.</string>
     <string name="failed_to_load_key">Could not load the key.</string>
     <string name="input_key_password">Key password</string>
     <string name="common_name">Common name (CN)</string>
@@ -1079,7 +1067,6 @@
     <string name="permission_flags">Permission flags</string>
     <string name="saved_filters">Saved filters</string>
     <string name="error_with_details">Error: %s</string>
-    <string name="enable_disable">Enable/disable</string>
     <string name="notice">Notice</string>
     <string name="notice_saf">Unlike the volumes, the selected directory will be used to store all the files related to App Manager, including saved APKs and backups. Storage Access Framework (SAF) is very slow, therefore, you should only use this option when others cannot be used.</string>
     <string name="backup_volume_dialog_description">Volumes with <tt>/tree</tt> prefix are folders selected using Storage Access Framework (SAF). Except these folders, the default directory for App Manager is a subfolder named <tt>AppManager</tt>.</string>
@@ -1230,4 +1217,44 @@
     <string name="backup_apps_cannot_be_backed_up">The following apps are not installed and cannot be backed up:</string>
     <string name="restart_device">Restart device</string>
     <string name="import_backups_warning_delete_backups_after_import">Delete the backups after importing them to App Manager? Each backup is individually deleted after it is imported with success. Select <b>No</b> if unsure.</string>
+    <string name="troubleshooting">Troubleshooting</string>
+    <string name="pref_reload_apps">Reload apps</string>
+    <string name="pref_reload_apps_msg">Reload the list of apps stored in App Manager database in case of unexpected behaviour.</string>
+    <string name="changelog_type_new">New</string>
+    <string name="changelog_type_fix">Fix</string>
+    <string name="changelog_type_improve">Improve</string>
+    <string name="unsupported_split_apk">Unsupported</string>
+    <string name="view_changelog">Find out what\'s new in this release</string>
+    <string name="sort_by_total_size">Total size</string>
+    <string name="am_command"><tt>am</tt> command</string>
+    <string name="pref_sign_apk_error_signing_key_not_added">A valid signing key is required for signing an APK file.</string>
+    <string name="pref_sign_apk_no_signing_key">No signing key</string>
+    <string name="failed_to_freeze">Could not freeze <xliff:g id="app_name" example="App Manager">%1$s</xliff:g>.</string>
+    <string name="failed_to_unfreeze">Could not unfreeze <xliff:g id="app_name" example="App Manager">%1$s</xliff:g>.</string>
+    <string name="freeze_unfreeze">Freeze/unfreeze</string>
+    <string name="profile_freeze_msg">Freezes or unfreezes apps based on state</string>
+    <string name="pref_default_freezing_method">Default freezing method</string>
+    <string name="pref_default_freezing_method_description">Method to be used by default in places where there is no option to select a freezing method.</string>
+    <string name="suspend_app">Suspend</string>
+    <string name="hide_app">Hide</string>
+    <plurals name="alert_failed_to_freeze">
+        <item quantity="one">Could not freeze %1$d app</item>
+        <item quantity="other">Could not freeze %1$d apps</item>
+    </plurals>
+    <plurals name="alert_failed_to_unfreeze">
+        <item quantity="one">Could not unfreeze %1$d app</item>
+        <item quantity="other">Could not unfreeze %1$d apps</item>
+    </plurals>
+    <string name="suspend_app_description">This is the weakest freezing method. A suspended app may still appear in the launcher but will be grayed out and cannot be launched.</string>
+    <string name="disable_app_description">Recommended freezing method. It disables the app and along with all its components, but all the shortcuts will be lost.</string>
+    <string name="hide_app_description">This method is only recommended for day to day use. A hidden app appears as if it is uninstalled. But the app could reappear if it is reinstalled or updated.</string>
+    <string name="sort_by_frozen_app">Frozen first</string>
+    <string name="filter_frozen_apps">Frozen apps</string>
+    <string name="pref_appearance_description">Theme, orientation, features, etc.</string>
+    <string name="pref_privacy">Privacy</string>
+    <string name="pref_privacy_description">Screen lock, authorization, etc.</string>
+    <string name="user_manual">User manual</string>
+    <string name="get_help">Get help</string>
+    <string name="pref_advanced_pref">Users, APK name format, parallel execution, etc.</string>
+    <string name="pref_version_changelog">Version/Changelog</string>
 </resources>

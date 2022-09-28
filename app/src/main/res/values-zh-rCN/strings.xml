@@ -93,15 +93,18 @@
     <string name="credits">鸣谢</string>
     <string name="credits_message">感谢下列开源项目作者：
 \n- The Android Open Source Project
+\n- <a href="https://github.com/zhaobozhen/libraries">Absinthe\'s libraries</a>
 \n- <a href="https://github.com/butzist/ActivityLauncher">Activity Launcher</a>
 \n- <a href="https://bitbucket.org/oF2pks/fdroid-applications-info">Apps_packages Info</a>
 \n- <a href="https://github.com/zhaobao/AppsMonitor">AppsMonitor</a>
 \n- <a href="https://github.com/8enet/AppOpsX">AppOpsX</a>
+\n- <a href="https://github.com/gabrielemariotti/changeloglib">ChangeLog Library</a>
 \n- <a href="https://bitbucket.org/oF2pks/fdroid-classyshark3xodus">ClassySharkAndroid</a>
 \n- <a href="https://github.com/billthefarmer/editor">Editor</a>
 \n- <a href="https://github.com/nex3z/FlowLayout">FlowLayout</a>
 \n- <a href="https://github.com/k3b/intent-intercept">Intent Intercept</a>
 \n- <a href="https://github.com/YarikSOffice/lingver">Lingver</a>
+\n- <a href="https://github.com/topjohnwu/Magisk">Magisk</a>
 \n- <a href="https://github.com/zhanghai/MaterialFiles">Material Files</a>
 \n- <a href="https://github.com/pluscubed/matlog">MatLog</a>
 \n- <a href="https://github.com/matrix-org/matrix-android-sdk">Matrix Android SDK</a>
@@ -110,7 +113,6 @@
 \n- <a href="https://github.com/Aefyr/SAI">SAI</a>
 \n- <a href="https://github.com/RikkaApps/Shizuku">Shizuku</a>
 \n- <a href="https://github.com/tuyafeng/Watt">Watt</a>
-\n- <a href="https://github.com/zhaobozhen/librariest">Absinthe\'s libraries</a>
 \n原始图标作者：<a href="https://github.com/Atrate">Atrate</a>. </string>
     <string name="word_wrap">自动换行</string>
     <string name="class_viewer">类查看器</string>
@@ -400,7 +402,7 @@
     <string name="run_in_termux">在 Termux 中运行</string>
     <string name="website">网址</string>
     <string name="pref_remove_all_rules">删除所有规则</string>
-    <string name="pref_remove_all_rules_msg">权限已被授予，app ops 和组件将回到它们的默认值。</string>
+    <string name="pref_remove_all_rules_msg">权限已被授予，App Ops 和组件将回到它们的默认值。</string>
     <string name="are_you_sure">您确定吗？</string>
     <string name="filter_apps_with_activities">可打开</string>
     <string name="toggle_default_app_ops">切换默认 AppOps</string>
@@ -618,7 +620,7 @@
     <string name="allow_routine_ops_msg">允许在例行操作中使用该配置文件</string>
     <string name="profile_state">配置文件状态</string>
     <string name="allow_routine_ops">允许例行操作</string>
-    <string name="adb_over_tcp">ADB over TCP</string>
+    <string name="adb_over_tcp">网络调试</string>
     <string name="pref_mode_of_operations">操作模式</string>
     <string name="user_profile_with_id">用户：%1$s (%2$d)</string>
     <string name="advanced">高级</string>
@@ -695,13 +697,13 @@
     <string name="no_of_cores">核心数量</string>
     <string name="support_architectures">支持的 ABI</string>
     <string name="security_providers">安全供应商</string>
-    <string name="kernel">Kernel</string>
+    <string name="kernel">内核</string>
     <string name="manufacturer">制造商</string>
     <string name="board_name">主板</string>
     <string name="model">型号</string>
     <string name="brand_name">品牌</string>
     <string name="about_device">关于此设备</string>
-    <string name="set_mode_for_app_ops_dots">为 app ops 设置模式…</string>
+    <string name="set_mode_for_app_ops_dots">为 App Ops 设置模式…</string>
     <string name="security">安全性</string>
     <string name="orientation_user_portrait">纵向视图</string>
     <plurals name="alert_failed_to_set_app_ops">
@@ -711,9 +713,9 @@
     <string name="backup_skip_signature_checks_description">还原校验和验证失败或具有与先前备份不同的 APK 签名的备份。</string>
     <string name="backup_multiple_description">使用一个单独<i>命名的</i>备份，而不是基本备份。</string>
     <string name="backup_rules_description">备份 App Manager 内配置的规则。</string>
-    <string name="backup_extras_description">备份应用权限、节电和数据使用选项、MagiskHide 状态、SSAID等。</string>
+    <string name="backup_extras_description">备份应用权限、节电和数据使用选项、MagiskHide 状态、SSAID 等。</string>
     <string name="backup_extras">附加</string>
-    <string name="backup_cache_description">备份<b>缓存</b>、<b>no_cache</b>和<b>no_backup</b>文件夹。</string>
+    <string name="backup_cache_description">备份<b>缓存</b>、<b>no_cache</b> 和 <b>no_backup</b> 文件夹。</string>
     <string name="backup_obb_media_description">备份 OBB 和媒体文件夹。</string>
     <string name="backup_external_data_description">备份外部数据文件夹。</string>
     <string name="backup_internal_data_description">备份数据文件夹。如果选中，将默认备份内部数据文件夹。</string>
@@ -810,7 +812,7 @@
     <string name="input_app_ops_description_profile">app op 名称和/或常数间用英文空格隔开，比如 <tt>WAKE_LOCK 63 72 CAMERA</tt>等。用 <tt>* </tt>表示应用到所有配置的 app ops。</string>
     <string name="working_on_adb_mode">在 ADB 模式上正常工作</string>
     <string name="verified_using_unreliable_hash">使用不可靠哈希进行了验证</string>
-    <string name="installer_app_message">选中 <b>挑选</b>从已安装应用中进行选择或选中<b>自定义</b>指定自定义包名。</string>
+    <string name="installer_app_message">选中<b>挑选</b>从已安装应用中进行选择或选中<b>自定义</b>指定自定义包名。</string>
     <string name="specify_custom_name">自定义</string>
     <string name="filter_apps_without_backups">无备份</string>
     <string name="uninstalled_apps">已卸载应用</string>
@@ -839,7 +841,6 @@
     <string name="common_name">通用名（CN）</string>
     <string name="input_key_password">密钥密码</string>
     <string name="failed_to_load_key">无法加载密钥。</string>
-    <string name="default_key_used">使用了默认密钥。</string>
     <string name="key_not_set">未设置。</string>
     <string name="use_default">使用默认</string>
     <string name="invalid_rsa_key_size">RSA加密的密钥大小无效。 密钥大小可以是1024位、2048位或4096位。</string>
@@ -935,7 +936,7 @@
     <string name="pref_show_timestamp_title">显示进程 ID 和时间戳</string>
     <string name="pref_show_timestamp_summary">展开时显示进程 id 和时间戳。</string>
     <string name="pref_log_write_period_title">写入周期</string>
-    <string name="pref_log_write_period_summary">每记录 %1$d 行写入 SD 卡。</string>
+    <string name="pref_log_write_period_summary">每记录 %1$d 行写入磁盘。</string>
     <string name="pref_log_line_period_error">请输入1到1000之间的整数。</string>
     <string name="pref_expanded_by_default_title">默认展开</string>
     <string name="pref_expanded_by_default_summary">默认情况下显示完整的日志文本。</string>
@@ -1028,7 +1029,7 @@
     <string name="next">下一个</string>
     <string name="installer_app_installed">应用已安装</string>
     <string name="background">后台</string>
-    <string name="trim_caches_in_all_apps_description">删除所有应用程序的缓存文件，包括 android 系统</string>
+    <string name="trim_caches_in_all_apps_description">删除所有应用程序的缓存文件，包括 Android 系统</string>
     <string name="trim_caches_in_all_apps">减少所有应用程序的缓存</string>
     <string name="user_root">使用 root</string>
     <string name="paste">粘贴</string>
@@ -1049,11 +1050,11 @@
     <string name="rename">重命名</string>
     <string name="import_from_sb">从 Swift Backup 3.0 – 3.2 导入</string>
     <string name="pref_default_blocking_method">默认拦截方式</string>
-    <string name="intent_firewall_and_disable">IFW + 禁用</string>
+    <string name="intent_firewall_and_disable">IFW + PM Disable</string>
     <string name="intent_firewall">IFW</string>
     <string name="pref_default_blocking_method_description">在没有拦截选项可选的情况下默认使用的方法。</string>
-    <string name="pref_intent_firewall_and_disable_description">使用 Intent Firewall 阻断组件并禁用它们。推荐 root 用户使用该方法。</string>
-    <string name="pref_intent_firewall_description">仅使用 Intent Firewall 阻断组件。不推荐，因为有些系统程序可以绕过IFW。</string>
+    <string name="pref_intent_firewall_and_disable_description">使用 Intent Firewall 阻断组件并通过 PM 禁用它们。推荐 root 用户使用该方法。</string>
+    <string name="pref_intent_firewall_description">仅使用 Intent Firewall 阻断组件。不推荐，因为有些系统程序可以绕过 IFW。</string>
     <string name="pref_disable_description">禁用组件。不推荐 root 用户使用，因为程序可以绕过这个。在 ADB 模式下，可以使用此方法禁用仅测试应用程序。</string>
     <string name="authenticating">正在验证…</string>
     <string name="search_type_contains">包含</string>
@@ -1158,4 +1159,16 @@
     <string name="backup_apps_cannot_be_backed_up">未安装下列应用，因而无法进行备份：</string>
     <string name="restart_device">重启设备</string>
     <string name="import_backups_warning_delete_backups_after_import">将备份导入 App Manager 后删除备份？ 每个备份在成功导入后会被单独删除。 如不确定，选择<b>否</b>。</string>
+    <string name="troubleshooting">疑难解答</string>
+    <string name="pref_reload_apps">重新加载应用</string>
+    <string name="pref_reload_apps_msg">重新加载存储在 App Manager 数据库中的应用列表，以防意外行为。</string>
+    <string name="changelog_type_new">新增</string>
+    <string name="changelog_type_fix">修复</string>
+    <string name="changelog_type_improve">改进</string>
+    <string name="unsupported_split_apk">不支持</string>
+    <string name="view_changelog">了解此版本中的新增功能</string>
+    <string name="sort_by_total_size">总大小</string>
+    <string name="am_command"><tt>am</tt>命令</string>
+    <string name="pref_sign_apk_no_signing_key">无签名秘钥</string>
+    <string name="pref_sign_apk_error_signing_key_not_added">签署 APK 文件需要有效的签名秘钥。</string>
 </resources>

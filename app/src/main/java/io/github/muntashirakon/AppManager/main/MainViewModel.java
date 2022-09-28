@@ -9,6 +9,7 @@ import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Handler;
 import android.os.UserHandleHidden;
 import android.text.TextUtils;
@@ -36,18 +37,19 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
-import io.github.muntashirakon.AppManager.AppManager;
 import io.github.muntashirakon.AppManager.backup.BackupUtils;
 import io.github.muntashirakon.AppManager.batchops.BatchOpsService;
 import io.github.muntashirakon.AppManager.compat.ActivityManagerCompat;
 import io.github.muntashirakon.AppManager.compat.PackageManagerCompat;
 import io.github.muntashirakon.AppManager.db.entity.App;
+import io.github.muntashirakon.AppManager.db.utils.AppDb;
 import io.github.muntashirakon.AppManager.logs.Log;
 import io.github.muntashirakon.AppManager.misc.AdvancedSearchView;
 import io.github.muntashirakon.AppManager.profiles.ProfileMetaManager;
 import io.github.muntashirakon.AppManager.rules.compontents.ComponentsBlocker;
 import io.github.muntashirakon.AppManager.settings.Ops;
 import io.github.muntashirakon.AppManager.types.PackageChangeReceiver;
+import io.github.muntashirakon.AppManager.types.PackageSizeInfo;
 import io.github.muntashirakon.AppManager.types.UserPackagePair;
 import io.github.muntashirakon.AppManager.users.Users;
 import io.github.muntashirakon.AppManager.utils.AppPref;
@@ -85,10 +87,10 @@ public class MainViewModel extends AndroidViewModel {
         mPackageManager = application.getPackageManager();
         mHandler = new Handler(application.getMainLooper());
         mPackageObserver = new PackageIntentReceiver(this);
-        mSortBy = (int) AppPref.get(AppPref.PrefKey.PREF_MAIN_WINDOW_SORT_ORDER_INT);
-        mSortReverse = (boolean) AppPref.get(AppPref.PrefKey.PREF_MAIN_WINDOW_SORT_REVERSE_BOOL);
-        mFilterFlags = (int) AppPref.get(AppPref.PrefKey.PREF_MAIN_WINDOW_FILTER_FLAGS_INT);
-        mFilterProfileName = (String) AppPref.get(AppPref.PrefKey.PREF_MAIN_WINDOW_FILTER_PROFILE_STR);
+        mSortBy = AppPref.getInt(AppPref.PrefKey.PREF_MAIN_WINDOW_SORT_ORDER_INT);
+        mSortReverse = AppPref.getBoolean(AppPref.PrefKey.PREF_MAIN_WINDOW_SORT_REVERSE_BOOL);
+        mFilterFlags = AppPref.getInt(AppPref.PrefKey.PREF_MAIN_WINDOW_FILTER_FLAGS_INT);
+        mFilterProfileName = AppPref.getString(AppPref.PrefKey.PREF_MAIN_WINDOW_FILTER_PROFILE_STR);
         if ("".equals(mFilterProfileName)) mFilterProfileName = null;
     }
 
@@ -315,16 +317,19 @@ public class MainViewModel extends AndroidViewModel {
             List<ApplicationItem> candidateApplicationItems = new ArrayList<>();
             if (mFilterProfileName != null) {
                 ProfileMetaManager profileMetaManager = new ProfileMetaManager(mFilterProfileName);
-                if (profileMetaManager.profile != null) {
-                    for (String packageName : profileMetaManager.profile.packages) {
-                        ApplicationItem item = new ApplicationItem();
-                        item.packageName = packageName;
-                        int index = applicationItems.indexOf(item);
-                        if (index != -1) {
-                            candidateApplicationItems.add(applicationItems.get(index));
-                        }
+                List<Integer> indexes = new ArrayList<>();
+                for (String packageName : profileMetaManager.getProfile().packages) {
+                    ApplicationItem item = new ApplicationItem();
+                    item.packageName = packageName;
+                    int index = applicationItems.indexOf(item);
+                    if (index != -1) {
+                        indexes.add(index);
                     }
-                } // else profile doesn't exist, display empty list
+                }
+                Collections.sort(indexes);
+                for (int index : indexes) {
+                    candidateApplicationItems.add(applicationItems.get(index));
+                }
             } else candidateApplicationItems.addAll(applicationItems);
             // Other filters
             if (mFilterFlags == ListOptions.FILTER_NO_FILTER) {
@@ -358,7 +363,7 @@ public class MainViewModel extends AndroidViewModel {
                         continue;
                     }
                     // Filter rests
-                    if ((mFilterFlags & ListOptions.FILTER_DISABLED_APPS) != 0 && !item.isDisabled) {
+                    if ((mFilterFlags & ListOptions.FILTER_FROZEN_APPS) != 0 && !item.isDisabled) {
                         continue;
                     } else if ((mFilterFlags & ListOptions.FILTER_APPS_WITH_RULES) != 0 && item.blockedCount <= 0) {
                         continue;
@@ -423,6 +428,9 @@ public class MainViewModel extends AndroidViewModel {
                     case ListOptions.SORT_BY_LAST_UPDATE:
                         // Sort in decreasing order
                         return -mode * o1.lastUpdateTime.compareTo(o2.lastUpdateTime);
+                    case ListOptions.SORT_BY_TOTAL_SIZE:
+                        // Sort in decreasing order
+                        return -mode * o1.totalSize.compareTo(o2.totalSize);
                     case ListOptions.SORT_BY_INSTALLATION_DATE:
                         // Sort in decreasing order
                         return -mode * Long.compare(o1.firstInstallTime, o2.firstInstallTime);
@@ -450,7 +458,7 @@ public class MainViewModel extends AndroidViewModel {
                             return -mode * o1.blockedCount.compareTo(o2.blockedCount);
                         }
                         break;
-                    case ListOptions.SORT_BY_DISABLED_APP:
+                    case ListOptions.SORT_BY_FROZEN_APP:
                         return -mode * Boolean.compare(o1.isDisabled, o2.isDisabled);
                     case ListOptions.SORT_BY_BACKUP:
                         return -mode * Boolean.compare(o1.backup != null, o2.backup != null);
@@ -502,8 +510,7 @@ public class MainViewModel extends AndroidViewModel {
             case PackageChangeReceiver.ACTION_PACKAGE_ALTERED:
             case PackageChangeReceiver.ACTION_PACKAGE_ADDED:
                 for (String packageName : packages) {
-                    ApplicationItem item = getNewApplicationItem(packageName, AppManager.getAppsDb().appDao()
-                            .getAll(packageName));
+                    ApplicationItem item = getNewApplicationItem(packageName, new AppDb().getAllApplications(packageName));
                     if (item != null) insertOrAddApplicationItem(item);
                 }
                 sortApplicationList(mSortBy, mSortReverse);
@@ -545,8 +552,9 @@ public class MainViewModel extends AndroidViewModel {
             if (item != null) {
                 if (item.backup == null) {
                     applicationItems.remove(item);
+                    AppDb appDb = new AppDb();
                     for (int userHandle : item.userHandles) {
-                        AppManager.getAppsDb().appDao().delete(item.packageName, userHandle);
+                        appDb.deleteApplication(item.packageName, userHandle);
                     }
                 } else {
                     ApplicationItem changedItem = getNewApplicationItem(packageName);
@@ -590,6 +598,7 @@ public class MainViewModel extends AndroidViewModel {
     private ApplicationItem getNewApplicationItem(String packageName) {
         ApplicationItem oldItem = null;
         int thisUser = UserHandleHidden.myUserId();
+        AppDb appDb = new AppDb();
         for (int userId : Users.getUsersIds()) {
             try {
                 @SuppressLint("WrongConstant")
@@ -635,8 +644,13 @@ public class MainViewModel extends AndroidViewModel {
                 item.blockedCount = app.rulesCount;
                 item.trackerCount = app.trackerCount;
                 item.lastActionTime = app.lastActionTime;
+                PackageSizeInfo packageSizeInfo = PackageUtils.getPackageSizeInfo(getApplication(), packageName, userId,
+                                Build.VERSION.SDK_INT >= Build.VERSION_CODES.O ? packageInfo.applicationInfo.storageUuid : null);
+                if (packageSizeInfo != null) {
+                    item.totalSize += packageSizeInfo.getTotalSize();
+                }
                 oldItem = item;
-                AppManager.getAppsDb().appDao().insert(app);
+                appDb.insert(app);
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -703,6 +717,12 @@ public class MainViewModel extends AndroidViewModel {
                 item.blockedCount = app.rulesCount;
                 item.trackerCount = app.trackerCount;
                 item.lastActionTime = app.lastActionTime;
+                for (int userId : item.userHandles) {
+                    PackageSizeInfo sizeInfo = PackageUtils.getPackageSizeInfo(getApplication(), packageName, userId, null);
+                    if (sizeInfo != null) {
+                        item.totalSize += sizeInfo.getTotalSize();
+                    }
+                }
                 oldItem = item;
             } catch (Exception ignore) {
             }
