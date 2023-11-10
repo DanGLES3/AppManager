@@ -2,12 +2,15 @@
 
 package io.github.muntashirakon.AppManager.main;
 
+import static io.github.muntashirakon.AppManager.compat.PackageManagerCompat.MATCH_UNINSTALLED_PACKAGES;
+
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageItemInfo;
 import android.content.pm.PackageManager;
 import android.graphics.drawable.Drawable;
 import android.util.Pair;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.WorkerThread;
 
@@ -18,7 +21,6 @@ import aosp.libcore.util.EmptyArray;
 import io.github.muntashirakon.AppManager.backup.BackupManager;
 import io.github.muntashirakon.AppManager.compat.PackageManagerCompat;
 import io.github.muntashirakon.AppManager.db.entity.Backup;
-import io.github.muntashirakon.AppManager.utils.PackageUtils;
 import io.github.muntashirakon.io.Path;
 
 /**
@@ -84,7 +86,11 @@ public class ApplicationItem extends PackageItemInfo {
     public Integer blockedCount = 0;
     public Integer trackerCount = 0;
     public Long lastActionTime = 0L;
+    public Long dataUsage = 0L;
     public Long totalSize = 0L;
+    public int openCount = 0;
+    public Long screenTime = 0L;
+    public Long lastUsageTime = 0L;
     /**
      * Whether the item is a user app (or system app)
      */
@@ -109,28 +115,29 @@ public class ApplicationItem extends PackageItemInfo {
      * Whether the app has any splits
      */
     public boolean hasSplits = false;
+    public boolean hasKeystore = false;
+    public boolean usesSaf = false;
+    public String ssaid = null;
     /**
      * Whether the item is selected
      */
     public boolean isSelected = false;
 
-    public int[] userHandles = EmptyArray.INT;
+    @NonNull
+    public int[] userIds = EmptyArray.INT;
 
     public ApplicationItem() {
         super();
     }
 
-    public ApplicationItem(PackageItemInfo orig) {
-        super(orig);
-    }
-
     @WorkerThread
     @Override
     public Drawable loadIcon(PackageManager pm) {
-        if (userHandles.length > 0) {
+        if (userIds.length > 0) {
             try {
                 ApplicationInfo info = PackageManagerCompat.getApplicationInfo(packageName,
-                        PackageUtils.flagMatchUninstalled, userHandles[0]);
+                        MATCH_UNINSTALLED_PACKAGES
+                                | PackageManagerCompat.MATCH_STATIC_SHARED_AND_SDK_LIBRARIES, userIds[0]);
                 return info.loadIcon(pm);
             } catch (Exception ignore) {
             }

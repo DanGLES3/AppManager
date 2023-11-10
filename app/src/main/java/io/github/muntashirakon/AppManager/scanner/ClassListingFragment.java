@@ -2,10 +2,13 @@
 
 package io.github.muntashirakon.AppManager.scanner;
 
+import static io.github.muntashirakon.AppManager.misc.AdvancedSearchView.SEARCH_TYPE_REGEX;
+
 import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Typeface;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -23,7 +26,6 @@ import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
-import com.android.internal.util.TextUtils;
 import com.google.android.material.card.MaterialCardView;
 
 import java.util.ArrayList;
@@ -32,13 +34,12 @@ import java.util.List;
 import java.util.Locale;
 
 import io.github.muntashirakon.AppManager.R;
+import io.github.muntashirakon.AppManager.editor.CodeEditorActivity;
 import io.github.muntashirakon.AppManager.misc.AdvancedSearchView;
 import io.github.muntashirakon.AppManager.utils.UIUtils;
 import io.github.muntashirakon.AppManager.utils.appearance.ColorCodes;
 import io.github.muntashirakon.util.UiUtils;
 import io.github.muntashirakon.widget.RecyclerView;
-
-import static io.github.muntashirakon.AppManager.misc.AdvancedSearchView.SEARCH_TYPE_REGEX;
 
 public class ClassListingFragment extends Fragment implements AdvancedSearchView.OnQueryTextListener {
     private TextView mEmptyView;
@@ -205,7 +206,7 @@ public class ClassListingFragment extends Fragment implements AdvancedSearchView
         @NonNull
         @Override
         public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-            View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.m3_preference, parent, false);
+            View view = LayoutInflater.from(parent.getContext()).inflate(io.github.muntashirakon.ui.R.layout.m3_preference, parent, false);
             return new ViewHolder(view);
         }
 
@@ -226,10 +227,8 @@ public class ClassListingFragment extends Fragment implements AdvancedSearchView
             holder.itemView.setCardBackgroundColor(position % 2 == 0 ? mCardColor1 : mCardColor0);
             holder.itemView.setOnClickListener(v -> {
                 try {
-                    Intent intent = new Intent(mActivity, ClassViewerActivity.class);
-                    intent.putExtra(ClassViewerActivity.EXTRA_URI, mViewModel.getUriFromClassName(className));
-                    intent.putExtra(ClassViewerActivity.EXTRA_APP_NAME, mActivity.getTitle());
-                    intent.putExtra(ClassViewerActivity.EXTRA_CLASS_NAME, className);
+                    Intent intent = CodeEditorActivity.getIntent(mActivity, mViewModel.getUriFromClassName(className), null, null, true)
+                            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                     mActivity.startActivity(intent);
                 } catch (Exception e) {
                     e.printStackTrace();

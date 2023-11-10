@@ -9,7 +9,7 @@ import dev.rikka.tools.refine.RefineAs;
 import misc.utils.HiddenUtil;
 
 @RefineAs(UserHandle.class)
-public class UserHandleHidden implements Parcelable {
+public class UserHandleHidden {
     /**
      * A user id to indicate all users on the device
      */
@@ -33,6 +33,7 @@ public class UserHandleHidden implements Parcelable {
     /**
      * Checks to see if both uids are referring to the same app id, ignoring the user id part of the
      * uids.
+     *
      * @param uid1 uid to compare
      * @param uid2 other uid to compare
      * @return whether the appId is the same for both uids
@@ -86,6 +87,18 @@ public class UserHandleHidden implements Parcelable {
      */
     @UserIdInt
     public static int myUserId() {
+        return HiddenUtil.throwUOE();
+    }
+
+    /**
+     * Generate a text representation of the uid, breaking out its individual
+     * components -- user, app, isolated, etc.
+     */
+    public static void formatUid(StringBuilder sb, int uid) {
+        HiddenUtil.throwUOE(sb, uid);
+    }
+
+    public int getIdentifier() {
         return HiddenUtil.throwUOE();
     }
 }

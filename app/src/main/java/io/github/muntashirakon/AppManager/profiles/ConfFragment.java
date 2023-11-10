@@ -10,15 +10,17 @@ import android.view.ViewGroup;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
+
 import io.github.muntashirakon.AppManager.R;
 
 public class ConfFragment extends Fragment {
-    AppsProfileActivity activity;
+    private AppsProfileActivity mActivity;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        activity = (AppsProfileActivity) requireActivity();
+        mActivity = (AppsProfileActivity) requireActivity();
     }
 
     @Nullable
@@ -30,15 +32,22 @@ public class ConfFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        getChildFragmentManager().beginTransaction().replace(R.id.fragment_container_view_tag, new ConfPreferences()).commit();
+        ProfileViewModel model = new ViewModelProvider(requireActivity()).get(ProfileViewModel.class);
+        model.observeProfileLoaded().observe(getViewLifecycleOwner(), profileName -> {
+            if (profileName == null) return;
+            getChildFragmentManager()
+                    .beginTransaction()
+                    .replace(R.id.fragment_container_view_tag, new ConfPreferences())
+                    .commit();
+        });
     }
 
     @Override
     public void onResume() {
         super.onResume();
-        if (activity.getSupportActionBar() != null) {
-            activity.getSupportActionBar().setSubtitle(R.string.configurations);
+        if (mActivity.getSupportActionBar() != null) {
+            mActivity.getSupportActionBar().setSubtitle(R.string.configurations);
         }
-        activity.fab.hide();
+        mActivity.fab.hide();
     }
 }

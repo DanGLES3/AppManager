@@ -9,7 +9,6 @@ import android.os.UserHandleHidden;
 
 import androidx.annotation.Nullable;
 
-import io.github.muntashirakon.AppManager.AppManager;
 import io.github.muntashirakon.AppManager.BaseActivity;
 import io.github.muntashirakon.AppManager.BuildConfig;
 import io.github.muntashirakon.AppManager.compat.ActivityManagerCompat;
@@ -23,21 +22,27 @@ public class ActivityLauncherShortcutActivity extends BaseActivity {
     @Override
     protected void onAuthenticated(@Nullable Bundle savedInstanceState) {
         Intent intent = getIntent();
-        if (!intent.hasExtra(EXTRA_PKG) || !intent.hasExtra(EXTRA_CLS)) {
+        if (!Intent.ACTION_CREATE_SHORTCUT.equals(intent.getAction()) || !intent.hasExtra(EXTRA_PKG) || !intent.hasExtra(EXTRA_CLS)) {
             // Invalid intent
             finishAndRemoveTask();
             return;
         }
+        intent.setAction(null);
         intent.setClassName(intent.getStringExtra(EXTRA_PKG), intent.getStringExtra(EXTRA_CLS));
         int userId = intent.getIntExtra(EXTRA_USR, UserHandleHidden.myUserId());
         intent.removeExtra(EXTRA_PKG);
         intent.removeExtra(EXTRA_CLS);
         try {
-            ActivityManagerCompat.startActivity(AppManager.getContext(), intent, userId);
+            ActivityManagerCompat.startActivity(intent, userId);
         } catch (RemoteException e) {
             e.printStackTrace();
             UIUtils.displayLongToast("Error: " + e.getMessage());
         }
         finishAndRemoveTask();
+    }
+
+    @Override
+    public boolean getTransparentBackground() {
+        return true;
     }
 }

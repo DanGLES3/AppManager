@@ -73,7 +73,6 @@
     <string name="user_id">Kullanıcı ID</string>
     <string name="main_activity">Asıl Faaliyet</string>
     <string name="empty_package_name">Boş paket adı</string>
-    <string name="instructions">Açıklamalar</string>
     <string name="error_creating_shortcut">Kısayol oluşturulurken hata oluştu</string>
     <string name="error_verbose_pin_shortcut">Geçerli başlatıcısı \"PinShortcut\" özelliğini desteklemiyor. Kısayol oluşturulamıyor.</string>
     <string name="grant_usage_acess_message">Uygulama kullanım bilgilerini görüntülemek için kullanılır.</string>
@@ -89,7 +88,6 @@
     <string name="requested_large_heap">Büyük metin</string>
     <string name="updated_app">Güncelleme</string>
     <string name="select_all">Tümünü Seç</string>
-    <string name="filter_disabled_apps">Pasif uygulamalar</string>
     <string name="installed_version">Kurulu Sürüm</string>
     <string name="trackers">İzleyiciler</string>
     <string name="components">Bileşenler</string>
@@ -113,8 +111,6 @@
     <string name="third_party">Üçüncü Parti Kütüphaneler ve Simgeler</string>
     <string name="license">Lisans</string>
     <string name="icon_picker">Simge Seçici</string>
-    <string name="error_invalid_icon_format">Geçersiz Simge Biçimi</string>
-    <string name="error_invalid_icon_resource">Geçersiz Simge Kaynağı</string>
     <string name="class_name">Sınıf Adı</string>
     <string name="package_name">Paket Adı</string>
     <string name="shortcut_name">Kısayol Adı</string>
@@ -179,7 +175,6 @@
     <string name="apply_now">Şimdi uygula…</string>
     <string name="keystore">KeyStore</string>
     <string name="no_profiles">Profil yok</string>
-    <string name="presets">Ön ayarlar</string>
     <string name="profiles">Profiller</string>
     <string name="open_pgp_provider">OpenPGP Sağlayıcısı</string>
     <string name="systemless_app">Sistemsiz Uygulama</string>
@@ -280,10 +275,6 @@
         <item quantity="one">Yedek zaten var. Emin misiniz\?</item>
         <item quantity="other">Birden fazla uygulamanın zaten yedeği var. Emin misiniz\?</item>
     </plurals>
-    <plurals name="alert_failed_to_enable">
-        <item quantity="one">%1$d uygulama etkinleştirilemedi</item>
-        <item quantity="other">%1$d uygulama etkinleştirilemedi</item>
-    </plurals>
     <plurals name="alert_failed_to_block_components">
         <item quantity="one">%1$d uygulama için bileşenler engellenemedi</item>
         <item quantity="other">%1$d uygulama için bileşenler engellenemedi</item>
@@ -333,7 +324,6 @@
     <string name="clear_data_from_uninstalled_apps_description"><tt>DONT_DELETE_DATA</tt> işaretiyle kaldırılan uygulamaların verilerini temizle</string>
     <string name="clear_data_from_uninstalled_apps">Kaldırılan uygulamaların verilerini temizle</string>
     <string name="deny_app_ops_description">Sabit değerlerle tanımlanan uygulama işlemleri için bir mod ayarlayın, örn. <tt>63</tt> veya <tt>RUN_IN_BACKGROUND</tt></string>
-    <string name="block_components_description">Verilen imzalarla tanımlanan tüm bileşenleri engelle</string>
     <string name="block_components_dots">Bileşenleri engelle…</string>
     <string name="block_unblock_trackers_description">Tüm kurulu uygulamalarda reklam ve izleme bileşenlerini engelleyin veya engelini kaldırın</string>
     <string name="clear_cache">Önbelleği Temizle</string>
@@ -418,16 +408,11 @@
         <item quantity="one">%1$d uygulama kaldırılamadı</item>
         <item quantity="other">%1$d uygulama kaldırılamadı</item>
     </plurals>
-    <plurals name="alert_failed_to_disable">
-        <item quantity="one">%1$d uygulama devre dışı bırakılamadı</item>
-        <item quantity="other">%1$d uygulama devre dışı bırakılamadı</item>
-    </plurals>
     <plurals name="alert_failed_to_clear_data">
         <item quantity="one">%1$d uygulamadan veriler temizlenemedi</item>
         <item quantity="other">%1$d uygulamadan veriler temizlenemedi</item>
     </plurals>
     <string name="sort_by_blocked_components">Önce engellenen</string>
-    <string name="sort_by_disabled_app">Önce devre dışı bırakılan</string>
     <string name="error_evaluating_input">Giriş değerlendirilemedi</string>
     <string name="shared_prefs">Paylaşılan Tercihler</string>
     <string name="test_only">Yalnızca test</string>
@@ -444,7 +429,6 @@
     <string name="disable_background_run">Arka planda çalışmayı engelle</string>
     <string name="kill_process">Sonlandır</string>
     <string name="running_apps">Çalışan Uygulamalar</string>
-    <string name="store">Mağaza</string>
     <string name="apk_updater">APK Güncelleyici</string>
     <plurals name="failed_to_import_files">
         <item quantity="one">%1$d dosya içe aktarılamadı.</item>
@@ -483,8 +467,6 @@
     <string name="storage_and_cache">Depolama ve Önbellek</string>
     <string name="failed_to_stop"><xliff:g id="app_name" example="App Manager">%1$s</xliff:g> durdurulamadı.</string>
     <string name="force_stop">Zorla durdur</string>
-    <string name="failed_to_enable"><xliff:g id="app_name" example="App Manager">%1$s</xliff:g> etkinleştirilemedi.</string>
-    <string name="failed_to_disable"><xliff:g id="app_name" example="App Manager">%1$s</xliff:g> devre dışı bırakılamadı.</string>
     <string name="enable">Etkinleştir</string>
     <string name="disable">Devre dışı bırak</string>
     <string name="stopped">Durduruldu</string>
@@ -576,7 +558,6 @@
 \nOrijinal logo: <a href="https://github.com/Atrate">Atrate</a>. </string>
     <string name="credits">Teşekkürler</string>
     <string name="paths_and_directories">Yollar ve Dizinler</string>
-    <string name="edit_shortcut">Kısayolu Düzenle</string>
     <string name="create_shortcut">Kısayol Oluştur</string>
     <string name="sort_by_target_sdk">Hedef SDK</string>
     <string name="only_install">Yalnızca Kur</string>
@@ -635,7 +616,6 @@
     <string name="pref_encryption_msg">Yedeklemeler için şifreleme.</string>
     <string name="encryption">Şifreleme</string>
     <string name="select_user">Kullanıcı seç</string>
-    <string name="pref_show_users_in_installer_msg">Harici bir uygulamayı kurmadan önce seçilecek bir kullanıcı listesi görüntüle. Root veya ADB gerektirir.</string>
     <string name="pref_show_users_in_installer">Kurucuda kullanıcıları göster</string>
     <string name="failed_to_duplicate_profile">Profil kopyalanamadı</string>
     <string name="send_selected">Seçileni gönder</string>
@@ -654,7 +634,6 @@
     <string name="profile_clear_data_msg">Uygulamaların verilerini temizler</string>
     <string name="profile_clear_cache_msg">Uygulamaların uygulama önbelleğini temizler</string>
     <string name="profile_force_stop_msg">Uygulamaları zorla durdurur</string>
-    <string name="profile_disable_msg">Duruma göre uygulamaları devre dışı bırakır veya etkinleştirir</string>
     <string name="allow_routine_ops_msg">Profilin rutin işlemlerde kullanılmasına izin ver</string>
     <string name="profile_state">Profil durumu</string>
     <string name="allow_routine_ops">Rutin işlemlere izin ver</string>
@@ -882,10 +861,7 @@
     <string name="generate_key">Oluştur</string>
     <string name="input_key">Anahtarı girin (onaltılık olarak)</string>
     <string name="input_keystore_alias_pass_msg">%1$s parolasını girmek için buraya dokunun</string>
-    <string name="source_code_links">GitHub: https://github.com/MuntashirAkon/AppManager
-\nGitLab: https://gitlab.com/muntashir/AppManager
-\nRiseup: https://0xacab.org/muntashir/AppManager
-\nCodeberg: https://codeberg.org/muntashir/AppManager</string>
+    <string name="source_code_links"><a href="https://github.com/MuntashirAkon/AppManager">GitHub</a> • <a href="https://gitlab.com/muntashir/AppManager">GitLab</a> • <a href="https://0xacab.org/muntashir/AppManager">Riseup</a> • <a href="https://codeberg.org/muntashir/AppManager">Codeberg</a></string>
     <string name="pref_installer_msg">Uygulama kurucusunun davranışlarını yapılandırın.</string>
     <string name="trackers_unblocked_successfully">İzleyicilerin engeli artık kaldırıldı</string>
     <string name="trackers_blocked_successfully">İzleyiciler artık engellendi</string>
@@ -988,7 +964,6 @@
     <string name="orientation_right_to_left">Sağdan sola</string>
     <string name="orientation_left_to_right">Soldan sağa</string>
     <string name="orientation_follow_locale">Yerel ayarı takip et</string>
-    <string name="pref_layout_orientation">Düzen yönü</string>
     <plurals name="file_deletion_confirmation">
         <item quantity="one">%d dosya silinecek</item>
         <item quantity="other">%d dosya silinecek</item>
@@ -1009,13 +984,10 @@
     <string name="adb_connect_port_number_description">Bağlantı noktası numarası, <b>Aygıt adı</b> bölümünün hemen altındaki <b>IP adresi &amp; bağlantı noktası</b> bölümünün altında bulunur.</string>
     <string name="port_number">Bağlantı noktası</string>
     <string name="adb_connect">Bağlan</string>
-    <string name="wireless_debugging_not_supported">Kablosuz hata ayıklama bu platformda desteklenmiyor.</string>
     <string name="wireless_debugging">Kablosuz hata ayıklama</string>
     <string name="unknown_net_policy">Bilinmeyen ağ politikası (%1$s - %2$X)</string>
     <string name="failed_to_prevent_background_run">%1$s arka planda çalışması engellenemedi</string>
-    <string name="app_signing_signature_mismatch_for_data_only_app">İmza uyuşmazlığı nedeniyle uygulama kurulamadı. Uygulama, verileri temizlenmeden kaldırıldı.</string>
-    <string name="community_links">Telegram: https://t.me/AppManagerChannel
-\nTwitter: https://twitter.com/AppManagerNews</string>
+    <string name="community_links"><a href="https://t.me/AppManagerChannel">Telegram kanalı</a> • <a href="https://twitter.com/AppManagerNews">Twitter</a></string>
     <string name="community">Topluluk</string>
     <plurals name="alert_failed_to_import_backups">
         <item quantity="one">%1$d yedek içe aktarılamadı</item>
@@ -1034,7 +1006,6 @@
     <string name="permission_flags">İzin işaretleri</string>
     <string name="pref_selected_users_msg">App Manager\'i yalnızca seçilen kullanıcılarla çalışacak şekilde kısıtlayın.</string>
     <string name="pref_selected_users">Seçilen kullanıcılar</string>
-    <string name="enable_disable">Etkinleştir/devre dışı bırak</string>
     <string name="error_with_details">Hata: %s</string>
     <string name="notice_saf">Birimlerin aksine, seçilen dizin, kaydedilmiş APK\'lar ve yedekler dahil olmak üzere App Manager ile ilgili tüm dosyaları depolamak için kullanılacaktır. Depolama Erişim Sistemi (SAF) çok yavaştır, bu nedenle bu seçeneği yalnızca diğerleri kullanılamadığında kullanmalısınız.</string>
     <string name="files">Dosyalar</string>
@@ -1208,4 +1179,115 @@
     <string name="am_command"><tt>am</tt> komutu</string>
     <string name="pref_sign_apk_error_signing_key_not_added">Bir APK dosyasını imzalamak için geçerli bir imzalama anahtarı gereklidir.</string>
     <string name="pref_sign_apk_no_signing_key">İmzalama anahtarı yok</string>
+    <string name="failed_to_freeze"><xliff:g id="app_name" example="App Manager">%1$s</xliff:g> dondurulamadı.</string>
+    <string name="freeze_unfreeze">Dondur/çöz</string>
+    <string name="profile_freeze_msg">Uygulamaları duruma göre dondurur veya çözer</string>
+    <string name="suspend_app">Askıya al</string>
+    <plurals name="alert_failed_to_unfreeze">
+        <item quantity="one">%1$d uygulama çözülemedi</item>
+        <item quantity="other">%1$d uygulama çözülemedi</item>
+    </plurals>
+    <string name="sort_by_frozen_app">Önce dondurulan</string>
+    <string name="filter_frozen_apps">Dondurulan uygulamalar</string>
+    <string name="pref_version_changelog">Sürüm/Değişiklik günlüğü</string>
+    <string name="hide_app">Gizle</string>
+    <string name="failed_to_unfreeze"><xliff:g id="app_name" example="App Manager">%1$s</xliff:g> çözülemedi.</string>
+    <string name="pref_default_freezing_method">Öntanımlı dondurma yöntemi</string>
+    <string name="pref_default_freezing_method_description">Bir dondurma yöntemi seçme seçeneğinin olmadığı yerlerde öntanımlı olarak kullanılacak yöntem.</string>
+    <plurals name="alert_failed_to_freeze">
+        <item quantity="one">%1$d uygulama dondurulamadı</item>
+        <item quantity="other">%1$d uygulama dondurulamadı</item>
+    </plurals>
+    <string name="suspend_app_description">Bu en zayıf dondurma yöntemidir. Askıya alınan bir uygulama başlatıcıda görünmeye devam edebilir ancak gri renkte olur ve başlatılamaz.</string>
+    <string name="disable_app_description">Tavsiye edilen dondurma yöntemi. Uygulamayı ve tüm bileşenlerini devre dışı bırakır, ancak tüm kısayollar kaybolacaktır.</string>
+    <string name="hide_app_description">Bu yöntem yalnızca günlük kullanım için tavsiye edilir. Gizli bir uygulama kaldırılmış gibi görünür. Ancak uygulama yeniden kurulursa veya güncellenirse yeniden görünebilir.</string>
+    <string name="pref_privacy">Gizlilik</string>
+    <string name="pref_appearance_description">Tema, yönlendirme, özellikler, vb.</string>
+    <string name="pref_privacy_description">Ekran kilidi, yetkilendirme, vb.</string>
+    <string name="user_manual">Kullanıcı kılavuzu</string>
+    <string name="get_help">Yardım alın</string>
+    <string name="pref_advanced_pref">Kullanıcılar, APK adı biçimi, paralel çalıştırma, vb.</string>
+    <string name="file_modification_date">Değiştirildi</string>
+    <string name="file_open_with">Birlikte aç</string>
+    <string name="file_change_open_with">Birlikte açmayı değiştir</string>
+    <string name="file_shortcut_target_file">Hedef dosya</string>
+    <string name="file_cut">Kes</string>
+    <string name="fm_open_with_for_this_file_only">Yalnızca bu dosya için</string>
+    <string name="file_open_as">Farklı aç…</string>
+    <string name="file_open_with_os_default_dialog">İşletim sistemi öntanımlı iletişim kutusu ile aç</string>
+    <string name="open_as_text">Metin</string>
+    <string name="open_as_image">Resim</string>
+    <string name="open_as_video">Video</string>
+    <string name="open_as_archive">Arşiv</string>
+    <string name="delete_filename">%s sil</string>
+    <string name="confirm_file_deletion">Evet, sil</string>
+    <string name="on_unfreeze_open_application">Çözdükten sonra uygulamayı aç</string>
+    <string name="tap_to_freeze_app">Dondurmak için dokunun</string>
+    <string name="action_stop_service">Durdur</string>
+    <string name="file_accessed_date">Erişildi</string>
+    <string name="file_creation_date">Oluşturuldu</string>
+    <string name="file_properties">Özellikler</string>
+    <string name="fm_always_open_with">Her zaman aç</string>
+    <string name="file_open_with_custom_activity">Özel</string>
+    <string name="open_as_folder">Klasör</string>
+    <string name="freeze_on_phone_locked">Telefon kilitlendiğinde uygulamayı otomatik olarak dondur</string>
+    <string name="waiting_for_the_phone_to_be_locked">Telefonun kilitlenmesi bekleniyor…</string>
+    <string name="open_as_other">Diğer</string>
+    <string name="on_open_application_no_recents">Başlatılan uygulamayı son kullanılanlarda gösterme</string>
+    <string name="sort_by_data_usage">Veri kullanımı</string>
+    <string name="filter_apps_with_keystore">KeyStore ile</string>
+    <string name="filter_apps_with_saf">SAF ile</string>
+    <string name="filter_apps_with_ssaid">SSAID ile</string>
+    <string name="action_continue">Devam et</string>
+    <string name="export_app_list_select_format">Uygulama listesini dışa aktarmak için biçim seçin</string>
+    <string name="install_for_another_user">Şunun için kur…</string>
+    <string name="adb_incomplete_usb_debugging_message">USB Hata Ayıklama düzgün yapılandırılmamış gibi görünüyor. Lütfen ek adımlar için <a href="https://muntashirakon.github.io/AppManager/#subsec:enable-usb-debugging">belgelendirmeyi</a> okuyun. Adımları zaten biliyorsanız, lütfen geliştirici seçeneklerini açmak için “Aç” düğmesine, veya root yok modunu kullanmaya devam etmek için “Kapat” düğmesine tıklayın.</string>
+    <string name="grant_overlay_permission_message">App Manager\'in diğer tüm pencerelerin üstünde kayan bir pencere görüntülemesine izin verin</string>
+    <string name="grant_required_permission">Gerekli izni ver</string>
+    <string name="option_display_dot_files">Noktayla başlayan dosyalar</string>
+    <string name="export_option_markdown">Markdown</string>
+    <string name="export_app_list">Uygulama listesini dışa aktar</string>
+    <string name="export_option_xml">XML</string>
+    <string name="option_display_folders_on_top">Klasörler üstte</string>
+    <string name="adb_incomplete_usb_debugging_title">Eksik USB Hata Ayıklama</string>
+    <string name="funding_campaign_dialog_message">Sınırlı bir süre boyunca App Manager için bir <b>fonlama kampanyası</b> yapıyoruz. Kampanya hakkında daha fazla bilgi edinmek için <a href="https://opencollective.com/app-manager#category-ABOUT">opencollective.com/app-manager</a> adresini ziyaret edin. Bu bildirim bir daha gösterilmeyecektir, ancak tüm kampanya süresince Ayarlar sayfasında bulabilirsiniz.</string>
+    <string name="funding_campaign_text">Sınırlı bir süre boyunca App Manager için bir <b>fonlama kampanyası</b> yapıyoruz. <a href="https://opencollective.com/app-manager#category-ABOUT">Daha fazla bilgi edinin…</a></string>
+    <string name="confirm_uninstallation">Kaldırma işlemini onayla</string>
+    <string name="class_hierarchy">Hiyerarşi</string>
+    <string name="title_ui_tracker">Kullanıcı Arayüzü İzleyici</string>
+    <string name="grant_accessibility_permission_for_tracking_window_contents">App Manager\'ın öndeki pencerenin içeriğini izlemek için erişilebilirlik özelliğini kullanmasına izin verin.</string>
+    <string name="title_terminal_emulator">Terminal</string>
+    <string name="title_labs_activity">Laboratuvarlar</string>
+    <string name="app_manager_build_expired">Güncelleme Gerekli</string>
+    <string name="app_manager_build_expired_message">Aygıtınızın ve verilerinizin güvenliğini sağlamak için, kullanmakta olduğunuz App Manager sürümü kullanımdan kaldırıldı. Kullanmaya devam etmek için en son sürüme güncellemeniz veya güncelleme yoksa kaldırmanız gerekir.</string>
+    <string name="app_manager_build_expiring_soon_warning">App Manager\'ın bu sürümünün süresi çok yakında dolacak. Lütfen en son sürüme güncelleyin.</string>
+    <string name="app_can_write_and_execute_in_same_place">Uygulama <a href="https://en.wikipedia.org/wiki/W%5EX">W^X politikasını</a> ihlal ediyor ve aynı dizinde veya belleğin aynı bölümünde yazma ve çalıştırma yeteneğine sahiptir. Bu, uygulama içine gömülü çalıştırılabilir dosyaların değiştirilmesi ya da internetten indirilmesi yoluyla herhangi bir dosyanın çalıştırılmasına izin verir. Uygulamanın amaçlanan davranışı bu olmadığı sürece (örn. terminal öykünücüleri), uygulamanın SDK 29 (Android 10) ve sonrasını hedefleyen daha yeni bir sürümünü veya alternatiflerini bulmanız tavsiye edilir.</string>
+    <string name="renamed_successfully">Yeniden adlandırıldı</string>
+    <string name="selinux_context">SELinux bağlamı</string>
+    <string name="unix_file_permissions">Mod</string>
+    <string name="file_group_id">Grup (GID)</string>
+    <string name="file_owner_id">Sahip (UID)</string>
+    <string name="calculating_file_size">Hesaplanıyor…</string>
+    <string name="sort_by_filename">Ad</string>
+    <string name="sort_by_last_modified">Son değiştirilme</string>
+    <string name="sort_by_file_size">Dosya boyutu</string>
+    <string name="sort_by_file_type">Dosya türü</string>
+    <string name="select_a_dex2oat_compiler_filter"><tt>dex2oat</tt> derleyici filtresi</string>
+    <string name="optimize_option_clear_profile_data">Önceki profil verilerini temizle</string>
+    <string name="optimize_option_check_profiles">DEX iyileştirmesi sırasında profil verilerini göz önünde bulundur</string>
+    <string name="optimize_option_force_dexopt">DEX iyileştirmesini hemen gerçekleştir</string>
+    <string name="title_perform_runtime_optimization_to_apps">Çalışma zamanı iyileştirmesi gerçekleştir</string>
+    <string name="action_run">Çalıştır</string>
+    <string name="summary_perform_runtime_optimization_to_apps">Uygulamaların performansını artırmak için DEX\'i ve (Android 10 ve sonraki sürümlerde) düzenleri iyileştirin.</string>
+    <string name="action_optimize_app">İyileştir</string>
+    <string name="batch_ops_runtime_optimization">Çalışma zamanı iyileştirmesi</string>
+    <string name="optimize_option_compile_layouts">Düzen kaynaklarını derle</string>
+    <string name="optimize_option_force_compilation">Gerekli olmadığında bile derlemeye zorla</string>
+    <plurals name="alert_failed_to_optimize_apps">
+        <item quantity="one">%1$d uygulama iyileştirilemedi</item>
+        <item quantity="other">%1$d uygulama iyileştirilemedi</item>
+    </plurals>
+    <string name="title_domains_supported_by_the_app">Desteklenen Etki Alanları</string>
+    <string name="app_info_tag_open_links">Açık bağlantılar</string>
+    <string name="source_stamp_verified_and_identified_to_be_from_source">SourceStamp doğrulandı ve <xliff:g id="source" example="Google Play">%1$s</xliff:g> kaynağından olduğu belirlendi.</string>
 </resources>

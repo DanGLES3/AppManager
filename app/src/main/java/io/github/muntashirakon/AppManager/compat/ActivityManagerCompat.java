@@ -2,6 +2,7 @@
 
 package io.github.muntashirakon.AppManager.compat;
 
+import android.Manifest;
 import android.annotation.UserIdInt;
 import android.app.ActivityManager;
 import android.app.ActivityManagerNative;
@@ -20,6 +21,8 @@ import android.text.TextUtils;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
+import androidx.annotation.RequiresPermission;
 import androidx.annotation.VisibleForTesting;
 
 import java.util.ArrayList;
@@ -29,22 +32,17 @@ import java.util.ListIterator;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import io.github.muntashirakon.AppManager.appops.AppOpsManager;
 import io.github.muntashirakon.AppManager.ipc.ProxyBinder;
 import io.github.muntashirakon.AppManager.logs.Log;
 import io.github.muntashirakon.AppManager.runner.Runner;
-import io.github.muntashirakon.AppManager.servermanager.LocalServer;
-import io.github.muntashirakon.AppManager.settings.Ops;
-import io.github.muntashirakon.AppManager.utils.PermissionUtils;
+import io.github.muntashirakon.AppManager.self.SelfPermissions;
+import io.github.muntashirakon.AppManager.users.Users;
 
 public final class ActivityManagerCompat {
-    public static final String SHELL_PACKAGE_NAME = "com.android.shell";
-
     @SuppressWarnings("deprecation")
-    public static int startActivity(Context context, Intent intent, @UserIdInt int userHandle)
-            throws RemoteException {
+    public static int startActivity(Intent intent, @UserIdInt int userHandle) throws RemoteException {
         IActivityManager am = getActivityManager();
-        String callingPackage = LocalServer.isAMServiceAlive() ? SHELL_PACKAGE_NAME : context.getPackageName();
+        String callingPackage = SelfPermissions.getCallingPackage(Users.getSelfOrRemoteUid());
         int result;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             result = am.startActivityAsUserWithFeature(null, callingPackage,
@@ -59,11 +57,10 @@ public final class ActivityManagerCompat {
     }
 
     @SuppressWarnings("deprecation")
-    public static ComponentName startService(Context context, Intent intent,
-                                             @UserIdInt int userHandle, boolean asForeground)
+    public static ComponentName startService(Intent intent, @UserIdInt int userHandle, boolean asForeground)
             throws RemoteException {
         IActivityManager am = getActivityManager();
-        String callingPackage = LocalServer.isAMServiceAlive() ? SHELL_PACKAGE_NAME : context.getPackageName();
+        String callingPackage = SelfPermissions.getCallingPackage(Users.getSelfOrRemoteUid());
         ComponentName cn;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             cn = am.startService(null, intent, intent.getType(), asForeground, callingPackage, null, userHandle);
@@ -81,11 +78,11 @@ public final class ActivityManagerCompat {
         int res;
         IIntentReceiver receiver = new IntentReceiver();
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            res = am.broadcastIntentWithFeature(null, null, intent, null, receiver, 0, null, null, null, AppOpsManager.OP_NONE, null, true, false, userHandle);
+            res = am.broadcastIntentWithFeature(null, null, intent, null, receiver, 0, null, null, null, AppOpsManagerCompat.OP_NONE, null, true, false, userHandle);
         } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            res = am.broadcastIntent(null, intent, null, null, 0, null, null, null, AppOpsManager.OP_NONE, null, true, false, userHandle);
+            res = am.broadcastIntent(null, intent, null, null, 0, null, null, null, AppOpsManagerCompat.OP_NONE, null, true, false, userHandle);
         } else {
-            res = am.broadcastIntent(null, intent, null, null, 0, null, null, null, AppOpsManager.OP_NONE, true, false, userHandle);
+            res = am.broadcastIntent(null, intent, null, null, 0, null, null, null, AppOpsManagerCompat.OP_NONE, true, false, userHandle);
         }
         return res;
     }
@@ -110,14 +107,13 @@ public final class ActivityManagerCompat {
     @NonNull
     public static List<ActivityManager.RunningServiceInfo> getRunningServices(String packageName, @UserIdInt int userId) {
         List<ActivityManager.RunningServiceInfo> runningServices;
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
-                && !Ops.isPrivileged()
-                && PermissionUtils.hasDumpPermission()) {
-            // Fetch running services by parsing dumpsys output if root/ADB is disabled
-            // and android.permission.DUMP is granted
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N_MR1
+                && !SelfPermissions.checkSelfOrRemotePermission(ManifestCompat.permission.REAL_GET_TASKS)
+                && canDumpRunningServices()) {
+            // Fetch running services by parsing dumpsys output
             runningServices = getRunningServicesUsingDumpSys(packageName);
         } else {
-            // For no-root, this returns services running in the current UID since Android M
+            // For no-root, this returns services running in the current UID since Android Oreo
             try {
                 runningServices = getActivityManager().getServices(100, 0);
             } catch (RemoteException e) {
@@ -135,8 +131,8 @@ public final class ActivityManagerCompat {
 
     public static List<ActivityManager.RunningAppProcessInfo> getRunningAppProcesses() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
-                && !Ops.isPrivileged()
-                && PermissionUtils.hasDumpPermission()) {
+                && !SelfPermissions.checkSelfOrRemotePermission(ManifestCompat.permission.REAL_GET_TASKS)
+                && canDumpRunningServices()) {
             // Fetch running app processes by parsing dumpsys output if root/ADB is disabled
             // and android.permission.DUMP is granted
             return getRunningAppProcessesUsingDumpSys();
@@ -150,6 +146,7 @@ public final class ActivityManagerCompat {
         }
     }
 
+    @RequiresPermission("android.permission.KILL_UID")
     public static void killUid(int uid, String reason) throws RemoteException {
         getActivityManager().killUid(UserHandleHidden.getAppId(uid), UserHandleHidden.getUserId(uid), reason);
     }
@@ -323,6 +320,12 @@ public final class ActivityManagerCompat {
             }
         }
         return runningServices;
+    }
+
+    @RequiresApi(Build.VERSION_CODES.M)
+    private static boolean canDumpRunningServices() {
+        return SelfPermissions.checkSelfPermission(Manifest.permission.DUMP)
+                && SelfPermissions.checkSelfPermission(Manifest.permission.PACKAGE_USAGE_STATS);
     }
 
     final static class IntentReceiver extends IIntentReceiver.Stub {

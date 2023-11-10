@@ -12,6 +12,7 @@ import android.os.Build;
 
 import androidx.annotation.IntDef;
 import androidx.annotation.NonNull;
+import androidx.annotation.WorkerThread;
 import androidx.core.content.pm.PackageInfoCompat;
 
 import java.lang.annotation.Retention;
@@ -23,13 +24,13 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import io.github.muntashirakon.AppManager.AppManager;
 import io.github.muntashirakon.AppManager.R;
 import io.github.muntashirakon.AppManager.rules.RuleType;
 import io.github.muntashirakon.AppManager.rules.compontents.ComponentUtils;
 import io.github.muntashirakon.AppManager.utils.ArrayUtils;
 import io.github.muntashirakon.AppManager.utils.LangUtils;
 import io.github.muntashirakon.AppManager.utils.PackageUtils;
+import io.github.muntashirakon.AppManager.utils.ThreadUtils;
 import io.github.muntashirakon.AppManager.utils.Utils;
 
 public class ApkWhatsNewFinder {
@@ -56,14 +57,14 @@ public class ApkWhatsNewFinder {
 
     private static final int INFO_COUNT = 7;
 
-    private final Set<String> tmpInfo = new HashSet<>();
-
-    private static ApkWhatsNewFinder instance;
+    private static ApkWhatsNewFinder sInstance;
 
     public static ApkWhatsNewFinder getInstance() {
-        if (instance == null) instance = new ApkWhatsNewFinder();
-        return instance;
+        if (sInstance == null) sInstance = new ApkWhatsNewFinder();
+        return sInstance;
     }
+
+    private final Set<String> mTmpInfo = new HashSet<>();
 
     /**
      * Get changes between two packages: one is the apk file and other is the installed app
@@ -78,9 +79,10 @@ public class ApkWhatsNewFinder {
      *                   {@link PackageManager#GET_CONFIGURATIONS}, {@link PackageManager#GET_SHARED_LIBRARY_FILES}
      * @return Changes
      */
+    @WorkerThread
     @NonNull
-    public Change[][] getWhatsNew(@NonNull PackageInfo newPkgInfo, @NonNull PackageInfo oldPkgInfo) {
-        Context context = AppManager.getContext();
+    public Change[][] getWhatsNew(@NonNull Context context, @NonNull PackageInfo newPkgInfo,
+                                  @NonNull PackageInfo oldPkgInfo) {
         ApplicationInfo newAppInfo = newPkgInfo.applicationInfo;
         ApplicationInfo oldAppInfo = oldPkgInfo.applicationInfo;
         Change[][] changes = new Change[INFO_COUNT][];
@@ -97,6 +99,9 @@ public class ApkWhatsNewFinder {
                     new Change(CHANGE_REMOVED, oldVersionInfo)
             };
         } else changes[VERSION_INFO] = ArrayUtils.emptyArray(Change.class);
+        if (ThreadUtils.isInterrupted()) {
+            return changes;
+        }
         // Tracker info
         HashMap<String, RuleType> newPkgComponents = PackageUtils.collectComponentClassNames(newPkgInfo);
         HashMap<String, RuleType> oldPkgComponents = PackageUtils.collectComponentClassNames(oldPkgInfo);
@@ -120,6 +125,9 @@ public class ApkWhatsNewFinder {
                     .getQuantityString(R.plurals.no_of_trackers, oldTrackerCount, oldTrackerCount));
             changes[TRACKER_INFO] = new Change[]{new Change(CHANGE_INFO, componentInfo[TRACKER_INFO]), newTrackers, oldTrackers};
         }
+        if (ThreadUtils.isInterrupted()) {
+            return changes;
+        }
         // Sha256 of signing certificates
         Set<String> newCertSha256 = new HashSet<>(Arrays.asList(PackageUtils.getSigningCertSha256Checksum(newPkgInfo, true)));
         Set<String> oldCertSha256 = new HashSet<>(Arrays.asList(PackageUtils.getSigningCertSha256Checksum(oldPkgInfo)));
@@ -127,6 +135,9 @@ public class ApkWhatsNewFinder {
         certSha256Changes.add(new Change(CHANGE_INFO, componentInfo[SIGNING_CERT_SHA256]));
         certSha256Changes.addAll(findChanges(newCertSha256, oldCertSha256));
         changes[SIGNING_CERT_SHA256] = certSha256Changes.size() == 1 ? ArrayUtils.emptyArray(Change.class) : certSha256Changes.toArray(new Change[0]);
+        if (ThreadUtils.isInterrupted()) {
+            return changes;
+        }
         // Permissions
         Set<String> newPermissions = new HashSet<>();
         Set<String> oldPermissions = new HashSet<>();
@@ -146,6 +157,9 @@ public class ApkWhatsNewFinder {
         changes[PERMISSION_INFO] = permissionChanges.size() == 1 ? ArrayUtils.emptyArray(Change.class) : permissionChanges.toArray(new Change[0]);
         // Component info
         changes[COMPONENT_INFO] = componentChanges.size() == 1 ? ArrayUtils.emptyArray(Change.class) : componentChanges.toArray(new Change[0]);
+        if (ThreadUtils.isInterrupted()) {
+            return changes;
+        }
         // Feature info
         Set<String> newFeatures = new HashSet<>();
         Set<String> oldFeatures = new HashSet<>();
@@ -161,6 +175,9 @@ public class ApkWhatsNewFinder {
         featureChanges.add(new Change(CHANGE_INFO, componentInfo[FEATURE_INFO]));
         featureChanges.addAll(findChanges(newFeatures, oldFeatures));
         changes[FEATURE_INFO] = featureChanges.size() == 1 ? ArrayUtils.emptyArray(Change.class) : featureChanges.toArray(new Change[0]);
+        if (ThreadUtils.isInterrupted()) {
+            return changes;
+        }
         // SDK
         final StringBuilder newSdk = new StringBuilder(context.getString(R.string.sdk_max))
                 .append(LangUtils.getSeparatorString()).append(newAppInfo.targetSdkVersion);
@@ -185,11 +202,11 @@ public class ApkWhatsNewFinder {
     @NonNull
     private List<Change> findChanges(Set<String> newInfo, Set<String> oldInfo) {
         List<Change> changeList = new ArrayList<>();
-        tmpInfo.clear();
-        tmpInfo.addAll(newInfo);
+        mTmpInfo.clear();
+        mTmpInfo.addAll(newInfo);
         newInfo.removeAll(oldInfo);
         for (String info : newInfo) changeList.add(new Change(CHANGE_ADD, info));
-        oldInfo.removeAll(tmpInfo);
+        oldInfo.removeAll(mTmpInfo);
         for (String info : oldInfo) changeList.add(new Change(CHANGE_REMOVED, info));
         return changeList;
     }

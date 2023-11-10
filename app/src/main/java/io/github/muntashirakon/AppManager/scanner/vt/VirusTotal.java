@@ -1,13 +1,14 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 package io.github.muntashirakon.AppManager.scanner.vt;
 
+import android.os.PowerManager;
 import android.os.SystemClock;
+import android.text.TextUtils;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.WorkerThread;
 
-import com.android.internal.util.TextUtils;
 import com.google.gson.Gson;
 
 import java.io.BufferedReader;
@@ -27,8 +28,10 @@ import java.util.List;
 import java.util.Objects;
 
 import io.github.muntashirakon.AppManager.settings.FeatureController;
-import io.github.muntashirakon.AppManager.utils.AppPref;
+import io.github.muntashirakon.AppManager.settings.Prefs;
+import io.github.muntashirakon.AppManager.utils.CpuUtils;
 import io.github.muntashirakon.io.IoUtils;
+import io.github.muntashirakon.io.Path;
 
 public class VirusTotal {
     public interface FullScanResponseInterface {
@@ -53,7 +56,7 @@ public class VirusTotal {
 
     @Nullable
     public static VirusTotal getInstance() {
-        String apiKey = AppPref.getVtApiKey();
+        String apiKey = Prefs.VirusTotal.getApiKey();
         if (FeatureController.isInternetEnabled() && apiKey != null) {
             return new VirusTotal(apiKey);
         }
@@ -68,8 +71,7 @@ public class VirusTotal {
         mGson = new Gson();
     }
 
-    public void fetchReportsOrScan(@NonNull String filename, long fileSize,
-                                   @NonNull InputStream is,
+    public void fetchReportsOrScan(@NonNull Path file,
                                    @NonNull String checksum,
                                    @NonNull FullScanResponseInterface response)
             throws IOException {
@@ -90,13 +92,24 @@ public class VirusTotal {
                 // Scanning disabled
                 throw new FileNotFoundException("File not found in VirusTotal.");
             }
-            if (fileSize > 32 * 1024 * 1024) {
-                throw new IOException("APK is larger than 32 MB.");
+            PowerManager.WakeLock wakeLock = CpuUtils.getPartialWakeLock("vt_upload");
+            wakeLock.acquire();
+            try {
+                long fileSize = file.length();
+                if (fileSize > 32 * 1024 * 1024) {
+                    throw new IOException("APK is larger than 32 MB.");
+                }
+                response.onScanningInitiated();
+                String filename = file.getName();
+                VtFileScanMeta scanMeta;
+                try (InputStream is = file.openInputStream()) {
+                    scanMeta = scan(filename, is);
+                }
+                response.onScanCompleted(scanMeta);
+                responseCode = VirusTotal.RESPONSE_QUEUED;
+            } finally {
+                CpuUtils.releaseWakeLock(wakeLock);
             }
-            response.onScanningInitiated();
-            VtFileScanMeta scanMeta = scan(filename, is);
-            response.onScanCompleted(scanMeta);
-            responseCode = VirusTotal.RESPONSE_QUEUED;
         } else {
             // Item is queued
             response.onReportReceived(report);
@@ -192,7 +205,7 @@ public class VirusTotal {
                 .getBytes(StandardCharsets.UTF_8));
         os.write(("Content-Type: application/octet-stream\r\n").getBytes(StandardCharsets.UTF_8));
         os.write(("Content-Transfer-Encoding: chunked\r\n\r\n").getBytes(StandardCharsets.UTF_8));
-        IoUtils.copy(is, os);
+        IoUtils.copy(is, os, -1, null);
     }
 
     @WorkerThread

@@ -7,9 +7,8 @@ import android.content.Context;
 import android.os.Build;
 import android.sun.security.provider.JavaKeyStoreProvider;
 
-import androidx.annotation.NonNull;
+import androidx.annotation.Keep;
 
-import com.google.android.material.color.DynamicColors;
 import com.topjohnwu.superuser.Shell;
 
 import org.lsposed.hiddenapibypass.HiddenApiBypass;
@@ -21,8 +20,6 @@ import io.github.muntashirakon.AppManager.utils.Utils;
 import io.github.muntashirakon.AppManager.utils.appearance.AppearanceUtils;
 
 public class AppManager extends Application {
-    private static AppManager instance;
-
     static {
         Shell.enableVerboseLogging = BuildConfig.DEBUG;
         Shell.setDefaultBuilder(Shell.Builder.create()
@@ -30,26 +27,16 @@ public class AppManager extends Application {
                 .setTimeout(10));
     }
 
-    @NonNull
-    public static AppManager getInstance() {
-        return instance;
-    }
-
-    @NonNull
-    public static Context getContext() {
-        return instance.getBaseContext();
-    }
-
+    @Keep
     @Override
     public void onCreate() {
-        instance = this;
         super.onCreate();
         Thread.setDefaultUncaughtExceptionHandler(new AMExceptionHandler(this));
-        DynamicColors.applyToActivitiesIfAvailable(this);
         AppearanceUtils.init(this);
         Security.addProvider(new JavaKeyStoreProvider());
     }
 
+    @Keep
     @Override
     protected void attachBaseContext(Context base) {
         super.attachBaseContext(base);

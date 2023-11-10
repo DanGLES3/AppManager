@@ -6,7 +6,9 @@ import android.app.Dialog;
 import android.content.DialogInterface;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.UserHandleHidden;
 import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.View;
 import android.widget.Button;
 
@@ -24,12 +26,11 @@ import com.google.android.material.textfield.TextInputLayout;
 
 import java.io.IOException;
 import java.util.Objects;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicReference;
 
 import io.github.muntashirakon.AppManager.R;
-import io.github.muntashirakon.AppManager.utils.UiThreadHandler;
+import io.github.muntashirakon.AppManager.utils.ThreadUtils;
 
 @RequiresApi(Build.VERSION_CODES.O)
 public class ChangeSsaidDialog extends DialogFragment {
@@ -59,7 +60,8 @@ public class ChangeSsaidDialog extends DialogFragment {
     private String mOldSsaid;
     @Nullable
     private SsaidChangedInterface mSsaidChangedInterface;
-    private final ExecutorService mExecutor = Executors.newSingleThreadExecutor();
+    @Nullable
+    private Future<?> mSsaidChangedResult;
 
     @NonNull
     @Override
@@ -87,43 +89,66 @@ public class ChangeSsaidDialog extends DialogFragment {
             applyButton.set(alertDialog.getButton(AlertDialog.BUTTON_POSITIVE));
             resetButton.set(alertDialog.getButton(AlertDialog.BUTTON_NEUTRAL));
             applyButton.get().setVisibility(View.GONE);
-            applyButton.get().setOnClickListener(v -> mExecutor.submit(() -> {
-                try {
-                    Editable editable = ssaidEditText.getText();
-                    if (editable == null) {
-                        throw new IOException("Empty SSAID field.");
+            applyButton.get().setOnClickListener(v -> {
+                mSsaidChangedResult = ThreadUtils.postOnBackgroundThread(() -> {
+                    try {
+                        Editable editable = ssaidEditText.getText();
+                        if (editable == null) {
+                            throw new IOException("Empty SSAID field.");
+                        }
+                        mSsaid = editable.toString();
+                        if (mSsaid.length() != sizeByte * 2) {
+                            throw new IOException("Invalid SSAID size " + mSsaid.length());
+                        }
+                        if (!mSsaid.matches("[0-9A-Fa-f]+")) {
+                            throw new IOException("Invalid SSAID " + mSsaid.length());
+                        }
+                        SsaidSettings ssaidSettings = new SsaidSettings(UserHandleHidden.getUserId(uid));
+                        boolean isSuccess = ssaidSettings.setSsaid(packageName, uid, mSsaid);
+                        if (isSuccess) {
+                            alertDialog.dismiss();
+                        }
+                        if (mSsaidChangedInterface != null) {
+                            ThreadUtils.postOnMainThread(() -> mSsaidChangedInterface.onSsaidChanged(mSsaid, isSuccess));
+                        }
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                        if (mSsaidChangedInterface != null) {
+                            ThreadUtils.postOnMainThread(() -> mSsaidChangedInterface.onSsaidChanged(mSsaid, false));
+                        }
                     }
-                    mSsaid = editable.toString();
-                    if (mSsaid.length() != sizeByte * 2) {
-                        throw new IOException("Invalid SSAID size " + mSsaid.length());
-                    }
-                    if (!mSsaid.matches("[0-9A-Fa-f]+")) {
-                        throw new IOException("Invalid SSAID " + mSsaid.length());
-                    }
-                    SsaidSettings ssaidSettings = new SsaidSettings(packageName, uid);
-                    boolean isSuccess = ssaidSettings.setSsaid(mSsaid);
-                    if (isSuccess) {
-                        alertDialog.dismiss();
-                    }
-                    if (mSsaidChangedInterface != null) {
-                        UiThreadHandler.run(() -> mSsaidChangedInterface.onSsaidChanged(mSsaid, isSuccess));
-                    }
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    if (mSsaidChangedInterface != null) {
-                        UiThreadHandler.run(() -> mSsaidChangedInterface.onSsaidChanged(mSsaid, false));
-                    }
-                }
-            }));
+                });
+            });
             resetButton.get().setVisibility(View.GONE);
             resetButton.get().setOnClickListener(v -> {
                 mSsaid = mOldSsaid;
                 ssaidEditText.setText(mSsaid);
+                applyButton.get().performClick();
                 resetButton.get().setVisibility(View.GONE);
                 applyButton.get().setVisibility(View.GONE);
             });
         });
         ssaidEditText.setText(mSsaid);
+        ssaidEditText.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                boolean valid = !s.equals(mSsaid) && s.length() == (2 * sizeByte);
+                if (resetButton.get() != null) {
+                    resetButton.get().setVisibility(valid && !mOldSsaid.contentEquals(s) ? View.VISIBLE : View.GONE);
+                }
+                if (applyButton.get() != null) {
+                    applyButton.get().setVisibility(valid ? View.VISIBLE : View.GONE);
+                }
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+            }
+        });
         ssaidInputLayout.setEndIconOnClickListener(v -> {
             mSsaid = SsaidSettings.generateSsaid(packageName);
             ssaidEditText.setText(mSsaid);
@@ -143,7 +168,9 @@ public class ChangeSsaidDialog extends DialogFragment {
 
     @Override
     public void onDismiss(@NonNull DialogInterface dialog) {
-        mExecutor.shutdownNow();
+        if (mSsaidChangedResult != null) {
+            mSsaidChangedResult.cancel(true);
+        }
         super.onDismiss(dialog);
     }
 

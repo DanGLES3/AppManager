@@ -2,7 +2,7 @@
 
 package io.github.muntashirakon.io;
 
-import android.content.Context;
+import static org.junit.Assert.assertEquals;
 
 import androidx.annotation.NonNull;
 
@@ -20,22 +20,18 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
-import io.github.muntashirakon.AppManager.AppManager;
 import io.github.muntashirakon.AppManager.utils.DigestUtils;
-import io.github.muntashirakon.AppManager.utils.FileUtils;
-
-import static org.junit.Assert.assertEquals;
 
 @RunWith(RobolectricTestRunner.class)
 public class SplitOutputStreamTest {
     private SplitOutputStream splitOutputStream;
     private InputStream inputStream;
+    private final List<File> junkFiles = new ArrayList<>();
     private final ClassLoader classLoader = getClass().getClassLoader();
-    private final Context context = AppManager.getContext();
 
     @Before
     public void setUp() throws Exception {
-        Path tmpPath = new Path(context, new File("/tmp"));
+        Path tmpPath = Paths.get("/tmp");
         splitOutputStream = new SplitOutputStream(tmpPath, "AppManager_v2.5.22.apks", 1024000);
         assert classLoader != null;
         File sampleFile = new File(classLoader.getResource("AppManager_v2.5.22.apks").getFile());
@@ -46,11 +42,14 @@ public class SplitOutputStreamTest {
     public void tearDown() throws Exception {
         splitOutputStream.close();
         inputStream.close();
+        for (File file : junkFiles) {
+            file.delete();
+        }
     }
 
     @Test
     public void write() throws IOException {
-        FileUtils.copy(inputStream, splitOutputStream);
+        IoUtils.copy(inputStream, splitOutputStream, -1, null);
         List<String> expectedHashes = getExpectedHashes();
         List<String> actualHashes = getActualHashes();
         assertEquals(expectedHashes, actualHashes);
@@ -92,6 +91,7 @@ public class SplitOutputStreamTest {
                 throw new FileNotFoundException(file + " does not exist.");
             }
             actualHashes.add(DigestUtils.getHexDigest(DigestUtils.SHA_256, file));
+            junkFiles.add(file);
         }
         return actualHashes;
     }

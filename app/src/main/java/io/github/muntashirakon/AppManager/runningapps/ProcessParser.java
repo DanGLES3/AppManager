@@ -6,30 +6,27 @@ import android.app.ActivityManager;
 import android.content.Context;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
-import android.system.ErrnoException;
-import android.system.OsHidden;
-import android.system.StructPasswd;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.VisibleForTesting;
 import androidx.annotation.WorkerThread;
-import androidx.collection.SparseArrayCompat;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
 
-import io.github.muntashirakon.AppManager.AppManager;
 import io.github.muntashirakon.AppManager.compat.ActivityManagerCompat;
+import io.github.muntashirakon.AppManager.compat.PackageManagerCompat;
 import io.github.muntashirakon.AppManager.ipc.LocalServices;
 import io.github.muntashirakon.AppManager.ipc.ps.ProcessEntry;
 import io.github.muntashirakon.AppManager.ipc.ps.Ps;
 import io.github.muntashirakon.AppManager.logs.Log;
-import io.github.muntashirakon.AppManager.servermanager.LocalServer;
+import io.github.muntashirakon.AppManager.utils.ContextUtils;
 import io.github.muntashirakon.AppManager.utils.PackageUtils;
 import io.github.muntashirakon.AppManager.utils.Utils;
+import io.github.muntashirakon.io.Path;
+import io.github.muntashirakon.io.Paths;
 
 @WorkerThread
 public final class ProcessParser {
@@ -46,8 +43,8 @@ public final class ProcessParser {
             mPm = null;
             mContext = null;
         } else {
-            mContext = AppManager.getContext();
-            mPm = AppManager.getContext().getPackageManager();
+            mContext = ContextUtils.getContext();
+            mPm = mContext.getPackageManager();
             getInstalledPackages();
         }
     }
@@ -58,7 +55,7 @@ public final class ProcessParser {
         List<ProcessItem> processItems = new ArrayList<>();
         try {
             List<ProcessEntry> processEntries;
-            if (LocalServer.isAMServiceAlive()) {
+            if (Paths.get("/proc/1").canRead() && LocalServices.alive()) {
                 processEntries = (List<ProcessEntry>) LocalServices.getAmService().getRunningProcesses().getList();
             } else {
                 Ps ps = new Ps();
@@ -66,7 +63,9 @@ public final class ProcessParser {
                 processEntries = ps.getProcesses();
             }
             for (ProcessEntry processEntry : processEntries) {
-                if (processEntry.seLinuxPolicy.contains(":kernel:")) continue;
+                if (processEntry.seLinuxPolicy != null && processEntry.seLinuxPolicy.contains(":kernel:")) {
+                    continue;
+                }
                 try {
                     processItems.addAll(parseProcess(processEntry));
                 } catch (Exception ignore) {
@@ -80,7 +79,7 @@ public final class ProcessParser {
 
     @VisibleForTesting
     @NonNull
-    HashMap<Integer, ProcessItem> parse(@NonNull File procDir) {
+    HashMap<Integer, ProcessItem> parse(@NonNull Path procDir) {
         HashMap<Integer, ProcessItem> processItems = new HashMap<>();
         Ps ps = new Ps(procDir);
         ps.loadProcesses();
@@ -145,7 +144,7 @@ public final class ProcessParser {
     }
 
     private void getInstalledPackages() {
-        List<PackageInfo> packageInfoList = PackageUtils.getAllPackages(0);
+        List<PackageInfo> packageInfoList = PackageUtils.getAllPackages(PackageManagerCompat.MATCH_STATIC_SHARED_AND_SDK_LIBRARIES);
         mInstalledPackages = new HashMap<>(packageInfoList.size());
         for (PackageInfo info : packageInfoList) {
             mInstalledPackages.put(info.packageName, info);
@@ -164,26 +163,8 @@ public final class ProcessParser {
         for (int uid : duplicateUids) mInstalledUidList.remove(uid);
         List<ActivityManager.RunningAppProcessInfo> runningAppProcesses = ActivityManagerCompat.getRunningAppProcesses();
         for (ActivityManager.RunningAppProcessInfo info : runningAppProcesses) {
-            this.mRunningAppProcesses.put(info.pid, info);
+            mRunningAppProcesses.put(info.pid, info);
         }
-    }
-
-    private static final SparseArrayCompat<String> uidNameCache = new SparseArrayCompat<>(150);
-
-    @NonNull
-    static String getNameForUid(int uid) {
-        String username = uidNameCache.get(uid);
-        if (username != null) return username;
-        try {
-            StructPasswd passwd = OsHidden.getpwuid(uid);
-            username = passwd.pw_name;
-        } catch (ErrnoException ignored) {
-        }
-        if (username == null) {
-            username = String.valueOf(uid);
-        }
-        uidNameCache.put(uid, username);
-        return username;
     }
 
     @NonNull

@@ -2,11 +2,11 @@
 
 package io.github.muntashirakon.AppManager.apk.signing;
 
-import java.util.Arrays;
-
 import androidx.annotation.IntDef;
 import androidx.annotation.NonNull;
-import io.github.muntashirakon.AppManager.utils.AppPref;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class SigSchemes {
     @IntDef(flag = true, value = {
@@ -25,63 +25,46 @@ public class SigSchemes {
 
     public static final int TOTAL_SIG_SCHEME = 4;
 
-    @SignatureScheme
-    private int flags;
+    public static final int DEFAULT_SCHEMES = SIG_SCHEME_V1 | SIG_SCHEME_V2;
 
-    @NonNull
-    public static SigSchemes fromPref() {
-        SigSchemes sigSchemes = new SigSchemes((Integer) AppPref.get(AppPref.PrefKey.PREF_SIGNATURE_SCHEMES_INT));
-        if (sigSchemes.isEmpty()) {
-            // Use default if no flag is set
-            return new SigSchemes(sigSchemes.getDefaultFlags());
-        }
-        return sigSchemes;
-    }
+    @SignatureScheme
+    private int mFlags;
 
     public SigSchemes(@SignatureScheme int flags) {
-        this.flags = flags;
+        this.mFlags = flags;
     }
 
     public boolean isEmpty() {
-        return flags == 0;
+        return mFlags == 0;
     }
 
     public int getFlags() {
-        return flags;
+        return mFlags;
     }
 
-    public int getDefaultFlags() {
-        return (int) AppPref.getInstance().getDefaultValue(AppPref.PrefKey.PREF_SIGNATURE_SCHEMES_INT);
-    }
-
-    public void addFlag(int index) {
-        this.flags |= (1 << index);
-    }
-
-    public void removeFlag(int index) {
-        this.flags &= ~(1 << index);
+    public void setFlags(int flags) {
+        this.mFlags = flags;
     }
 
     @NonNull
-    public boolean[] flagsToCheckedItems() {
-        boolean[] checkedItems = new boolean[TOTAL_SIG_SCHEME];
-        Arrays.fill(checkedItems, false);
+    public List<Integer> getAllItems() {
+        List<Integer> allItems = new ArrayList<>();
         for (int i = 0; i < TOTAL_SIG_SCHEME; ++i) {
-            if ((flags & (1 << i)) != 0) checkedItems[i] = true;
+            allItems.add(1 << i);
         }
-        return checkedItems;
+        return allItems;
     }
 
     public boolean v1SchemeEnabled() {
-        return (flags & SIG_SCHEME_V1) != 0;
+        return (mFlags & SIG_SCHEME_V1) != 0;
     }
     public boolean v2SchemeEnabled() {
-        return (flags & SIG_SCHEME_V2) != 0;
+        return (mFlags & SIG_SCHEME_V2) != 0;
     }
     public boolean v3SchemeEnabled() {
-        return (flags & SIG_SCHEME_V3) != 0;
+        return (mFlags & SIG_SCHEME_V3) != 0;
     }
     public boolean v4SchemeEnabled() {
-        return (flags & SIG_SCHEME_V4) != 0;
+        return (mFlags & SIG_SCHEME_V4) != 0;
     }
 }

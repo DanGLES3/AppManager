@@ -4,6 +4,7 @@ package io.github.muntashirakon.AppManager.logcat;
 
 import android.net.Uri;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -12,17 +13,21 @@ import android.widget.Filter;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.os.BundleCompat;
 
 import java.lang.ref.WeakReference;
 import java.util.List;
 
 import io.github.muntashirakon.AppManager.R;
 import io.github.muntashirakon.AppManager.logcat.struct.LogLine;
-import io.github.muntashirakon.reflow.ReflowMenuViewWrapper;
+import io.github.muntashirakon.AppManager.utils.ContextUtils;
+import io.github.muntashirakon.AppManager.utils.ThreadUtils;
+import io.github.muntashirakon.AppManager.utils.Utils;
+import io.github.muntashirakon.multiselection.MultiSelectionActionsView;
 
 // Copyright 2022 Muntashir Al-Islam
 public class SavedLogViewerFragment extends AbsLogViewerFragment implements LogViewerViewModel.LogLinesAvailableInterface,
-        ReflowMenuViewWrapper.OnItemSelectedListener, LogViewerActivity.SearchingInterface, Filter.FilterListener {
+        MultiSelectionActionsView.OnItemSelectedListener, LogViewerActivity.SearchingInterface, Filter.FilterListener {
     public static final String TAG = SavedLogViewerFragment.class.getSimpleName();
     public static final String ARG_FILE_URI = "file_uri";
 
@@ -40,7 +45,7 @@ public class SavedLogViewerFragment extends AbsLogViewerFragment implements LogV
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        Uri uri = requireArguments().getParcelable(ARG_FILE_URI);
+        Uri uri = BundleCompat.getParcelable(requireArguments(), ARG_FILE_URI, Uri.class);
         if (uri == null) {
             // TODO: 31/5/22 Handle invalid URI
             return;
@@ -74,7 +79,7 @@ public class SavedLogViewerFragment extends AbsLogViewerFragment implements LogV
 
     @Override
     public void onNewLogsAvailable(@NonNull List<LogLine> logLines) {
-        mActivity.getProgressBar().hide();
+        mActivity.hideProgressBar();
         for (LogLine logLine : logLines) {
             mLogListAdapter.addWithFilter(logLine, "", false);
             mActivity.addToAutocompleteSuggestions(logLine);
@@ -89,6 +94,11 @@ public class SavedLogViewerFragment extends AbsLogViewerFragment implements LogV
         int id = item.getItemId();
         if (id == R.id.action_save) {
             displaySaveLogDialog(true);
+        } else if (id == R.id.action_copy) {
+            ThreadUtils.postOnBackgroundThread(() -> {
+                String logs = TextUtils.join("\n", getSelectedLogsAsStrings());
+                ThreadUtils.postOnMainThread(() -> Utils.copyToClipboard(ContextUtils.getContext(), "Logs", logs));
+            });
         } else if (id == R.id.action_export) {
             displaySaveDebugLogsDialog(false, true);
         } else if (id == R.id.action_share) {

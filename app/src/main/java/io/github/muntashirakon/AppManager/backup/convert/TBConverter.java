@@ -2,6 +2,16 @@
 
 package io.github.muntashirakon.AppManager.backup.convert;
 
+import static io.github.muntashirakon.AppManager.backup.BackupManager.CERT_PREFIX;
+import static io.github.muntashirakon.AppManager.backup.BackupManager.DATA_PREFIX;
+import static io.github.muntashirakon.AppManager.backup.BackupManager.ICON_FILE;
+import static io.github.muntashirakon.AppManager.backup.BackupManager.SOURCE_PREFIX;
+import static io.github.muntashirakon.AppManager.backup.BackupManager.getExt;
+import static io.github.muntashirakon.AppManager.utils.TarUtils.DEFAULT_SPLIT_SIZE;
+import static io.github.muntashirakon.AppManager.utils.TarUtils.TAR_BZIP2;
+import static io.github.muntashirakon.AppManager.utils.TarUtils.TAR_GZIP;
+import static io.github.muntashirakon.AppManager.utils.TarUtils.TAR_ZSTD;
+
 import android.annotation.UserIdInt;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -11,11 +21,12 @@ import android.util.Base64;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.github.luben.zstd.ZstdOutputStream;
+
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
 import org.apache.commons.compress.compressors.CompressorInputStream;
-import org.apache.commons.compress.compressors.CompressorOutputStream;
 import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
 import org.apache.commons.compress.compressors.bzip2.BZip2CompressorOutputStream;
 import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
@@ -30,32 +41,27 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
 import java.util.Properties;
+import java.util.regex.Pattern;
 
 import io.github.muntashirakon.AppManager.backup.BackupException;
 import io.github.muntashirakon.AppManager.backup.BackupFiles;
 import io.github.muntashirakon.AppManager.backup.BackupFlags;
+import io.github.muntashirakon.AppManager.backup.BackupUtils;
 import io.github.muntashirakon.AppManager.backup.CryptoUtils;
 import io.github.muntashirakon.AppManager.backup.MetadataManager;
 import io.github.muntashirakon.AppManager.crypto.Crypto;
 import io.github.muntashirakon.AppManager.logs.Log;
-import io.github.muntashirakon.AppManager.utils.AppPref;
+import io.github.muntashirakon.AppManager.settings.Prefs;
 import io.github.muntashirakon.AppManager.utils.ArrayUtils;
+import io.github.muntashirakon.AppManager.utils.ContextUtils;
 import io.github.muntashirakon.AppManager.utils.DigestUtils;
 import io.github.muntashirakon.AppManager.utils.FileUtils;
 import io.github.muntashirakon.AppManager.utils.TarUtils;
+import io.github.muntashirakon.io.IoUtils;
 import io.github.muntashirakon.io.Path;
+import io.github.muntashirakon.io.Paths;
 import io.github.muntashirakon.io.SplitOutputStream;
-
-import static io.github.muntashirakon.AppManager.backup.BackupManager.CERT_PREFIX;
-import static io.github.muntashirakon.AppManager.backup.BackupManager.DATA_PREFIX;
-import static io.github.muntashirakon.AppManager.backup.BackupManager.ICON_FILE;
-import static io.github.muntashirakon.AppManager.backup.BackupManager.SOURCE_PREFIX;
-import static io.github.muntashirakon.AppManager.backup.BackupManager.getExt;
-import static io.github.muntashirakon.AppManager.utils.TarUtils.DEFAULT_SPLIT_SIZE;
-import static io.github.muntashirakon.AppManager.utils.TarUtils.TAR_BZIP2;
-import static io.github.muntashirakon.AppManager.utils.TarUtils.TAR_GZIP;
 
 public class TBConverter extends Converter {
     public static final String TAG = TBConverter.class.getSimpleName();
@@ -89,7 +95,7 @@ public class TBConverter extends Converter {
      */
     public TBConverter(@NonNull Path propFile) {
         mPropFile = propFile;
-        mBackupLocation = propFile.getParentFile();
+        mBackupLocation = propFile.getParent();
         mUserId = UserHandleHidden.myUserId();
         String dirtyName = propFile.getName();
         int idx = dirtyName.indexOf('-');
@@ -114,7 +120,7 @@ public class TBConverter extends Converter {
         // Destination APK will be renamed
         mDestMetadata.apkName = "base.apk";
         // Destination compression type will be the default compression method
-        mDestMetadata.tarType = ConvertUtils.getTarTypeFromPref();
+        mDestMetadata.tarType = Prefs.BackupRestore.getCompressionMethod();
         MetadataManager metadataManager = MetadataManager.getNewInstance();
         metadataManager.setMetadata(mDestMetadata);
         // Simulate a backup creation
@@ -133,7 +139,7 @@ public class TBConverter extends Converter {
                 mTempBackupPath = backupFile.getBackupPath();
                 mCrypto = ConvertUtils.setupCrypto(mDestMetadata);
                 try {
-                    mChecksum = new BackupFiles.Checksum(backupFile.getChecksumFile(CryptoUtils.MODE_NO_ENCRYPTION), "w");
+                    mChecksum = backupFile.getChecksum(CryptoUtils.MODE_NO_ENCRYPTION);
                 } catch (IOException e) {
                     throw new BackupException("Failed to create checksum file.", e);
                 }
@@ -186,6 +192,9 @@ public class TBConverter extends Converter {
                 if (mCrypto != null) {
                     mCrypto.close();
                 }
+                if (backupSuccess) {
+                    BackupUtils.putBackupToDbAndBroadcast(ContextUtils.getContext(), mDestMetadata);
+                }
             }
             return;
         }
@@ -214,17 +223,17 @@ public class TBConverter extends Converter {
             } else if (TAR_BZIP2.equals(mSourceMetadata.tarType)) {
                 is = new BZip2CompressorInputStream(bis, true);
             } else {
-                Objects.requireNonNull(baseApkFile.getParentFile()).delete();
+                baseApkFile.requireParent().delete();
                 throw new BackupException("Invalid source compression type: " + mSourceMetadata.tarType);
             }
             try (OutputStream fos = baseApkFile.openOutputStream()) {
                 // The whole file is the APK
-                FileUtils.copy(is, fos);
+                IoUtils.copy(is, fos, -1, null);
             } finally {
                 is.close();
             }
         } catch (IOException e) {
-            Objects.requireNonNull(baseApkFile.getParentFile()).delete();
+            baseApkFile.requireParent().delete();
             throw new BackupException("Couldn't decompress " + mSourceMetadata.apkName, e);
         }
         // Get certificate checksums
@@ -245,7 +254,7 @@ public class TBConverter extends Converter {
         } catch (Throwable th) {
             throw new BackupException("APK files backup is requested but no APK files have been backed up.", th);
         } finally {
-            Objects.requireNonNull(baseApkFile.getParentFile()).delete();
+            baseApkFile.requireParent().delete();
         }
         // Overwrite with the new files
         try {
@@ -261,7 +270,7 @@ public class TBConverter extends Converter {
     private void backupData() throws BackupException {
         Path dataFile;
         try {
-            dataFile = getDataFile(FileUtils.trimExtension(mPropFile.getName()), mSourceMetadata.tarType);
+            dataFile = getDataFile(Paths.trimPathExtension(mPropFile.getName()), mSourceMetadata.tarType);
         } catch (FileNotFoundException e) {
             throw new BackupException("Could not get data file", e);
         }
@@ -289,11 +298,13 @@ public class TBConverter extends Converter {
             if (intBackupFilePrefix != null) {
                 intSos = new SplitOutputStream(mTempBackupPath, intBackupFilePrefix, DEFAULT_SPLIT_SIZE);
                 BufferedOutputStream bos = new BufferedOutputStream(intSos);
-                CompressorOutputStream cos;
+                OutputStream cos;
                 if (TAR_GZIP.equals(mDestMetadata.tarType)) {
                     cos = new GzipCompressorOutputStream(bos);
                 } else if (TAR_BZIP2.equals(mDestMetadata.tarType)) {
                     cos = new BZip2CompressorOutputStream(bos);
+                } else if (TAR_ZSTD.equals(mDestMetadata.tarType)) {
+                    cos = new ZstdOutputStream(bos);
                 } else {
                     throw new BackupException("Invalid compression type: " + mDestMetadata.tarType);
                 }
@@ -304,11 +315,13 @@ public class TBConverter extends Converter {
             if (extBackupFilePrefix != null) {
                 extSos = new SplitOutputStream(mTempBackupPath, extBackupFilePrefix, DEFAULT_SPLIT_SIZE);
                 BufferedOutputStream bos = new BufferedOutputStream(extSos);
-                CompressorOutputStream cos;
+                OutputStream cos;
                 if (TAR_GZIP.equals(mDestMetadata.tarType)) {
                     cos = new GzipCompressorOutputStream(bos);
                 } else if (TAR_BZIP2.equals(mDestMetadata.tarType)) {
                     cos = new BZip2CompressorOutputStream(bos);
+                } else if (TAR_ZSTD.equals(mDestMetadata.tarType)) {
+                    cos = new ZstdOutputStream(bos);
                 } else {
                     throw new BackupException("Invalid compression type: " + mDestMetadata.tarType);
                 }
@@ -323,7 +336,7 @@ public class TBConverter extends Converter {
                 String fileName = inTarEntry.getName();
                 boolean isExternal = fileName.startsWith(EXTERNAL_PREFIX);
                 // Get new file name
-                fileName = fileName.replaceFirst((isExternal ? EXTERNAL_PREFIX : INTERNAL_PREFIX) + mPackageName + "/\\./", "");
+                fileName = fileName.replaceFirst((isExternal ? EXTERNAL_PREFIX : INTERNAL_PREFIX) + Pattern.quote(mPackageName + "/") + "\\./", "");
                 if (fileName.equals("")) continue;
                 // New tar entry
                 TarArchiveEntry outTarEntry = new TarArchiveEntry(fileName);
@@ -343,11 +356,11 @@ public class TBConverter extends Converter {
                 if (!inTarEntry.isDirectory() && !inTarEntry.isSymbolicLink()) {
                     if (isExternal) {
                         if (extTos != null) {
-                            FileUtils.copy(tis, extTos);
+                            IoUtils.copy(tis, extTos, -1, null);
                         }
                     } else {
                         if (intTos != null) {
-                            FileUtils.copy(tis, intTos);
+                            IoUtils.copy(tis, intTos, -1, null);
                         }
                     }
                 }
@@ -427,7 +440,7 @@ public class TBConverter extends Converter {
             // Flags
             mSourceMetadata.flags = new BackupFlags(BackupFlags.BACKUP_MULTIPLE);
             try {
-                mFilesToBeDeleted.add(getDataFile(FileUtils.trimExtension(mPropFile.getName()), mSourceMetadata.tarType));
+                mFilesToBeDeleted.add(getDataFile(Paths.trimPathExtension(mPropFile.getName()), mSourceMetadata.tarType));
                 // No error = data file exists
                 mSourceMetadata.flags.addFlag(BackupFlags.BACKUP_INT_DATA);
                 if ("1".equals(prop.getProperty("has_external_data"))) {
@@ -445,7 +458,7 @@ public class TBConverter extends Converter {
             mSourceMetadata.dataDirs = ConvertUtils.getDataDirs(mPackageName, mUserId, mSourceMetadata.flags
                     .backupInternalData(), mSourceMetadata.flags.backupExternalData(), false);
             mSourceMetadata.keyStore = false;
-            mSourceMetadata.installer = AppPref.getString(AppPref.PrefKey.PREF_INSTALLER_INSTALLER_APP_STR);
+            mSourceMetadata.installer = Prefs.Installer.getInstallerPackageName();
             String base64Icon = prop.getProperty("app_gui_icon");
             if (base64Icon != null) {
                 byte[] decodedBytes = Base64.decode(base64Icon, 0);
@@ -460,6 +473,7 @@ public class TBConverter extends Converter {
     private Path getDataFile(String filePrefix, @TarUtils.TarType String tarType) throws FileNotFoundException {
         String filename = filePrefix + ".tar";
         if (TAR_BZIP2.equals(tarType)) filename += ".bz2";
+        else if (TAR_ZSTD.equals(tarType)) filename += ".zst";
         else filename += ".gz";
         return mBackupLocation.findFile(filename);
     }
@@ -467,6 +481,7 @@ public class TBConverter extends Converter {
     @NonNull
     private Path getApkFile(String apkName, @TarUtils.TarType String tarType) throws FileNotFoundException {
         if (TAR_BZIP2.equals(tarType)) apkName += ".bz2";
+        else if (TAR_ZSTD.equals(tarType)) apkName += ".zst";
         else apkName += ".gz";
         return mBackupLocation.findFile(apkName);
     }

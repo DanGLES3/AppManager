@@ -12,17 +12,16 @@ import androidx.core.view.ViewCompat;
 
 import com.google.android.material.internal.ViewUtils;
 
-import io.github.muntashirakon.ui.R;
-
 public class AppBarLayout extends com.google.android.material.appbar.AppBarLayout {
     public AppBarLayout(@NonNull Context context) {
         this(context, null);
     }
 
     public AppBarLayout(@NonNull Context context, @Nullable AttributeSet attrs) {
-        this(context, attrs, R.attr.appBarLayoutStyle);
+        this(context, attrs, com.google.android.material.R.attr.appBarLayoutStyle);
     }
 
+    @SuppressWarnings("deprecation")
     @SuppressLint("RestrictedApi")
     public AppBarLayout(@NonNull Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);

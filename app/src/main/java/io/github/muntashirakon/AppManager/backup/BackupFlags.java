@@ -2,6 +2,8 @@
 
 package io.github.muntashirakon.AppManager.backup;
 
+import static io.github.muntashirakon.AppManager.utils.UIUtils.getSmallerText;
+
 import android.content.Context;
 import android.text.SpannableStringBuilder;
 
@@ -17,12 +19,10 @@ import java.util.List;
 import java.util.Objects;
 
 import io.github.muntashirakon.AppManager.R;
-import io.github.muntashirakon.AppManager.settings.Ops;
+import io.github.muntashirakon.AppManager.self.SelfPermissions;
+import io.github.muntashirakon.AppManager.settings.Prefs;
 import io.github.muntashirakon.AppManager.users.Users;
-import io.github.muntashirakon.AppManager.utils.AppPref;
 import io.github.muntashirakon.AppManager.utils.ArrayUtils;
-
-import static io.github.muntashirakon.AppManager.utils.UIUtils.getSmallerText;
 
 public final class BackupFlags {
     @IntDef(flag = true, value = {
@@ -47,11 +47,11 @@ public final class BackupFlags {
     public static final int BACKUP_NOTHING = 0;
     @SuppressWarnings("PointlessBitwiseExpression")
     @Deprecated
-    public static final int BACKUP_SOURCE = 1 << 0;
+    private static final int BACKUP_SOURCE = 1 << 0;
     public static final int BACKUP_INT_DATA = 1 << 1;
     public static final int BACKUP_EXT_DATA = 1 << 2;
     @Deprecated
-    public static final int BACKUP_EXCLUDE_CACHE = 1 << 3;
+    private static final int BACKUP_EXCLUDE_CACHE = 1 << 3;
     public static final int BACKUP_RULES = 1 << 4;
     public static final int BACKUP_NO_SIGNATURE_CHECK = 1 << 5;
     public static final int BACKUP_APK_FILES = 1 << 6;
@@ -61,7 +61,7 @@ public final class BackupFlags {
     public static final int BACKUP_EXTRAS = 1 << 10;
     public static final int BACKUP_CACHE = 1 << 11;
 
-    private static final LinkedHashMap<Integer, Pair<Integer, Integer>> backupFlagsMap = new LinkedHashMap<Integer, Pair<Integer, Integer>>() {{
+    private static final LinkedHashMap<Integer, Pair<Integer, Integer>> sBackupFlagsMap = new LinkedHashMap<Integer, Pair<Integer, Integer>>() {{
         put(BACKUP_APK_FILES, new Pair<>(R.string.backup_apk_files, R.string.backup_apk_files_description));
         put(BACKUP_INT_DATA, new Pair<>(R.string.internal_data, R.string.backup_internal_data_description));
         put(BACKUP_EXT_DATA, new Pair<>(R.string.external_data, R.string.backup_external_data_description));
@@ -87,17 +87,14 @@ public final class BackupFlags {
     public static List<Integer> getSupportedBackupFlagsAsArray() {
         List<Integer> backupFlags = new ArrayList<>();
         backupFlags.add(BACKUP_APK_FILES);
-        if (Ops.isRoot()) {
+        if (SelfPermissions.canWriteToDataData()) {
             backupFlags.add(BACKUP_INT_DATA);
         }
         backupFlags.add(BACKUP_EXT_DATA);
         backupFlags.add(BACKUP_EXT_OBB_MEDIA);
         backupFlags.add(BACKUP_CACHE);
-        if (Ops.isRoot()) {
-            // Display extra backups only in root mode
-            backupFlags.add(BACKUP_EXTRAS);
-            backupFlags.add(BACKUP_RULES);
-        }
+        backupFlags.add(BACKUP_EXTRAS);
+        backupFlags.add(BACKUP_RULES);
         backupFlags.add(BACKUP_MULTIPLE);
         if (Users.getUsersIds().length > 1) {
             // Display custom users only if multiple users present
@@ -149,7 +146,7 @@ public final class BackupFlags {
         // Reset backup flags
         CharSequence[] flagNames = new CharSequence[backupFlags.size()];
         for (int i = 0; i < flagNames.length; ++i) {
-            Pair<Integer, Integer> flagNamePair = Objects.requireNonNull(backupFlagsMap.get(backupFlags.get(i)));
+            Pair<Integer, Integer> flagNamePair = Objects.requireNonNull(sBackupFlagsMap.get(backupFlags.get(i)));
             flagNames[i] = new SpannableStringBuilder()
                     .append(context.getText(flagNamePair.first))
                     .append("\n")
@@ -159,33 +156,32 @@ public final class BackupFlags {
     }
 
     @BackupFlag
-    private int flags;
+    private int mFlags;
 
     @NonNull
     public static BackupFlags fromPref() {
-        int flags = AppPref.getInt(AppPref.PrefKey.PREF_BACKUP_FLAGS_INT);
-        return new BackupFlags(getSanitizedFlags(flags));
+        return new BackupFlags(getSanitizedFlags(Prefs.BackupRestore.getBackupFlags()));
     }
 
     public BackupFlags(@BackupFlag int flags) {
-        this.flags = flags;
+        mFlags = flags;
     }
 
     @BackupFlag
     public int getFlags() {
-        return flags;
+        return mFlags;
     }
 
     public void addFlag(@BackupFlag int flag) {
-        this.flags |= flag;
+        mFlags |= flag;
     }
 
     public void removeFlag(@BackupFlag int flag) {
-        this.flags &= ~flag;
+        mFlags &= ~flag;
     }
 
     public void setFlags(int flags) {
-        this.flags = flags;
+        mFlags = flags;
     }
 
     @NonNull
@@ -193,7 +189,7 @@ public final class BackupFlags {
         List<Integer> indexes = new ArrayList<>();
         for (int i = 0; i < enabledFlags.size(); ++i) {
             int flag = enabledFlags.get(i);
-            if ((flags & flag) != 0) {
+            if ((mFlags & flag) != 0) {
                 indexes.add(i);
             }
         }
@@ -201,23 +197,23 @@ public final class BackupFlags {
     }
 
     public boolean isEmpty() {
-        return flags == 0;
+        return mFlags == 0;
     }
 
     public boolean backupApkFiles() {
-        return (flags & BACKUP_APK_FILES) != 0;
+        return (mFlags & BACKUP_APK_FILES) != 0;
     }
 
     public boolean backupInternalData() {
-        return (flags & BACKUP_INT_DATA) != 0;
+        return (mFlags & BACKUP_INT_DATA) != 0;
     }
 
     public boolean backupExternalData() {
-        return (flags & BACKUP_EXT_DATA) != 0;
+        return (mFlags & BACKUP_EXT_DATA) != 0;
     }
 
     public boolean backupMediaObb() {
-        return (flags & BACKUP_EXT_OBB_MEDIA) != 0;
+        return (mFlags & BACKUP_EXT_OBB_MEDIA) != 0;
     }
 
     public boolean backupData() {
@@ -225,28 +221,28 @@ public final class BackupFlags {
     }
 
     public boolean backupRules() {
-        return (flags & BACKUP_RULES) != 0;
+        return (mFlags & BACKUP_RULES) != 0;
     }
 
     public boolean backupExtras() {
-        return (flags & BACKUP_EXTRAS) != 0;
+        return (mFlags & BACKUP_EXTRAS) != 0;
     }
 
     public boolean backupCache() {
-        return (flags & BACKUP_CACHE) != 0;
+        return (mFlags & BACKUP_CACHE) != 0;
     }
 
     @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     public boolean skipSignatureCheck() {
-        return (flags & BACKUP_NO_SIGNATURE_CHECK) != 0;
+        return (mFlags & BACKUP_NO_SIGNATURE_CHECK) != 0;
     }
 
     public boolean backupMultiple() {
-        return (flags & BACKUP_MULTIPLE) != 0;
+        return (mFlags & BACKUP_MULTIPLE) != 0;
     }
 
     public boolean backupCustomUsers() {
-        return (flags & BACKUP_CUSTOM_USERS) != 0;
+        return (mFlags & BACKUP_CUSTOM_USERS) != 0;
     }
 
     @NonNull
@@ -287,10 +283,8 @@ public final class BackupFlags {
      * Remove unsupported flags from the given list of flags
      */
     private static int getSanitizedFlags(int flags) {
-        if (!Ops.isRoot()) {
+        if (!SelfPermissions.canWriteToDataData()) {
             flags &= ~BACKUP_INT_DATA;
-            flags &= ~BACKUP_EXTRAS;
-            flags &= ~BACKUP_RULES;
         }
         if (Users.getUsersIds().length == 1) {
             flags &= ~BACKUP_CUSTOM_USERS;
@@ -308,7 +302,7 @@ public final class BackupFlags {
             // BACKUP_EXCLUDE_CACHE is inversely replaced with BACKUP_CACHE
             flags &= ~BACKUP_EXCLUDE_CACHE;
             flags &= ~BACKUP_CACHE;
-        } else flags |= BACKUP_CACHE;
+        }
         return flags;
     }
 }

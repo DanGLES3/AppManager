@@ -5,6 +5,7 @@ package io.github.muntashirakon.AppManager.settings;
 import android.os.Build;
 import android.os.Bundle;
 import android.text.Editable;
+import android.text.TextUtils;
 import android.view.View;
 
 import androidx.annotation.NonNull;
@@ -12,8 +13,8 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.DialogFragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.preference.Preference;
+import androidx.preference.SwitchPreferenceCompat;
 
-import com.android.internal.util.TextUtils;
 import com.google.android.material.chip.Chip;
 import com.google.android.material.chip.ChipGroup;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
@@ -21,7 +22,6 @@ import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.transition.MaterialSharedAxis;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
@@ -31,6 +31,7 @@ import io.github.muntashirakon.AppManager.utils.AppPref;
 import io.github.muntashirakon.AppManager.utils.ArrayUtils;
 import io.github.muntashirakon.AppManager.utils.MultithreadedExecutor;
 import io.github.muntashirakon.AppManager.utils.Utils;
+import io.github.muntashirakon.dialog.SearchableMultiChoiceDialogBuilder;
 import io.github.muntashirakon.dialog.TextInputDialogBuilder;
 
 public class AdvancedPreferences extends PreferenceFragment {
@@ -44,18 +45,18 @@ public class AdvancedPreferences extends PreferenceFragment {
             "%datetime%"
     };
 
-    private int threadCount;
-    private MainPreferencesViewModel model;
+    private int mThreadCount;
+    private MainPreferencesViewModel mModel;
 
     @Override
     public void onCreatePreferences(@Nullable Bundle savedInstanceState, @Nullable String rootKey) {
         setPreferencesFromResource(R.xml.preferences_advanced, rootKey);
         getPreferenceManager().setPreferenceDataStore(new SettingsDataStore());
-        model = new ViewModelProvider(requireActivity()).get(MainPreferencesViewModel.class);
+        mModel = new ViewModelProvider(requireActivity()).get(MainPreferencesViewModel.class);
         // Selected users
         Preference usersPref = Objects.requireNonNull(findPreference("selected_users"));
         usersPref.setOnPreferenceClickListener(preference -> {
-            model.loadAllUsers();
+            mModel.loadAllUsers();
             return true;
         });
         // Saved apk name format
@@ -92,20 +93,20 @@ public class AdvancedPreferences extends PreferenceFragment {
         });
         // Thread count
         Preference threadCountPref = Objects.requireNonNull(findPreference("thread_count"));
-        threadCount = MultithreadedExecutor.getThreadCount();
-        threadCountPref.setSummary(getResources().getQuantityString(R.plurals.pref_thread_count_msg, threadCount, threadCount));
+        mThreadCount = MultithreadedExecutor.getThreadCount();
+        threadCountPref.setSummary(getResources().getQuantityString(R.plurals.pref_thread_count_msg, mThreadCount, mThreadCount));
         threadCountPref.setOnPreferenceClickListener(preference -> {
             new TextInputDialogBuilder(requireActivity(), null)
                     .setTitle(R.string.pref_thread_count)
                     .setHelperText(getString(R.string.pref_thread_count_hint, Utils.getTotalCores()))
-                    .setInputText(String.valueOf(threadCount))
+                    .setInputText(String.valueOf(mThreadCount))
                     .setNegativeButton(R.string.cancel, null)
                     .setPositiveButton(R.string.save, (dialog, which, inputText, isChecked) -> {
                         if (inputText != null && TextUtils.isDigitsOnly(inputText)) {
                             int c = Integer.decode(inputText.toString());
-                            AppPref.set(AppPref.PrefKey.PREF_CONCURRENCY_THREAD_COUNT_INT, c);
-                            threadCount = MultithreadedExecutor.getThreadCount();
-                            threadCountPref.setSummary(getResources().getQuantityString(R.plurals.pref_thread_count_msg, threadCount, threadCount));
+                            MultithreadedExecutor.setThreadCount(c);
+                            mThreadCount = MultithreadedExecutor.getThreadCount();
+                            threadCountPref.setSummary(getResources().getQuantityString(R.plurals.pref_thread_count_msg, mThreadCount, mThreadCount));
                         }
                     })
                     .show();
@@ -118,6 +119,9 @@ public class AdvancedPreferences extends PreferenceFragment {
                     fragment.show(getParentFragmentManager(), ImportExportKeyStoreDialogFragment.TAG);
                     return true;
                 });
+        // Send notifications to the connected device
+        ((SwitchPreferenceCompat) Objects.requireNonNull(findPreference("send_notifications_to_connected_devices")))
+                .setChecked(Prefs.Misc.sendNotificationsToConnectedDevices());
     }
 
     @Override
@@ -130,38 +134,31 @@ public class AdvancedPreferences extends PreferenceFragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        model.selectUsers().observe(getViewLifecycleOwner(), users -> {
+        mModel.selectUsers().observe(getViewLifecycleOwner(), users -> {
             if (users == null) return;
-            int[] selectedUsers = AppPref.getSelectedUsers();
-            int[] userIds = new int[users.size()];
-            boolean[] choices = new boolean[users.size()];
-            Arrays.fill(choices, false);
+            int[] selectedUsers = Prefs.Misc.getSelectedUsers();
+            Integer[] userIds = new Integer[users.size()];
             CharSequence[] userInfo = new CharSequence[users.size()];
+            List<Integer> preselectedUserIds = new ArrayList<>();
             for (int i = 0; i < users.size(); ++i) {
                 userIds[i] = users.get(i).id;
-                userInfo[i] = userIds[i] + " (" + users.get(i).name + ")";
+                userInfo[i] = users.get(i).toLocalizedString(requireContext());
                 if (selectedUsers == null || ArrayUtils.contains(selectedUsers, userIds[i])) {
-                    choices[i] = true;
+                    preselectedUserIds.add(userIds[i]);
                 }
             }
-            new MaterialAlertDialogBuilder(requireActivity())
+            new SearchableMultiChoiceDialogBuilder<>(requireActivity(), userIds, userInfo)
                     .setTitle(R.string.pref_selected_users)
-                    .setMultiChoiceItems(userInfo, choices, (dialog, which, isChecked) -> choices[which] = isChecked)
-                    .setPositiveButton(R.string.save, (dialog, which) -> {
-                        List<Integer> selectedUserIds = new ArrayList<>(users.size());
-                        for (int i = 0; i < choices.length; ++i) {
-                            if (choices[i]) {
-                                selectedUserIds.add(userIds[i]);
-                            }
-                        }
+                    .addSelections(preselectedUserIds)
+                    .setPositiveButton(R.string.save, (dialog, which, selectedUserIds) -> {
                         if (selectedUserIds.size() > 0) {
-                            AppPref.setSelectedUsers(ArrayUtils.convertToIntArray(selectedUserIds));
-                        } else AppPref.setSelectedUsers(null);
+                            Prefs.Misc.setSelectedUsers(ArrayUtils.convertToIntArray(selectedUserIds));
+                        } else Prefs.Misc.setSelectedUsers(null);
                         Utils.relaunchApp(requireActivity());
                     })
                     .setNegativeButton(R.string.cancel, null)
-                    .setNeutralButton(R.string.use_default, (dialog, which) -> {
-                        AppPref.setSelectedUsers(null);
+                    .setNeutralButton(R.string.use_default, (dialog, which, selectedUserIds) -> {
+                        Prefs.Misc.setSelectedUsers(null);
                         Utils.relaunchApp(requireActivity());
                     })
                     .show();

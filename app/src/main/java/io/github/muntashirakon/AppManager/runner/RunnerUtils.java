@@ -3,7 +3,6 @@
 package io.github.muntashirakon.AppManager.runner;
 
 import android.os.Build;
-import android.os.UserHandleHidden;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -28,10 +27,6 @@ public final class RunnerUtils {
 
     public static final String CMD_AM = Build.VERSION.SDK_INT >= Build.VERSION_CODES.P ? "cmd activity" : "am";
     public static final String CMD_PM = Build.VERSION.SDK_INT >= Build.VERSION_CODES.P ? "cmd package" : "pm";
-
-    public static final String CMD_INSTALL_EXISTING_PACKAGE = CMD_PM + " install-existing --user %s %s";
-    public static final String CMD_UNINSTALL_PACKAGE = CMD_PM + " uninstall -k --user %s %s";
-    public static final String CMD_UNINSTALL_PACKAGE_WITH_DATA = CMD_PM + " uninstall --user %s %s";
 
     private static final String EMPTY = "";
 
@@ -91,20 +86,6 @@ public final class RunnerUtils {
         return ESCAPE_XSI.translate(input);
     }
 
-    @NonNull
-    public static Runner.Result uninstallPackageUpdate(String packageName, int userHandle, boolean keepData) {
-        String cmd = String.format(keepData ? CMD_UNINSTALL_PACKAGE : CMD_UNINSTALL_PACKAGE_WITH_DATA,
-                userHandleToUser(UserHandleHidden.USER_ALL), packageName) + " && "
-                + String.format(CMD_INSTALL_EXISTING_PACKAGE, userHandleToUser(userHandle), packageName);
-        return Runner.runCommand(cmd);
-    }
-
-    @NonNull
-    public static String userHandleToUser(int userHandle) {
-        if (userHandle == UserHandleHidden.USER_ALL) return "all";
-        else return String.valueOf(userHandle);
-    }
-
     @NoOps
     public static boolean isRootGiven() {
         return Boolean.TRUE.equals(isAppGrantedRoot());
@@ -127,11 +108,11 @@ public final class RunnerUtils {
         }
         // Check if root is available
         String pathEnv = System.getenv("PATH");
-        Log.d(TAG, "PATH=" + pathEnv);
+        Log.d(TAG, "PATH=%s", pathEnv);
         if (pathEnv == null) return false;
         for (String pathDir : pathEnv.split(":")) {
             File suFile = new File(pathDir, "su");
-            Log.d(TAG, "SU(file=" + suFile + ", exists=" + suFile.exists() + ", executable=" + suFile.canExecute() + ")");
+            Log.d(TAG, "SU(file=%s, exists=%s, executable=%s)", suFile, suFile.exists(), suFile.canExecute());
             if (new File(pathDir, "su").canExecute()) {
                 // Root available but App Manager is not granted root
                 return null;
@@ -151,19 +132,19 @@ public final class RunnerUtils {
         /**
          * The mapping to be used in translation.
          */
-        private final Map<String, String> lookupMap;
+        private final Map<String, String> mLookupMap;
         /**
          * The first character of each key in the lookupMap.
          */
-        private final BitSet prefixSet;
+        private final BitSet mPrefixSet;
         /**
          * The length of the shortest key in the lookupMap.
          */
-        private final int shortest;
+        private final int mShortest;
         /**
          * The length of the longest key in the lookupMap.
          */
-        private final int longest;
+        private final int mLongest;
 
         /**
          * Define the lookup table to be used in translation
@@ -180,14 +161,14 @@ public final class RunnerUtils {
             if (lookupMap == null) {
                 throw new InvalidParameterException("lookupMap cannot be null");
             }
-            this.lookupMap = new HashMap<>();
-            this.prefixSet = new BitSet();
+            mLookupMap = new HashMap<>();
+            mPrefixSet = new BitSet();
             int currentShortest = Integer.MAX_VALUE;
             int currentLongest = 0;
 
             for (final Map.Entry<CharSequence, CharSequence> pair : lookupMap.entrySet()) {
-                this.lookupMap.put(pair.getKey().toString(), pair.getValue().toString());
-                this.prefixSet.set(pair.getKey().charAt(0));
+                mLookupMap.put(pair.getKey().toString(), pair.getValue().toString());
+                mPrefixSet.set(pair.getKey().charAt(0));
                 final int sz = pair.getKey().length();
                 if (sz < currentShortest) {
                     currentShortest = sz;
@@ -196,8 +177,8 @@ public final class RunnerUtils {
                     currentLongest = sz;
                 }
             }
-            this.shortest = currentShortest;
-            this.longest = currentLongest;
+            mShortest = currentShortest;
+            mLongest = currentLongest;
         }
 
         /**
@@ -214,15 +195,15 @@ public final class RunnerUtils {
          */
         public int translate(@NonNull final CharSequence input, final int index, final Writer out) throws IOException {
             // check if translation exists for the input at position index
-            if (prefixSet.get(input.charAt(index))) {
-                int max = longest;
-                if (index + longest > input.length()) {
+            if (mPrefixSet.get(input.charAt(index))) {
+                int max = mLongest;
+                if (index + mLongest > input.length()) {
                     max = input.length() - index;
                 }
                 // implement greedy algorithm by trying maximum match first
-                for (int i = max; i >= shortest; i--) {
+                for (int i = max; i >= mShortest; i--) {
                     final CharSequence subSeq = input.subSequence(index, index + i);
-                    final String result = lookupMap.get(subSeq.toString());
+                    final String result = mLookupMap.get(subSeq.toString());
 
                     if (result != null) {
                         out.write(result);

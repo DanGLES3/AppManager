@@ -7,11 +7,9 @@ import android.view.View;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatDelegate;
-import androidx.core.app.ActivityCompat;
 import androidx.preference.Preference;
 import androidx.preference.SwitchPreferenceCompat;
 
-import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.transition.MaterialSharedAxis;
 
 import java.util.Arrays;
@@ -20,7 +18,9 @@ import java.util.Objects;
 
 import io.github.muntashirakon.AppManager.BuildConfig;
 import io.github.muntashirakon.AppManager.R;
-import io.github.muntashirakon.AppManager.utils.AppPref;
+import io.github.muntashirakon.AppManager.utils.appearance.AppearanceUtils;
+import io.github.muntashirakon.dialog.SearchableFlagsDialogBuilder;
+import io.github.muntashirakon.dialog.SearchableSingleChoiceDialogBuilder;
 
 public class AppearancePreferences extends PreferenceFragment {
     private static final List<Integer> THEME_CONST = Arrays.asList(
@@ -33,8 +33,8 @@ public class AppearancePreferences extends PreferenceFragment {
             View.LAYOUT_DIRECTION_LTR,
             View.LAYOUT_DIRECTION_RTL);
 
-    private int currentTheme;
-    private int currentLayoutOrientation;
+    private int mCurrentTheme;
+    private int mCurrentLayoutDirection;
 
     @Override
     public void onCreatePreferences(@Nullable Bundle savedInstanceState, @Nullable String rootKey) {
@@ -42,19 +42,18 @@ public class AppearancePreferences extends PreferenceFragment {
         getPreferenceManager().setPreferenceDataStore(new SettingsDataStore());
         // App theme
         final String[] themes = getResources().getStringArray(R.array.themes);
-        currentTheme = AppPref.getInt(AppPref.PrefKey.PREF_APP_THEME_INT);
+        mCurrentTheme = Prefs.Appearance.getNightMode();
         Preference appTheme = Objects.requireNonNull(findPreference("app_theme"));
-        appTheme.setSummary(themes[THEME_CONST.indexOf(currentTheme)]);
+        appTheme.setSummary(themes[THEME_CONST.indexOf(mCurrentTheme)]);
         appTheme.setOnPreferenceClickListener(preference -> {
-            new MaterialAlertDialogBuilder(requireActivity())
+            new SearchableSingleChoiceDialogBuilder<>(requireActivity(), THEME_CONST, themes)
                     .setTitle(R.string.select_theme)
-                    .setSingleChoiceItems(themes, THEME_CONST.indexOf(currentTheme),
-                            (dialog, which) -> currentTheme = THEME_CONST.get(which))
-                    .setPositiveButton(R.string.apply, (dialog, which) -> {
-                        if (AppPref.getInt(AppPref.PrefKey.PREF_APP_THEME_INT) != currentTheme) {
-                            AppPref.set(AppPref.PrefKey.PREF_APP_THEME_INT, currentTheme);
-                            AppCompatDelegate.setDefaultNightMode(currentTheme);
-                            appTheme.setSummary(themes[THEME_CONST.indexOf(currentTheme)]);
+                    .setSelection(mCurrentTheme)
+                    .setPositiveButton(R.string.apply, (dialog, which, selectedTheme) -> {
+                        if (selectedTheme != null && selectedTheme != mCurrentTheme) {
+                            mCurrentTheme = selectedTheme;
+                            Prefs.Appearance.setNightMode(mCurrentTheme);
+                            AppCompatDelegate.setDefaultNightMode(mCurrentTheme);
                         }
                     })
                     .setNegativeButton(R.string.cancel, null)
@@ -64,26 +63,26 @@ public class AppearancePreferences extends PreferenceFragment {
         // Black theme/custom theme
         SwitchPreferenceCompat fullBlackTheme = Objects.requireNonNull(findPreference("app_theme_pure_black"));
         fullBlackTheme.setVisible(BuildConfig.DEBUG);
-        fullBlackTheme.setChecked(AppPref.isPureBlackTheme());
+        fullBlackTheme.setChecked(Prefs.Appearance.isPureBlackTheme());
         fullBlackTheme.setOnPreferenceChangeListener((preference, newValue) -> {
             boolean enabled = (boolean) newValue;
-            AppPref.setPureBlackTheme(enabled);
-            ActivityCompat.recreate(requireActivity());
+            Prefs.Appearance.setPureBlackTheme(enabled);
+            AppearanceUtils.applyConfigurationChangesToActivities();
             return true;
         });
         // Layout orientation
         final String[] layoutOrientations = getResources().getStringArray(R.array.layout_orientations);
-        currentLayoutOrientation = AppPref.getLayoutOrientation();
+        mCurrentLayoutDirection = Prefs.Appearance.getLayoutDirection();
         Preference layoutOrientation = Objects.requireNonNull(findPreference("layout_orientation"));
-        layoutOrientation.setSummary(layoutOrientations[LAYOUT_ORIENTATION_CONST.indexOf(currentLayoutOrientation)]);
+        layoutOrientation.setSummary(layoutOrientations[LAYOUT_ORIENTATION_CONST.indexOf(mCurrentLayoutDirection)]);
         layoutOrientation.setOnPreferenceClickListener(preference -> {
-            new MaterialAlertDialogBuilder(requireActivity())
-                    .setTitle(R.string.pref_layout_orientation)
-                    .setSingleChoiceItems(layoutOrientations, LAYOUT_ORIENTATION_CONST.indexOf(currentLayoutOrientation),
-                            (dialog, which) -> currentLayoutOrientation = LAYOUT_ORIENTATION_CONST.get(which))
-                    .setPositiveButton(R.string.apply, (dialog, which) -> {
-                        AppPref.set(AppPref.PrefKey.PREF_LAYOUT_ORIENTATION_INT, currentLayoutOrientation);
-                        ActivityCompat.recreate(requireActivity());
+            new SearchableSingleChoiceDialogBuilder<>(requireActivity(), LAYOUT_ORIENTATION_CONST, layoutOrientations)
+                    .setTitle(R.string.pref_layout_direction)
+                    .setSelection(mCurrentLayoutDirection)
+                    .setPositiveButton(R.string.apply, (dialog, which, selectedLayoutOrientation) -> {
+                        mCurrentLayoutDirection = Objects.requireNonNull(selectedLayoutOrientation);
+                        Prefs.Appearance.setLayoutDirection(mCurrentLayoutDirection);
+                        AppearanceUtils.applyConfigurationChangesToActivities();
                     })
                     .setNegativeButton(R.string.cancel, null)
                     .show();
@@ -93,11 +92,10 @@ public class AppearancePreferences extends PreferenceFragment {
         FeatureController fc = FeatureController.getInstance();
         ((Preference) Objects.requireNonNull(findPreference("enabled_features")))
                 .setOnPreferenceClickListener(preference -> {
-                    new MaterialAlertDialogBuilder(requireActivity())
+                    new SearchableFlagsDialogBuilder<>(requireActivity(), FeatureController.featureFlags, FeatureController.getFormattedFlagNames(requireActivity()), fc.getFlags())
                             .setTitle(R.string.enable_disable_features)
-                            .setMultiChoiceItems(FeatureController.getFormattedFlagNames(requireActivity()),
-                                    fc.flagsToCheckedItems(),
-                                    (dialog, index, isChecked) -> fc.modifyState(FeatureController.featureFlags.get(index), isChecked))
+                            .setOnMultiChoiceClickListener((dialog, which, item, isChecked) ->
+                                    fc.modifyState(FeatureController.featureFlags.get(which), isChecked))
                             .setNegativeButton(R.string.close, null)
                             .show();
                     return true;

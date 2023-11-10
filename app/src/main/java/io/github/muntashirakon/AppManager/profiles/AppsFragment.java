@@ -21,24 +21,51 @@ import com.google.android.material.progressindicator.LinearProgressIndicator;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import io.github.muntashirakon.AppManager.R;
-import io.github.muntashirakon.AppManager.imagecache.ImageLoader;
+import io.github.muntashirakon.AppManager.self.imagecache.ImageLoader;
 import io.github.muntashirakon.widget.RecyclerView;
 import io.github.muntashirakon.widget.SwipeRefreshLayout;
 
 public class AppsFragment extends Fragment implements SwipeRefreshLayout.OnRefreshListener {
-    private AppsProfileActivity activity;
-    private SwipeRefreshLayout swipeRefresh;
-    private LinearProgressIndicator progressIndicator;
-    private ProfileViewModel model;
+    public static class AppsFragmentItem {
+        @NonNull
+        public final String packageName;
+        @Nullable
+        public CharSequence label;
+        public ApplicationInfo applicationInfo;
 
-    private final ImageLoader imageLoader = new ImageLoader();
+        public AppsFragmentItem(@NonNull String packageName) {
+            this.packageName = packageName;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o instanceof String) {
+                return Objects.equals(packageName, o);
+            }
+            if (!(o instanceof AppsFragmentItem)) return false;
+            AppsFragmentItem that = (AppsFragmentItem) o;
+            return Objects.equals(packageName, that.packageName);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(packageName);
+        }
+    }
+
+    private AppsProfileActivity mActivity;
+    private SwipeRefreshLayout mSwipeRefresh;
+    private LinearProgressIndicator mProgressIndicator;
+    private ProfileViewModel mModel;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        activity = (AppsProfileActivity) requireActivity();
+        mActivity = (AppsProfileActivity) requireActivity();
     }
 
     @Nullable
@@ -51,25 +78,25 @@ public class AppsFragment extends Fragment implements SwipeRefreshLayout.OnRefre
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         // Swipe refresh
-        swipeRefresh = view.findViewById(R.id.swipe_refresh);
-        swipeRefresh.setOnRefreshListener(this);
+        mSwipeRefresh = view.findViewById(R.id.swipe_refresh);
+        mSwipeRefresh.setOnRefreshListener(this);
         RecyclerView recyclerView = view.findViewById(R.id.scrollView);
         recyclerView.setFitsSystemWindows(false);
         recyclerView.setHasFixedSize(true);
-        recyclerView.setLayoutManager(new LinearLayoutManager(activity, LinearLayoutManager.VERTICAL, false));
+        recyclerView.setLayoutManager(new LinearLayoutManager(mActivity, LinearLayoutManager.VERTICAL, false));
         final TextView emptyView = view.findViewById(android.R.id.empty);
         emptyView.setText(R.string.no_apps);
         recyclerView.setEmptyView(emptyView);
-        progressIndicator = view.findViewById(R.id.progress_linear);
-        progressIndicator.setVisibilityAfterHide(View.GONE);
-        progressIndicator.show();
+        mProgressIndicator = view.findViewById(R.id.progress_linear);
+        mProgressIndicator.setVisibilityAfterHide(View.GONE);
+        mProgressIndicator.show();
         view.findViewById(R.id.alert_text).setVisibility(View.GONE);
-        swipeRefresh.setOnChildScrollUpCallback((parent, child) -> recyclerView.canScrollVertically(-1));
-        model = activity.model;
+        mSwipeRefresh.setOnChildScrollUpCallback((parent, child) -> recyclerView.canScrollVertically(-1));
+        mModel = mActivity.model;
         AppsRecyclerAdapter adapter = new AppsRecyclerAdapter();
         recyclerView.setAdapter(adapter);
-        model.getPackages().observe(getViewLifecycleOwner(), packages -> {
-            progressIndicator.hide();
+        mModel.getPackages().observe(getViewLifecycleOwner(), packages -> {
+            mProgressIndicator.hide();
             adapter.setList(packages);
         });
     }
@@ -77,33 +104,27 @@ public class AppsFragment extends Fragment implements SwipeRefreshLayout.OnRefre
     @Override
     public void onResume() {
         super.onResume();
-        if (activity.getSupportActionBar() != null) {
-            activity.getSupportActionBar().setSubtitle(R.string.apps);
+        if (mActivity.getSupportActionBar() != null) {
+            mActivity.getSupportActionBar().setSubtitle(R.string.apps);
         }
-        activity.fab.show();
-    }
-
-    @Override
-    public void onDestroy() {
-        imageLoader.close();
-        super.onDestroy();
+        mActivity.fab.show();
     }
 
     @Override
     public void onRefresh() {
-        swipeRefresh.setRefreshing(false);
-        model.loadPackages();
+        mSwipeRefresh.setRefreshing(false);
+        mModel.loadPackages();
     }
 
     public class AppsRecyclerAdapter extends RecyclerView.Adapter<AppsRecyclerAdapter.ViewHolder> {
         PackageManager pm;
-        final ArrayList<String> packages = new ArrayList<>();
+        final ArrayList<AppsFragmentItem> packages = new ArrayList<>();
 
         private AppsRecyclerAdapter() {
-            pm = activity.getPackageManager();
+            pm = mActivity.getPackageManager();
         }
 
-        void setList(List<String> list) {
+        void setList(List<AppsFragmentItem> list) {
             packages.clear();
             packages.addAll(list);
             notifyDataSetChanged();
@@ -112,37 +133,33 @@ public class AppsFragment extends Fragment implements SwipeRefreshLayout.OnRefre
         @NonNull
         @Override
         public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-            View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.m3_preference, parent, false);
+            View view = LayoutInflater.from(parent.getContext()).inflate(io.github.muntashirakon.ui.R.layout.m3_preference, parent, false);
             return new ViewHolder(view);
         }
 
         @Override
         public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-            String packageName = packages.get(position);
-            ApplicationInfo info = null;
-            try {
-                info = pm.getApplicationInfo(packageName, 0);
-            } catch (PackageManager.NameNotFoundException ignore) {
-            }
-            imageLoader.displayImage(packageName, info, holder.icon);
-            String label;
-            if (info != null) {
-                label = info.loadLabel(pm).toString();
-            } else label = packageName;
-            holder.title.setText(label);
-            if (packageName.equals(label)) {
-                holder.subtitle.setVisibility(View.GONE);
-            } else {
+            AppsFragmentItem fragmentItem = packages.get(position);
+            holder.icon.setTag(fragmentItem);
+            ImageLoader.getInstance().displayImage(fragmentItem.packageName, fragmentItem.applicationInfo, holder.icon);
+            CharSequence label = fragmentItem.label;
+            holder.title.setText(label != null ? label : fragmentItem.packageName);
+            if (label != null) {
                 holder.subtitle.setVisibility(View.VISIBLE);
-                holder.subtitle.setText(packageName);
+                holder.subtitle.setText(fragmentItem.packageName);
+            } else {
+                holder.subtitle.setVisibility(View.GONE);
             }
-            holder.itemView.setOnClickListener(v -> {});
+            holder.itemView.setOnClickListener(v -> {
+            });
             holder.itemView.setOnLongClickListener(v -> {
-                PopupMenu popupMenu = new PopupMenu(activity, holder.itemView);
-                popupMenu.getMenu().add(R.string.delete).setOnMenuItemClickListener(item -> {
-                    model.deletePackage(packageName);
-                    return true;
-                });
+                PopupMenu popupMenu = new PopupMenu(mActivity, holder.itemView);
+                popupMenu.setForceShowIcon(true);
+                popupMenu.getMenu().add(R.string.delete).setIcon(R.drawable.ic_trash_can)
+                        .setOnMenuItemClickListener(item -> {
+                            mModel.deletePackage(fragmentItem.packageName);
+                            return true;
+                        });
                 popupMenu.show();
                 return true;
             });
@@ -153,7 +170,7 @@ public class AppsFragment extends Fragment implements SwipeRefreshLayout.OnRefre
             return packages.size();
         }
 
-        class ViewHolder extends RecyclerView.ViewHolder {
+        public class ViewHolder extends RecyclerView.ViewHolder {
             ImageView icon;
             TextView title;
             TextView subtitle;

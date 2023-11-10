@@ -9,52 +9,45 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.os.Bundle;
-import android.os.RemoteException;
 import android.util.Size;
 import android.widget.RemoteViews;
 
 import androidx.annotation.NonNull;
+import androidx.core.app.PendingIntentCompat;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import io.github.muntashirakon.AppManager.R;
-import io.github.muntashirakon.AppManager.compat.PendingIntentCompat;
+import io.github.muntashirakon.AppManager.self.SelfPermissions;
+import io.github.muntashirakon.AppManager.settings.FeatureController;
 import io.github.muntashirakon.AppManager.users.Users;
 import io.github.muntashirakon.AppManager.utils.DateUtils;
+import io.github.muntashirakon.AppManager.utils.ExUtils;
 
 public class ScreenTimeAppWidget extends AppWidgetProvider {
-
-    static void updateAppWidget(Context context, AppWidgetManager appWidgetManager,
-                                int appWidgetId) {
+    static void updateAppWidget(Context context, AppWidgetManager appWidgetManager, int appWidgetId) {
+        if (!FeatureController.isUsageAccessEnabled() || !SelfPermissions.checkUsageStatsPermission()) {
+            return;
+        }
         // Fetch screens time
         int[] userIds = Users.getUsersIds();
         List<PackageUsageInfo> packageUsageInfoList = new ArrayList<>();
+        AppUsageStatsManager usageStatsManager = AppUsageStatsManager.getInstance();
         for (int userId : userIds) {
-            int _try = 5; // try to get usage stats at most 5 times
-            do {
-                try {
-                    packageUsageInfoList.addAll(AppUsageStatsManager.getInstance(context)
-                            .getUsageStats(UsageUtils.USAGE_TODAY, userId));
-                } catch (RemoteException e) {
-                    e.printStackTrace();
-                }
-            } while (0 != --_try && packageUsageInfoList.size() == 0);
+            ExUtils.exceptionAsIgnored(() -> packageUsageInfoList.addAll(usageStatsManager
+                    .getUsageStats(UsageUtils.USAGE_TODAY, userId)));
         }
         Collections.sort(packageUsageInfoList, (o1, o2) -> -Long.compare(o1.screenTime, o2.screenTime));
         long totalScreenTime = 0;
-        Set<Integer> users = new HashSet<>(3);
         for (PackageUsageInfo appItem : packageUsageInfoList) {
             totalScreenTime += appItem.screenTime;
-            users.add(appItem.userId);
         }
         // Get pending intent
         Intent intent = new Intent(context, AppUsageActivity.class);
-        PendingIntent pendingIntent = PendingIntent.getActivity(context, 0 /* no requestCode */, intent,
-                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntentCompat.FLAG_IMMUTABLE);
+        PendingIntent pendingIntent = PendingIntentCompat.getActivity(context, 0 /* no requestCode */, intent,
+                PendingIntent.FLAG_UPDATE_CURRENT, false);
         // Construct the RemoteViews object
         Size appWidgetSize = getAppWidgetSize(context, appWidgetManager, appWidgetId);
         RemoteViews views;

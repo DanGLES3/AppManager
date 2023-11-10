@@ -2,6 +2,8 @@
 
 package io.github.muntashirakon.AppManager.intercept;
 
+import static io.github.muntashirakon.AppManager.intercept.IntentCompat.parseExtraValue;
+
 import android.annotation.SuppressLint;
 import android.app.Dialog;
 import android.os.Bundle;
@@ -9,9 +11,7 @@ import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -29,8 +29,8 @@ import com.google.android.material.textfield.TextInputLayout;
 import java.io.Serializable;
 
 import io.github.muntashirakon.AppManager.R;
-
-import static io.github.muntashirakon.AppManager.intercept.IntentCompat.parseExtraValue;
+import io.github.muntashirakon.adapters.SelectedArrayAdapter;
+import io.github.muntashirakon.widget.MaterialSpinner;
 
 public class AddIntentExtraFragment extends DialogFragment {
     public static final String TAG = "AddIntentExtraFragment";
@@ -94,7 +94,7 @@ public class AddIntentExtraFragment extends DialogFragment {
     private static final int TYPE_COUNT = 18;
 
     @Nullable
-    private OnSaveListener onSaveListener;
+    private OnSaveListener mOnSaveListener;
 
     public interface OnSaveListener {
         void onSave(@Mode int mode, ExtraItem extraItem);
@@ -126,10 +126,10 @@ public class AddIntentExtraFragment extends DialogFragment {
     private final ViewGroup[] mLayoutTypes = new ViewGroup[TYPE_COUNT];
     private final TextView[] mValues = new TextView[TYPE_COUNT];
     @Type
-    private int currentType;
+    private int mCurrentType;
 
     public void setOnSaveListener(@Nullable OnSaveListener onSaveListener) {
-        this.onSaveListener = onSaveListener;
+        mOnSaveListener = onSaveListener;
     }
 
     @NonNull
@@ -144,28 +144,21 @@ public class AddIntentExtraFragment extends DialogFragment {
         if (inflater == null) return super.onCreateDialog(savedInstanceState);
         @SuppressLint("InflateParams")
         View view = inflater.inflate(R.layout.dialog_edit_pref_item, null);
-        Spinner spinner = view.findViewById(R.id.type_selector_spinner);
-        ArrayAdapter<CharSequence> spinnerAdapter = ArrayAdapter.createFromResource(activity,
-                R.array.extras_types, R.layout.item_checked_text_view);
+        MaterialSpinner spinner = view.findViewById(R.id.type_selector_spinner);
+        ArrayAdapter<CharSequence> spinnerAdapter = SelectedArrayAdapter.createFromResource(activity,
+                R.array.extras_types, io.github.muntashirakon.ui.R.layout.auto_complete_dropdown_item);
         spinner.setAdapter(spinnerAdapter);
-        spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, @Type int position, long id) {
-                for (ViewGroup layout : mLayoutTypes) layout.setVisibility(View.GONE);
-                if (position != TYPE_NULL) {
-                    // We don't need a value for null
-                    ViewGroup viewGroup = mLayoutTypes[position];
-                    viewGroup.setVisibility(View.VISIBLE);
-                    if (viewGroup instanceof TextInputLayout) {
-                        ((TextInputLayout) viewGroup).setHint(spinnerAdapter.getItem(position));
-                    }
+        spinner.setOnItemClickListener((parent, view1, position, id) -> {
+            for (ViewGroup layout : mLayoutTypes) layout.setVisibility(View.GONE);
+            if (position != TYPE_NULL) {
+                // We don't need a value for null
+                ViewGroup viewGroup = mLayoutTypes[position];
+                viewGroup.setVisibility(View.VISIBLE);
+                if (viewGroup instanceof TextInputLayout) {
+                    ((TextInputLayout) viewGroup).setHint(spinnerAdapter.getItem(position));
                 }
-                currentType = position;
             }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-            }
+            mCurrentType = position;
         });
         // Set layouts
         mLayoutTypes[TYPE_BOOLEAN] = view.findViewById(R.id.layout_bool);
@@ -209,18 +202,18 @@ public class AddIntentExtraFragment extends DialogFragment {
         TextInputEditText editKeyName = view.findViewById(R.id.key_name);
         if (extraItem != null) {
             // Extra is already set
-            currentType = extraItem.type;
+            mCurrentType = extraItem.type;
             String keyName = extraItem.keyName;
             Object keyValue = extraItem.keyValue;
             editKeyName.setText(keyName);
             if (mode == MODE_EDIT) editKeyName.setEnabled(false);
             for (ViewGroup layout : mLayoutTypes) layout.setVisibility(View.GONE);
-            if (currentType != TYPE_NULL) {
+            if (mCurrentType != TYPE_NULL) {
                 // We don't need a value for null
-                ViewGroup viewGroup = mLayoutTypes[currentType];
+                ViewGroup viewGroup = mLayoutTypes[mCurrentType];
                 viewGroup.setVisibility(View.VISIBLE);
                 if (viewGroup instanceof TextInputLayout) {
-                    ((TextInputLayout) viewGroup).setHint(spinnerAdapter.getItem(currentType));
+                    ((TextInputLayout) viewGroup).setHint(spinnerAdapter.getItem(mCurrentType));
                 }
                 if (keyValue != null) {
                     // FIXME: 25/1/21 Reformat the string to support parsing
@@ -233,8 +226,8 @@ public class AddIntentExtraFragment extends DialogFragment {
         }
         MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(activity);
         builder.setView(view)
-                .setPositiveButton(mode == MODE_CREATE ? R.string.add_item : R.string.done, (dialog, which) -> {
-                    if (onSaveListener == null) return;
+                .setPositiveButton(mode == MODE_CREATE ? R.string.add : R.string.done, (dialog, which) -> {
+                    if (mOnSaveListener == null) return;
                     if (editKeyName.getText() == null) {
                         Toast.makeText(getActivity(), R.string.key_name_cannot_be_null, Toast.LENGTH_LONG).show();
                         return;
@@ -246,30 +239,30 @@ public class AddIntentExtraFragment extends DialogFragment {
                         newExtraItem = new ExtraItem();
                         newExtraItem.keyName = keyName;
                     }
-                    newExtraItem.type = currentType;
+                    newExtraItem.type = mCurrentType;
                     if (TextUtils.isEmpty(newExtraItem.keyName)) {
                         Toast.makeText(getActivity(), R.string.key_name_cannot_be_null, Toast.LENGTH_LONG).show();
                         return;
                     }
                     try {
-                        if (currentType == TYPE_BOOLEAN) {
-                            newExtraItem.keyValue = ((MaterialSwitch) mValues[currentType]).isChecked();
+                        if (mCurrentType == TYPE_BOOLEAN) {
+                            newExtraItem.keyValue = ((MaterialSwitch) mValues[mCurrentType]).isChecked();
                         } else {
-                            newExtraItem.keyValue = parseExtraValue(currentType, mValues[currentType].getText().toString().trim());
+                            newExtraItem.keyValue = parseExtraValue(mCurrentType, mValues[mCurrentType].getText().toString().trim());
                         }
                     } catch (Exception e) {
                         e.printStackTrace();
                         Toast.makeText(getActivity(), R.string.error_evaluating_input, Toast.LENGTH_LONG).show();
                         return;
                     }
-                    onSaveListener.onSave(mode, newExtraItem);
+                    mOnSaveListener.onSave(mode, newExtraItem);
                 })
                 .setNegativeButton(R.string.cancel, (dialog, which) -> {
                     if (getDialog() != null) getDialog().cancel();
                 });
         if (mode == MODE_EDIT) {
             builder.setNeutralButton(R.string.delete, (dialog, which) -> {
-                if (onSaveListener != null) onSaveListener.onSave(MODE_DELETE, extraItem);
+                if (mOnSaveListener != null) mOnSaveListener.onSave(MODE_DELETE, extraItem);
             });
         }
         return builder.create();

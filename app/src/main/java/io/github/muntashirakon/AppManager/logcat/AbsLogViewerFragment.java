@@ -33,16 +33,18 @@ import io.github.muntashirakon.AppManager.logcat.helper.PreferenceHelper;
 import io.github.muntashirakon.AppManager.logcat.helper.SaveLogHelper;
 import io.github.muntashirakon.AppManager.logcat.struct.LogLine;
 import io.github.muntashirakon.AppManager.settings.LogViewerPreferences;
-import io.github.muntashirakon.AppManager.types.SearchableMultiChoiceDialogBuilder;
 import io.github.muntashirakon.AppManager.utils.StoragePermission;
 import io.github.muntashirakon.AppManager.utils.UIUtils;
+import io.github.muntashirakon.dialog.SearchableItemsDialogBuilder;
+import io.github.muntashirakon.dialog.SearchableMultiChoiceDialogBuilder;
+import io.github.muntashirakon.dialog.SearchableSingleChoiceDialogBuilder;
 import io.github.muntashirakon.dialog.TextInputDialogBuilder;
 import io.github.muntashirakon.io.Path;
-import io.github.muntashirakon.reflow.ReflowMenuViewWrapper;
+import io.github.muntashirakon.multiselection.MultiSelectionActionsView;
 import io.github.muntashirakon.widget.MultiSelectionView;
 
 public abstract class AbsLogViewerFragment extends Fragment implements LogViewerViewModel.LogLinesAvailableInterface,
-        ReflowMenuViewWrapper.OnItemSelectedListener, LogViewerActivity.SearchingInterface, Filter.FilterListener {
+        MultiSelectionActionsView.OnItemSelectedListener, LogViewerActivity.SearchingInterface, Filter.FilterListener {
     public static final String TAG = AbsLogViewerFragment.class.getSimpleName();
 
     protected RecyclerView mRecyclerView;
@@ -113,7 +115,6 @@ public abstract class AbsLogViewerFragment extends Fragment implements LogViewer
         mMultiSelectionView.setOnItemSelectedListener(this);
         mMultiSelectionView.hide();
         mRecyclerView.setAdapter(mLogListAdapter);
-        mRecyclerView.setHasFixedSize(true);
         mRecyclerView.addOnScrollListener(mRecyclerViewScrollListener);
         // Observers
         mViewModel.getExpandLogsLiveData().observe(getViewLifecycleOwner(), expanded -> {
@@ -184,11 +185,11 @@ public abstract class AbsLogViewerFragment extends Fragment implements LogViewer
             displayDeleteSavedLogsDialog();
         } else if (id == R.id.action_change_log_level) {
             CharSequence[] logLevelsLocalised = getResources().getStringArray(R.array.log_levels);
-            int currentLogLevelIdx = LogViewerPreferences.LOG_LEVEL_VALUES.indexOf(mViewModel.getLogLevel());
-            new MaterialAlertDialogBuilder(mActivity)
+            new SearchableSingleChoiceDialogBuilder<>(mActivity, LogViewerPreferences.LOG_LEVEL_VALUES, logLevelsLocalised)
                     .setTitle(R.string.log_level)
-                    .setSingleChoiceItems(logLevelsLocalised, currentLogLevelIdx, (dialog, which) -> {
-                        mViewModel.setLogLevel(LogViewerPreferences.LOG_LEVEL_VALUES.get(which));
+                    .setSelection(mViewModel.getLogLevel())
+                    .setOnSingleChoiceClickListener((dialog, which, selectedLogLevel, isChecked) -> {
+                        mViewModel.setLogLevel(selectedLogLevel);
                         // Search again
                         mActivity.search(mQueryString);
                     })
@@ -288,10 +289,9 @@ public abstract class AbsLogViewerFragment extends Fragment implements LogViewer
             UIUtils.displayShortToast(R.string.no_saved_logs);
             return;
         }
-        new MaterialAlertDialogBuilder(mActivity)
+        new SearchableItemsDialogBuilder<>(mActivity, SaveLogHelper.getFormattedFilenames(mActivity, logFiles))
                 .setTitle(R.string.open)
-                .setItems(SaveLogHelper.getFormattedFilenames(mActivity, logFiles), (dialog, which) ->
-                        mActivity.openLogFile(logFiles.get(which)))
+                .setOnItemClickListener((dialog, which, item) -> mActivity.openLogFile(logFiles.get(which)))
                 .setNegativeButton(R.string.close, null)
                 .show();
     }

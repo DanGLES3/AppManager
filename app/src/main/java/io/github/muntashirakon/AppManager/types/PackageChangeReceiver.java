@@ -18,6 +18,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.UiThread;
 import androidx.annotation.WorkerThread;
+import androidx.core.os.BundleCompat;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -47,6 +48,22 @@ public abstract class PackageChangeReceiver extends BroadcastReceiver {
      */
     public static final String ACTION_PACKAGE_REMOVED = BuildConfig.APPLICATION_ID + ".action.PACKAGE_REMOVED";
 
+    /**
+     * Specifies that some packages have been altered. This could be due to batch operations, database update, etc.
+     * It has one extra namely {@link Intent#EXTRA_CHANGED_PACKAGE_LIST}.
+     */
+    public static final String ACTION_DB_PACKAGE_ALTERED = BuildConfig.APPLICATION_ID + ".action.DB_PACKAGE_ALTERED";
+    /**
+     * Specifies that some packages have been added. This could be due to batch operations, database update, etc.
+     * It has one extra namely {@link Intent#EXTRA_CHANGED_PACKAGE_LIST}.
+     */
+    public static final String ACTION_DB_PACKAGE_ADDED = BuildConfig.APPLICATION_ID + ".action.DB_PACKAGE_ADDED";
+    /**
+     * Specifies that some packages have been removed. This could be due to batch operations, database update, etc.
+     * It has one extra namely {@link Intent#EXTRA_CHANGED_PACKAGE_LIST}.
+     */
+    public static final String ACTION_DB_PACKAGE_REMOVED = BuildConfig.APPLICATION_ID + ".action.DB_PACKAGE_REMOVED";
+
     private static final String ACTION_PACKAGES_SUSPENDED = "android.intent.action.PACKAGES_SUSPENDED";
     private static final String ACTION_PACKAGES_UNSUSPENDED = "android.intent.action.PACKAGES_UNSUSPENDED";
 
@@ -68,6 +85,9 @@ public abstract class PackageChangeReceiver extends BroadcastReceiver {
         sdFilter.addAction(ACTION_PACKAGE_ALTERED);
         sdFilter.addAction(ACTION_PACKAGE_ADDED);
         sdFilter.addAction(ACTION_PACKAGE_REMOVED);
+        sdFilter.addAction(ACTION_DB_PACKAGE_ALTERED);
+        sdFilter.addAction(ACTION_DB_PACKAGE_ADDED);
+        sdFilter.addAction(ACTION_DB_PACKAGE_REMOVED);
         sdFilter.addAction(ACTION_BATCH_OPS_COMPLETED);
         context.registerReceiver(this, sdFilter);
     }
@@ -97,7 +117,7 @@ public abstract class PackageChangeReceiver extends BroadcastReceiver {
 
         @Override
         public void handleMessage(@NonNull Message msg) {
-            Intent intent = msg.getData().getParcelable("intent");
+            Intent intent = Objects.requireNonNull(BundleCompat.getParcelable(msg.getData(), "intent", Intent.class));
             switch (Objects.requireNonNull(intent.getAction())) {
                 case Intent.ACTION_PACKAGE_REMOVED:
                     if (intent.getBooleanExtra(Intent.EXTRA_REPLACING, false)) return;
@@ -110,6 +130,9 @@ public abstract class PackageChangeReceiver extends BroadcastReceiver {
                 case ACTION_PACKAGE_ADDED:
                 case ACTION_PACKAGE_ALTERED:
                 case ACTION_PACKAGE_REMOVED:
+                case ACTION_DB_PACKAGE_ADDED:
+                case ACTION_DB_PACKAGE_ALTERED:
+                case ACTION_DB_PACKAGE_REMOVED:
                 case ACTION_PACKAGES_SUSPENDED:
                 case ACTION_PACKAGES_UNSUSPENDED:
                 case Intent.ACTION_EXTERNAL_APPLICATIONS_AVAILABLE:

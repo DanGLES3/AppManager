@@ -2,101 +2,117 @@
 
 package io.github.muntashirakon.AppManager.apk;
 
+import static io.github.muntashirakon.AppManager.compat.PackageManagerCompat.MATCH_UNINSTALLED_PACKAGES;
+
+import android.annotation.UserIdInt;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.RemoteException;
+import android.os.UserHandleHidden;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.WorkerThread;
 import androidx.core.content.pm.PackageInfoCompat;
 
+import com.reandroid.xml.XMLAttribute;
+import com.reandroid.xml.XMLDocument;
+import com.reandroid.xml.XMLElement;
+
 import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.Objects;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
 
-import io.github.muntashirakon.AppManager.AppManager;
 import io.github.muntashirakon.AppManager.StaticDataset;
-import io.github.muntashirakon.AppManager.apk.parser.AndroidBinXmlParser;
+import io.github.muntashirakon.AppManager.apk.parser.AndroidBinXmlDecoder;
 import io.github.muntashirakon.AppManager.apk.splitapk.SplitApkExporter;
 import io.github.muntashirakon.AppManager.backup.BackupFiles;
 import io.github.muntashirakon.AppManager.compat.PackageManagerCompat;
+import io.github.muntashirakon.AppManager.logs.Log;
+import io.github.muntashirakon.AppManager.misc.OsEnvironment;
+import io.github.muntashirakon.AppManager.self.filecache.FileCache;
 import io.github.muntashirakon.AppManager.utils.AppPref;
+import io.github.muntashirakon.AppManager.utils.ContextUtils;
 import io.github.muntashirakon.AppManager.utils.DateUtils;
 import io.github.muntashirakon.AppManager.utils.FileUtils;
 import io.github.muntashirakon.io.IoUtils;
 import io.github.muntashirakon.io.Path;
 import io.github.muntashirakon.io.Paths;
 
-import static io.github.muntashirakon.AppManager.utils.PackageUtils.flagMatchUninstalled;
-
 public final class ApkUtils {
     public static final String EXT_APK = ".apk";
     public static final String EXT_APKS = ".apks";
 
+    private static final Object sLock = new Object();
     private static final String MANIFEST_FILE = "AndroidManifest.xml";
 
     @WorkerThread
     @NonNull
-    public static Path getSharableApkFile(@NonNull PackageInfo packageInfo) throws Exception {
-        ApplicationInfo info = packageInfo.applicationInfo;
-        Context ctx = AppManager.getContext();
-        PackageManager pm = ctx.getPackageManager();
-        String outputName = FileUtils.getSanitizedFileName(info.loadLabel(pm).toString() + "_" +
-                packageInfo.versionName, false);
-        if (outputName == null) outputName = info.packageName;
-        Path tmpPublicSource;
-        if (isSplitApk(info)) {
-            // Split apk
-            tmpPublicSource = Paths.get(new File(AppManager.getContext().getExternalCacheDir(), outputName + EXT_APKS));
-            SplitApkExporter.saveApks(packageInfo, tmpPublicSource);
-        } else {
-            // Regular apk
-            tmpPublicSource = Paths.get(packageInfo.applicationInfo.publicSourceDir);
+    public static Path getSharableApkFile(@NonNull Context ctx, @NonNull PackageInfo packageInfo) throws IOException {
+        synchronized (sLock) {
+            ApplicationInfo info = packageInfo.applicationInfo;
+            PackageManager pm = ctx.getPackageManager();
+            String outputName = Paths.sanitizeFilename(info.loadLabel(pm).toString() + "_" +
+                    packageInfo.versionName, "_");
+            if (outputName == null) outputName = info.packageName;
+            Path tmpPublicSource;
+            if (isSplitApk(info) || hasObbFiles(info.packageName, UserHandleHidden.getUserId(info.uid))) {
+                // Split apk
+                tmpPublicSource = Paths.get(new File(FileUtils.getExternalCachePath(ContextUtils.getContext()), outputName + EXT_APKS));
+                SplitApkExporter.saveApks(packageInfo, tmpPublicSource);
+            } else {
+                // Regular apk
+                tmpPublicSource = Paths.get(packageInfo.applicationInfo.publicSourceDir);
+            }
+            return tmpPublicSource;
         }
-        return tmpPublicSource;
     }
 
     /**
-     * Backup the given apk (both root and non root). This is similar to apk sharing feature except
+     * Backup the given apk (both root and no-root). This is similar to apk sharing feature except
      * that these are saved at /sdcard/AppManager/apks
      */
     @WorkerThread
-    public static void backupApk(String packageName, int userHandle)
+    public static void backupApk(@NonNull Context ctx, @NonNull String packageName, @UserIdInt int userId)
             throws IOException, PackageManager.NameNotFoundException, RemoteException {
         Path backupPath = BackupFiles.getApkBackupDirectory();
         // Fetch package info
-        Context ctx = AppManager.getContext();
         PackageManager pm = ctx.getPackageManager();
-        PackageInfo packageInfo = PackageManagerCompat.getPackageInfo(packageName, flagMatchUninstalled, userHandle);
+        PackageInfo packageInfo = PackageManagerCompat.getPackageInfo(packageName,
+                MATCH_UNINSTALLED_PACKAGES | PackageManager.GET_SHARED_LIBRARY_FILES
+                        | PackageManagerCompat.MATCH_STATIC_SHARED_AND_SDK_LIBRARIES, userId);
         ApplicationInfo info = packageInfo.applicationInfo;
-        String outputName = FileUtils.getSanitizedFileName(getFormattedApkFilename(packageInfo, pm), false);
+        String outputName = Paths.sanitizeFilename(getFormattedApkFilename(ctx, packageInfo, pm), "_",
+                Paths.SANITIZE_FLAG_FAT_ILLEGAL_CHARS | Paths.SANITIZE_FLAG_UNIX_RESERVED);
         if (outputName == null) outputName = packageName;
         Path apkFile;
-        if (isSplitApk(info)) {
+        if (isSplitApk(info) || hasObbFiles(packageName, userId)) {
             // Split apk
             apkFile = backupPath.createNewFile(outputName + EXT_APKS, null);
             SplitApkExporter.saveApks(packageInfo, apkFile);
         } else {
             // Regular apk
             apkFile = backupPath.createNewFile(outputName + EXT_APK, null);
-            FileUtils.copy(Paths.get(info.publicSourceDir), apkFile);
+            IoUtils.copy(Paths.get(info.publicSourceDir), apkFile, null);
         }
     }
 
     @NonNull
-    private static String getFormattedApkFilename(@NonNull PackageInfo packageInfo, @NonNull PackageManager pm) {
+    private static String getFormattedApkFilename(@NonNull Context context, @NonNull PackageInfo packageInfo,
+                                                  @NonNull PackageManager pm) {
         // TODO: 15/3/22 Optimize this
         String apkName = AppPref.getString(AppPref.PrefKey.PREF_SAVED_APK_FORMAT_STR)
                 .replaceAll("%label%", packageInfo.applicationInfo.loadLabel(pm).toString())
@@ -104,7 +120,7 @@ public final class ApkUtils {
                 .replaceAll("%version%", packageInfo.versionName)
                 .replaceAll("%version_code%", String.valueOf(PackageInfoCompat.getLongVersionCode(packageInfo)))
                 .replaceAll("%target_sdk%", String.valueOf(packageInfo.applicationInfo.targetSdkVersion))
-                .replaceAll("%datetime%", DateUtils.formatDateTime(System.currentTimeMillis()));
+                .replaceAll("%datetime%", DateUtils.formatDateTime(context, System.currentTimeMillis()));
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             return apkName.replaceAll("%min_sdk%", String.valueOf(packageInfo.applicationInfo.minSdkVersion));
         }
@@ -144,7 +160,7 @@ public final class ApkUtils {
         try (ZipInputStream zipInputStream = new ZipInputStream(new BufferedInputStream(apkInputStream))) {
             ZipEntry zipEntry;
             while ((zipEntry = zipInputStream.getNextEntry()) != null) {
-                if (!FileUtils.getLastPathComponent(zipEntry.getName()).equals(MANIFEST_FILE)) {
+                if (!Paths.getLastPathSegment(zipEntry.getName()).equals(MANIFEST_FILE)) {
                     continue;
                 }
                 ByteArrayOutputStream buffer = new ByteArrayOutputStream();
@@ -157,42 +173,96 @@ public final class ApkUtils {
             }
         }
         // This could be due to a Zip error, try caching the APK
-        File cachedApk = FileUtils.getCachedFile(apkInputStream);
+        File cachedApk = FileCache.getGlobalFileCache().getCachedFile(apkInputStream, "apk");
         ByteBuffer byteBuffer;
         try {
             byteBuffer = getManifestFromApk(cachedApk);
         } finally {
-            FileUtils.deleteSilently(cachedApk);
+            FileCache.getGlobalFileCache().delete(cachedApk);
         }
         return byteBuffer;
     }
 
     @NonNull
     public static HashMap<String, String> getManifestAttributes(@NonNull ByteBuffer manifestBytes)
-            throws ApkFile.ApkFileException, AndroidBinXmlParser.XmlParserException {
+            throws ApkFile.ApkFileException, IOException {
         HashMap<String, String> manifestAttrs = new HashMap<>();
-        AndroidBinXmlParser parser = new AndroidBinXmlParser(manifestBytes);
-        int eventType = parser.getEventType();
-        boolean seenManifestElement = false;
-        while (eventType != AndroidBinXmlParser.EVENT_END_DOCUMENT) {
-            if (eventType == AndroidBinXmlParser.EVENT_START_ELEMENT) {
-                if (parser.getName().equals("manifest") && parser.getDepth() == 1 && parser.getNamespace().isEmpty()) {
-                    if (seenManifestElement) {
-                        throw new ApkFile.ApkFileException("Duplicate manifest found.");
-                    }
-                    seenManifestElement = true;
-                    for (int i = 0; i < parser.getAttributeCount(); i++) {
-                        if (parser.getAttributeName(i).isEmpty())
-                            continue;
-                        String namespace = "" + (parser.getAttributeNamespace(i).isEmpty() ? "" : (parser.getAttributeNamespace(i) + ":"));
-                        manifestAttrs.put(namespace + parser.getAttributeName(i), parser.getAttributeStringValue(i));
-                    }
-                }
-            }
-            eventType = parser.next();
+        XMLDocument xmlDocument = AndroidBinXmlDecoder.decodeToXml(manifestBytes);
+        XMLElement manifestElement = xmlDocument.getDocumentElement();
+        if (!"manifest".equals(manifestElement.getName())) {
+            throw new ApkFile.ApkFileException("No manifest found.");
         }
-        if (!seenManifestElement) throw new ApkFile.ApkFileException("No manifest found.");
+        for (XMLAttribute attribute : manifestElement.listAttributes()) {
+            if (attribute.getName().isEmpty()) {
+                continue;
+            }
+            manifestAttrs.put(attribute.getName(), attribute.getValue());
+        }
+        XMLElement androidElement = null;
+        for (XMLElement elem : manifestElement.getChildElementList()) {
+            if ("application".equals(elem.getName())) {
+                androidElement = elem;
+                break;
+            }
+        }
+        if (androidElement == null) {
+            Log.w("ApkUtils", "No application element found while parsing APK.");
+            return manifestAttrs;
+        }
+        for (XMLAttribute attribute : androidElement.listAttributes()) {
+            if (attribute.getName().isEmpty()) {
+                continue;
+            }
+            manifestAttrs.put(attribute.getName(), attribute.getValue());
+        }
         return manifestAttrs;
+    }
+
+    public static boolean hasObbFiles(@NonNull String packageName, @UserIdInt int userId) {
+        try {
+            return getObbDir(packageName, userId).listFiles().length > 0;
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    @NonNull
+    public static Path getObbDir(@NonNull String packageName, @UserIdInt int userId) throws FileNotFoundException {
+        // Get writable OBB directory
+        Path obbDir = getWritableExternalDirectory(userId)
+                .findFile("Android")
+                .findFile("obb")
+                .findFile(packageName);
+        return Paths.get(obbDir.getUri());
+    }
+
+    @NonNull
+    public static Path getOrCreateObbDir(@NonNull String packageName, @UserIdInt int userId) throws IOException {
+        // Get writable OBB directory
+        Path obbDir = getWritableExternalDirectory(userId)
+                .findOrCreateDirectory("Android")
+                .findOrCreateDirectory("obb")
+                .findOrCreateDirectory(packageName);
+        return Paths.get(obbDir.getUri());
+    }
+
+    @NonNull
+    public static Path getWritableExternalDirectory(@UserIdInt int userId) throws FileNotFoundException {
+        // Get the first writable external storage directory
+        OsEnvironment.UserEnvironment userEnvironment = OsEnvironment.getUserEnvironment(userId);
+        Path[] extDirs = userEnvironment.getExternalDirs();
+        Path writableExtDir = null;
+        for (Path extDir : extDirs) {
+            if (extDir.canWrite() || Objects.requireNonNull(extDir.getFilePath()).startsWith("/storage/emulated")) {
+                writableExtDir = extDir;
+                break;
+            }
+        }
+        if (writableExtDir == null) {
+            throw new FileNotFoundException("Couldn't find any writable Obb dir");
+        }
+        return writableExtDir;
     }
 
     public static int getDensityFromName(@Nullable String densityName) {

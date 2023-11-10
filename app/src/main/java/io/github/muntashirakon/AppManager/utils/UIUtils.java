@@ -4,13 +4,22 @@ package io.github.muntashirakon.AppManager.utils;
 
 import android.annotation.TargetApi;
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.ColorMatrix;
+import android.graphics.ColorMatrixColorFilter;
 import android.graphics.Paint;
+import android.graphics.Rect;
 import android.graphics.Typeface;
+import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.text.Spannable;
 import android.text.SpannableStringBuilder;
 import android.text.Spanned;
+import android.text.TextPaint;
+import android.text.TextUtils;
 import android.text.style.AbsoluteSizeSpan;
 import android.text.style.BackgroundColorSpan;
 import android.text.style.ForegroundColorSpan;
@@ -27,10 +36,13 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.AnyThread;
 import androidx.annotation.ColorInt;
+import androidx.annotation.FloatRange;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.PluralsRes;
+import androidx.annotation.Px;
 import androidx.annotation.StringRes;
 import androidx.annotation.UiThread;
 import androidx.appcompat.app.ActionBar;
@@ -42,7 +54,6 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
 import java.util.Locale;
 
-import io.github.muntashirakon.AppManager.AppManager;
 import io.github.muntashirakon.AppManager.R;
 import io.github.muntashirakon.AppManager.misc.AdvancedSearchView;
 import io.github.muntashirakon.dialog.DialogTitleBuilder;
@@ -55,7 +66,7 @@ public class UIUtils {
     public static Spannable getHighlightedText(@NonNull String text, @Nullable String constraint,
                                                @ColorInt int color) {
         Spannable spannable = sSpannableFactory.newSpannable(text);
-        if (TextUtilsCompat.isEmpty(constraint)) {
+        if (TextUtils.isEmpty(constraint)) {
             return spannable;
         }
         int start = text.toLowerCase(Locale.ROOT).indexOf(constraint);
@@ -201,20 +212,12 @@ public class UIUtils {
         return typedValue.data;
     }
 
-    public static int getAccentColor(@NonNull Context context) {
-        return MaterialColors.getColor(context, R.attr.colorAccent, -1);
-    }
-
-    public static int getPrimaryColor(@NonNull Context context) {
-        return MaterialColors.getColor(context, R.attr.colorPrimary, -1);
-    }
-
     public static int getTextColorPrimary(@NonNull Context context) {
-        return MaterialColors.getColor(context, R.attr.colorOnSurface, -1);
+        return MaterialColors.getColor(context, com.google.android.material.R.attr.colorOnSurface, -1);
     }
 
     public static int getTextColorSecondary(@NonNull Context context) {
-        return MaterialColors.getColor(context, R.attr.colorOnSurfaceVariant, -1);
+        return MaterialColors.getColor(context, com.google.android.material.R.attr.colorOnSurfaceVariant, -1);
     }
 
     public static int getTitleSize(@NonNull Context context) {
@@ -233,13 +236,9 @@ public class UIUtils {
     }
 
     @NonNull
-    public static AlertDialog getProgressDialog(@NonNull FragmentActivity activity) {
-        return getProgressDialog(activity, null);
-    }
-
-    @NonNull
-    public static AlertDialog getProgressDialog(@NonNull FragmentActivity activity, @Nullable CharSequence text) {
-        View view = activity.getLayoutInflater().inflate(R.layout.dialog_progress2, null);
+    public static AlertDialog getProgressDialog(@NonNull FragmentActivity activity, @Nullable CharSequence text, boolean circular) {
+        int layout = circular ? R.layout.dialog_progress_circular : R.layout.dialog_progress2;
+        View view = activity.getLayoutInflater().inflate(layout, null);
         if (text != null) {
             TextView tv = view.findViewById(android.R.id.text1);
             tv.setText(text);
@@ -291,34 +290,34 @@ public class UIUtils {
 
     @UiThread
     public static void displayShortToast(@StringRes int res) {
-        Toast.makeText(AppManager.getContext(), res, Toast.LENGTH_SHORT).show();
+        Toast.makeText(ContextUtils.getContext(), res, Toast.LENGTH_SHORT).show();
     }
 
     @UiThread
     public static void displayShortToast(@StringRes int res, Object... args) {
-        Context appContext = AppManager.getContext();
+        Context appContext = ContextUtils.getContext();
         Toast.makeText(appContext, appContext.getString(res, args), Toast.LENGTH_SHORT).show();
     }
 
     @UiThread
     public static void displayLongToast(CharSequence message) {
-        Toast.makeText(AppManager.getContext(), message, Toast.LENGTH_LONG).show();
+        Toast.makeText(ContextUtils.getContext(), message, Toast.LENGTH_LONG).show();
     }
 
     @UiThread
     public static void displayLongToast(@StringRes int res) {
-        Toast.makeText(AppManager.getContext(), res, Toast.LENGTH_LONG).show();
+        Toast.makeText(ContextUtils.getContext(), res, Toast.LENGTH_LONG).show();
     }
 
     @UiThread
     public static void displayLongToast(@StringRes int res, Object... args) {
-        Context appContext = AppManager.getContext();
+        Context appContext = ContextUtils.getContext();
         Toast.makeText(appContext, appContext.getString(res, args), Toast.LENGTH_LONG).show();
     }
 
     @UiThread
     public static void displayLongToastPl(@PluralsRes int res, int count, Object... args) {
-        Context appContext = AppManager.getContext();
+        Context appContext = ContextUtils.getContext();
         Toast.makeText(appContext, appContext.getResources().getQuantityString(res, count, args), Toast.LENGTH_LONG).show();
     }
 
@@ -327,5 +326,74 @@ public class UIUtils {
         if (text instanceof Spannable) {
             return (Spannable) text;
         } else return sSpannableFactory.newSpannable(text);
+    }
+
+    @AnyThread
+    @NonNull
+    public static Bitmap getBitmapFromDrawable(@NonNull Drawable drawable) {
+        if (drawable instanceof BitmapDrawable) {
+            return ((BitmapDrawable) drawable).getBitmap();
+        }
+        final Bitmap bmp = Bitmap.createBitmap(drawable.getIntrinsicWidth(), drawable.getIntrinsicHeight(), Bitmap.Config.ARGB_8888);
+        final Canvas canvas = new Canvas(bmp);
+        drawable.setBounds(0, 0, canvas.getWidth(), canvas.getHeight());
+        drawable.draw(canvas);
+        return bmp;
+    }
+
+    @AnyThread
+    @NonNull
+    public static Bitmap getBitmapFromDrawable(@NonNull Drawable drawable, @Px int padding) {
+        if (padding == 0) {
+            return getBitmapFromDrawable(drawable);
+        }
+        int width = drawable.getIntrinsicWidth() + 2 * padding;
+        int height = drawable.getIntrinsicHeight() + 2 * padding;
+        Bitmap bmp = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(bmp);
+        drawable.setBounds(padding, padding, canvas.getWidth() - padding, canvas.getHeight() - padding);
+        drawable.draw(canvas);
+        return bmp;
+    }
+
+    @NonNull
+    public static Bitmap generateBitmapFromText(@NonNull String text, @Nullable Typeface typeface) {
+        int fontSize = 100;
+        TextPaint textPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
+        textPaint.setTextSize(fontSize);
+        textPaint.setColor(Color.WHITE);
+        textPaint.setTextAlign(Paint.Align.LEFT);
+        textPaint.setTypeface(typeface != null ? typeface : Typeface.SANS_SERIF);
+
+        Rect textRect = new Rect();
+        textPaint.getTextBounds(text, 0, text.length(), textRect);
+        int length = Math.max(textRect.width(), textRect.height()) + 80;
+        Bitmap bitmap = Bitmap.createBitmap(length, length, Bitmap.Config.ARGB_8888);
+
+        Canvas canvas = new Canvas(bitmap);
+        float x = canvas.getWidth() / 2f - textRect.width() / 2f - textRect.left;
+        float y = canvas.getHeight() / 2f + textRect.height() / 2f - textRect.bottom;
+        canvas.drawText(text, x, y, textPaint);
+        return bitmap;
+    }
+
+    public static Bitmap getDimmedBitmap(@NonNull Bitmap bitmap) {
+        Bitmap newBmp = bitmap.isMutable() ? bitmap : bitmap.copy(Bitmap.Config.ARGB_8888, true);
+        setBrightness(newBmp, -120f);
+        return newBmp;
+    }
+
+    public static void setBrightness(Bitmap bmp, @FloatRange(from = -255, to = 255) float brightness) {
+        assert bmp.isMutable();
+        ColorMatrix cm = new ColorMatrix(new float[]{
+                1, 0, 0, 0, brightness,
+                0, 1, 0, 0, brightness,
+                0, 0, 1, 0, brightness,
+                0, 0, 0, 1, 0
+        });
+        Canvas canvas = new Canvas(bmp);
+        Paint paint = new Paint();
+        paint.setColorFilter(new ColorMatrixColorFilter(cm));
+        canvas.drawBitmap(bmp, 0, 0, paint);
     }
 }

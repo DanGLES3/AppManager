@@ -9,7 +9,6 @@ import android.content.pm.ServiceInfo;
 import android.os.Build;
 
 import androidx.annotation.NonNull;
-import androidx.collection.ArraySet;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -18,6 +17,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 import io.github.muntashirakon.AppManager.runner.Runner;
@@ -27,67 +27,63 @@ import io.github.muntashirakon.io.Paths;
 public class MagiskUtils {
     // FIXME(20/9/20): This isn't always true, see check_data in util_functions.sh
     public static final String NVBASE = "/data/adb";
-    private static boolean bootMode = false;
+    private static boolean sBootMode = false;
 
     public static final String ISOLATED_MAGIC = "isolated";
 
     private static final String[] SCAN_PATHS = new String[]{
-            "/system/app", "/system/priv-app", "/system/product/app", "/system/product/priv-app"
+            "/system/app", "/system/priv-app", "/system/preload",
+            "/system/product/app", "/system/product/priv-app", "/system/product/overlay",
+            "/system/vendor/app", "/system/vendor/overlay",
+            "/system/system_ext/app", "/system/system_ext/priv-app",
+            "/system_ext/app", "/system_ext/priv-app",
+
+            "/vendor/app", "/vendor/overlay",
+
+            "/product/app", "/product/priv-app", "/product/overlay",
     };
 
     @NonNull
     public static Path getModDir() {
-        return Paths.get(NVBASE + "/modules" + (bootMode ? "_update" : ""));
+        return Paths.get(NVBASE + "/modules" + (sBootMode ? "_update" : ""));
     }
 
     public static void setBootMode(boolean bootMode) {
-        MagiskUtils.bootMode = bootMode;
+        MagiskUtils.sBootMode = bootMode;
     }
 
-    private static List<String> systemlessPaths;
+    private static List<String> sSystemlessPaths;
 
     @NonNull
-    public static List<String> getSystemlessPaths() {
-        if (systemlessPaths == null) {
-            systemlessPaths = new ArrayList<>();
+    private static List<String> getSystemlessPaths() {
+        if (sSystemlessPaths == null) {
+            sSystemlessPaths = new ArrayList<>();
+            Path modDir = getModDir();
+            if (!modDir.canRead()) {
+                // No permission or no-magisk
+                return Collections.emptyList();
+            }
             // Get module paths
-            Path[] modulePaths = getModDir().listFiles(Path::isDirectory);
+            Path[] modulePaths = modDir.listFiles(Path::isDirectory);
             // Scan module paths
             for (Path file : modulePaths) {
                 // Get system apk files
                 for (String sysPath : SCAN_PATHS) {
-                    Path[] paths = Paths.get(file + sysPath).listFiles(Path::isDirectory);
+                    // Always NonNull since it's a Linux FS
+                    Path[] paths = Objects.requireNonNull(Paths.build(file, sysPath)).listFiles(Path::isDirectory);
                     for (Path path : paths) {
                         if (hasApkFile(path)) {
-                            systemlessPaths.add(sysPath + "/" + path.getName());
+                            sSystemlessPaths.add(sysPath + "/" + path.getName());
                         }
                     }
                 }
             }
         }
-        return systemlessPaths;
+        return sSystemlessPaths;
     }
 
-    public static boolean isSystemlessPath(String path) {
-        getSystemlessPaths();
-        return systemlessPaths.contains(path);
-    }
-
-    @NonNull
-    public static Set<String> listHiddenPackages() {
-        Runner.Result result = Runner.runCommand(new String[]{"magiskhide", "ls"});
-        Set<String> packages = new ArraySet<>();
-        if (result.isSuccessful()) {
-            for (String hideInfo : result.getOutputAsList()) {
-                int pipeLoc = hideInfo.indexOf('|');
-                if (pipeLoc == -1) {
-                    packages.add(hideInfo);
-                } else {
-                    packages.add(hideInfo.substring(0, pipeLoc));
-                }
-            }
-        }
-        return packages;
+    public static boolean isSystemlessPath(@NonNull String path) {
+        return getSystemlessPaths().contains(path);
     }
 
     private static boolean hasApkFile(@NonNull Path file) {

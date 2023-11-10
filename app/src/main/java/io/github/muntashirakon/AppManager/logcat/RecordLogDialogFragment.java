@@ -26,8 +26,8 @@ import io.github.muntashirakon.AppManager.logcat.helper.SaveLogHelper;
 import io.github.muntashirakon.AppManager.logcat.helper.ServiceHelper;
 import io.github.muntashirakon.AppManager.logcat.helper.WidgetHelper;
 import io.github.muntashirakon.AppManager.settings.LogViewerPreferences;
-import io.github.muntashirakon.AppManager.utils.AppPref;
-import io.github.muntashirakon.AppManager.utils.UiThreadHandler;
+import io.github.muntashirakon.AppManager.settings.Prefs;
+import io.github.muntashirakon.AppManager.utils.ThreadUtils;
 import io.github.muntashirakon.dialog.TextInputDialogBuilder;
 import io.github.muntashirakon.dialog.TextInputDropdownDialogBuilder;
 
@@ -71,7 +71,7 @@ public class RecordLogDialogFragment extends DialogFragment {
         mActivity = requireActivity();
         String[] suggestions = requireArguments().getStringArray(QUERY_SUGGESTIONS);
         String logFilename = SaveLogHelper.createLogFilename();
-        mLogLevel = AppPref.getInt(AppPref.PrefKey.PREF_LOG_VIEWER_DEFAULT_LOG_LEVEL_INT);
+        mLogLevel = Prefs.LogViewer.getLogLevel();
         mFilterQuery = "";
         AlertDialog alertDialog = new TextInputDialogBuilder(mActivity, R.string.enter_filename)
                 .setTitle(R.string.record_log)
@@ -86,7 +86,7 @@ public class RecordLogDialogFragment extends DialogFragment {
                         new Thread(() -> {
                             Intent intent = ServiceHelper.getLogcatRecorderServiceIfNotAlreadyRunning(context, filename,
                                     mFilterQuery, mLogLevel);
-                            UiThreadHandler.run(() -> {
+                            ThreadUtils.postOnMainThread(() -> {
                                 if (intent != null) {
                                     ContextCompat.startForegroundService(context, intent);
                                 }

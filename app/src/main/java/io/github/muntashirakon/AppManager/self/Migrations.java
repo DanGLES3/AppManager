@@ -2,29 +2,28 @@
 
 package io.github.muntashirakon.AppManager.self;
 
-import android.content.Context;
+import android.annotation.SuppressLint;
 
 import androidx.annotation.WorkerThread;
 
 import java.io.File;
-import java.util.Locale;
 
-import io.github.muntashirakon.AppManager.AppManager;
 import io.github.muntashirakon.AppManager.logs.Log;
 import io.github.muntashirakon.AppManager.servermanager.ServerConfig;
 import io.github.muntashirakon.AppManager.settings.FeatureController;
 import io.github.muntashirakon.AppManager.utils.ContextUtils;
 import io.github.muntashirakon.AppManager.utils.FileUtils;
+import io.github.muntashirakon.io.Paths;
 
+@SuppressLint("StaticFieldLeak")
 public class Migrations {
     public static final String TAG = Migrations.class.getSimpleName();
 
     private static final MigrationTask MIGRATE_FROM_ALL_VERSION_TO_3_0_0 = new MigrationTask(-1) {
         @Override
         public void run() {
-            Log.d(TAG, String.format(Locale.ROOT, "Running MIGRATE_FROM_ALL_VERSION_TO_3_0_0 from (%d-%d) to %d", fromVersionAtLeast, fromVersionAtMost, toVersion));
+            Log.d(TAG, "Running MIGRATE_FROM_ALL_VERSION_TO_3_0_0 from (%d-%d) to %d", fromVersionAtLeast, fromVersionAtMost, toVersion);
             // Delete am database, am.jar
-            Context context = AppManager.getContext();
             File internalFilesDir = ContextUtils.getDeContext(context).getFilesDir().getParentFile();
             File[] paths = new File[]{
                     ServerConfig.getDestJarFile(),
@@ -39,7 +38,7 @@ public class Migrations {
             }
             // Delete old cache dir (removed in v2.6.4 (394))
             File oldCacheDir = context.getExternalFilesDir("cache");
-            FileUtils.deleteDir(oldCacheDir);
+            Paths.get(oldCacheDir).delete();
             // Disable Internet feature by default
             FeatureController.getInstance().modifyState(FeatureController.FEAT_INTERNET, false);
         }
@@ -48,9 +47,9 @@ public class Migrations {
     private static final MigrationTask MIGRATE_FROM_3_0_0_RC01_RC04_TO_3_0_0 = new MigrationTask(403, 406) {
         @Override
         public void run() {
-            Log.d(TAG, String.format(Locale.ROOT, "Running MIGRATE_FROM_3_0_0_RC01_RC04_TO_3_0_0 from (%d-%d) to %d", fromVersionAtLeast, fromVersionAtMost, toVersion));
+            Log.d(TAG, "Running MIGRATE_FROM_3_0_0_RC01_RC04_TO_3_0_0 from (%d-%d) to %d", fromVersionAtLeast, fromVersionAtMost, toVersion);
             // Migrate DB
-            File newAppsDb = AppManager.getContext().getDatabasePath("apps.db");
+            File newAppsDb = context.getDatabasePath("apps.db");
             if (!newAppsDb.exists()) {
                 File oldAppsDb = new File(FileUtils.getCachePath(), "apps.db");
                 if (oldAppsDb.exists()) {

@@ -6,7 +6,6 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.pm.UserInfo;
 import android.content.res.TypedArray;
 import android.os.Bundle;
 import android.os.UserHandleHidden;
@@ -14,6 +13,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.FrameLayout;
 
 import androidx.annotation.IntDef;
 import androidx.annotation.NonNull;
@@ -22,12 +22,13 @@ import androidx.annotation.UiThread;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
-import androidx.fragment.app.FragmentPagerAdapter;
 import androidx.lifecycle.ViewModelProvider;
-import androidx.viewpager.widget.ViewPager;
+import androidx.viewpager2.adapter.FragmentStateAdapter;
+import androidx.viewpager2.widget.ViewPager2;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.tabs.TabLayout;
+import com.google.android.material.tabs.TabLayoutMediator;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -39,12 +40,14 @@ import java.util.Objects;
 import io.github.muntashirakon.AppManager.R;
 import io.github.muntashirakon.AppManager.batchops.BatchOpsManager;
 import io.github.muntashirakon.AppManager.batchops.BatchOpsService;
-import io.github.muntashirakon.AppManager.types.SearchableMultiChoiceDialogBuilder;
 import io.github.muntashirakon.AppManager.types.UserPackagePair;
+import io.github.muntashirakon.AppManager.users.UserInfo;
 import io.github.muntashirakon.AppManager.utils.ArrayUtils;
 import io.github.muntashirakon.AppManager.utils.StoragePermission;
+import io.github.muntashirakon.dialog.BottomSheetBehavior;
 import io.github.muntashirakon.dialog.CapsuleBottomSheetDialogFragment;
 import io.github.muntashirakon.dialog.DialogTitleBuilder;
+import io.github.muntashirakon.dialog.SearchableMultiChoiceDialogBuilder;
 
 public class BackupRestoreDialogFragment extends CapsuleBottomSheetDialogFragment {
     public static final String TAG = BackupRestoreDialogFragment.class.getSimpleName();
@@ -110,8 +113,8 @@ public class BackupRestoreDialogFragment extends CapsuleBottomSheetDialogFragmen
         @Override
         public void onReceive(Context context, Intent intent) {
             if (mActionCompleteInterface != null) {
-                BatchOpsManager.Result result = BatchOpsManager.getLastResult();
-                mActionCompleteInterface.onActionComplete(mMode, result != null ? result.getFailedPackages().toArray(new String[0]) : new String[0]);
+                ArrayList<String> failedPackages = intent.getStringArrayListExtra(BatchOpsService.EXTRA_FAILED_PKG);
+                mActionCompleteInterface.onActionComplete(mMode, failedPackages != null ? failedPackages.toArray(new String[0]) : new String[0]);
             }
             mActivity.unregisterReceiver(mBatchOpsBroadCastReceiver);
         }
@@ -262,12 +265,15 @@ public class BackupRestoreDialogFragment extends CapsuleBottomSheetDialogFragmen
         mTabFragments = new Fragment[mTabTitles.length()];
         mTabFragments[0] = BackupFragment.getInstance();
         mTabFragments[1] = RestoreMultipleFragment.getInstance();
-        ViewPager viewPager = getBody().findViewById(R.id.pager);
+        getBody().findViewById(R.id.container).setVisibility(View.VISIBLE);
+        ViewPager2 viewPager = getBody().findViewById(R.id.pager);
         TabLayout tabLayout = getBody().findViewById(R.id.tab_layout);
-        viewPager.setVisibility(View.VISIBLE);
+        viewPager.setOffscreenPageLimit(1);
+        viewPager.registerOnPageChangeCallback(new ViewPagerUpdateScrollingChildListener(viewPager, getBehavior()));
         finishLoading();
         viewPager.setAdapter(new BackupDialogFragmentPagerAdapter(this));
-        tabLayout.setupWithViewPager(viewPager);
+        new TabLayoutMediator(tabLayout, viewPager, (tab, position) -> tab.setText(mTabTitles.getString(position)))
+                .attach();
     }
 
     public void updateMultipleRestoreHeader() {
@@ -304,12 +310,15 @@ public class BackupRestoreDialogFragment extends CapsuleBottomSheetDialogFragmen
         mTabFragments = new Fragment[mTabTitles.length()];
         mTabFragments[0] = BackupFragment.getInstance();
         mTabFragments[1] = RestoreSingleFragment.getInstance();
-        ViewPager viewPager = getBody().findViewById(R.id.pager);
+        getBody().findViewById(R.id.container).setVisibility(View.VISIBLE);
+        ViewPager2 viewPager = getBody().findViewById(R.id.pager);
         TabLayout tabLayout = getBody().findViewById(R.id.tab_layout);
-        viewPager.setVisibility(View.VISIBLE);
+        viewPager.setOffscreenPageLimit(1);
+        viewPager.registerOnPageChangeCallback(new ViewPagerUpdateScrollingChildListener(viewPager, getBehavior()));
         finishLoading();
         viewPager.setAdapter(new BackupDialogFragmentPagerAdapter(this));
-        tabLayout.setupWithViewPager(viewPager);
+        new TabLayoutMediator(tabLayout, viewPager, (tab, position) -> tab.setText(mTabTitles.getString(position)))
+                .attach();
     }
 
     private void updateSingleBackupHeader() {
@@ -324,7 +333,7 @@ public class BackupRestoreDialogFragment extends CapsuleBottomSheetDialogFragmen
         List<Integer> userHandles = new ArrayList<>(users.size());
         int i = 0;
         for (UserInfo info : users) {
-            userNames[i] = info.name == null ? String.valueOf(info.id) : (info.name + " (" + info.id + ")");
+            userNames[i] = info.toLocalizedString(requireContext());
             userHandles.add(info.id);
             ++i;
         }
@@ -379,26 +388,35 @@ public class BackupRestoreDialogFragment extends CapsuleBottomSheetDialogFragmen
         dismiss();
     }
 
-    private class BackupDialogFragmentPagerAdapter extends FragmentPagerAdapter {
+    private class BackupDialogFragmentPagerAdapter extends FragmentStateAdapter {
         public BackupDialogFragmentPagerAdapter(@NonNull Fragment fragment) {
-            super(fragment.getChildFragmentManager(), BEHAVIOR_RESUME_ONLY_CURRENT_FRAGMENT);
+            super(fragment);
         }
 
         @NonNull
         @Override
-        public Fragment getItem(int position) {
+        public Fragment createFragment(int position) {
             return mTabFragments[position];
         }
 
         @Override
-        public int getCount() {
+        public int getItemCount() {
             return mTabTitles.length();
         }
+    }
 
-        @Nullable
+    private static class ViewPagerUpdateScrollingChildListener extends ViewPager2.OnPageChangeCallback {
+        private final ViewPager2 mViewPager;
+        private final BottomSheetBehavior<FrameLayout> mBehavior;
+
+        private ViewPagerUpdateScrollingChildListener(ViewPager2 viewPager, BottomSheetBehavior<FrameLayout> behavior) {
+            mViewPager = viewPager;
+            mBehavior = behavior;
+        }
+
         @Override
-        public CharSequence getPageTitle(int position) {
-            return mTabTitles.getText(position);
+        public void onPageSelected(int position) {
+            mViewPager.post(mBehavior::updateScrollingChild);
         }
     }
 }

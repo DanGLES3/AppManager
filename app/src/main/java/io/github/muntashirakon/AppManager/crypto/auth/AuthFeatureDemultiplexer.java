@@ -8,19 +8,12 @@ import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import java.util.HashMap;
-
-import io.github.muntashirakon.AppManager.AppManager;
 import io.github.muntashirakon.AppManager.BaseActivity;
-import io.github.muntashirakon.AppManager.profiles.AppsProfileActivity;
+import io.github.muntashirakon.AppManager.profiles.ProfileApplierActivity;
 
 public class AuthFeatureDemultiplexer extends BaseActivity {
     public static final String EXTRA_AUTH = "auth";
     public static final String EXTRA_FEATURE = "feature";
-
-    private final HashMap<String, Class<?>> featureActivityMap = new HashMap<String, Class<?>>() {{
-        put("profile", AppsProfileActivity.class);
-    }};
 
     @Override
     protected void onAuthenticated(@Nullable Bundle savedInstanceState) {
@@ -31,6 +24,11 @@ public class AuthFeatureDemultiplexer extends BaseActivity {
             return;
         }
         handleRequest(intent);
+    }
+
+    @Override
+    public boolean getTransparentBackground() {
+        return true;
     }
 
     private void handleRequest(@NonNull Intent intent) {
@@ -49,14 +47,15 @@ public class AuthFeatureDemultiplexer extends BaseActivity {
 
         switch (feature) {
             case "profile":
-                intent.setClass(AppManager.getContext(), featureActivityMap.get(feature));
-                if (intent.hasExtra(AppsProfileActivity.EXTRA_STATE)) {
-                    // Setting state means that it is a simple shortcut
-                    intent.putExtra(AppsProfileActivity.EXTRA_SHORTCUT_TYPE, AppsProfileActivity.ST_SIMPLE);
-                } else intent.putExtra(AppsProfileActivity.EXTRA_SHORTCUT_TYPE, AppsProfileActivity.ST_ADVANCED);
-                startActivity(intent);
+                launchProfile(intent);
                 break;
         }
         finish();
+    }
+
+    public void launchProfile(@NonNull Intent intent) {
+        String profileId = intent.getStringExtra(ProfileApplierActivity.EXTRA_PROFILE_ID);
+        String state = intent.getStringExtra(ProfileApplierActivity.EXTRA_STATE);
+        startActivity(ProfileApplierActivity.getShortcutIntent(getApplicationContext(), profileId, null, state));
     }
 }

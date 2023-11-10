@@ -63,44 +63,40 @@
     <string name="user_id">ID do Usuário</string>
     <string name="main_activity">Atividade Principal</string>
     <string name="empty_package_name">Nome do pacote vazio</string>
-    <string name="instructions">Instruções</string>
     <string name="error_creating_shortcut">Erro ao criar atalho</string>
     <string name="error_verbose_pin_shortcut">O launcher atual não aceita PinShortcut. Não foi possível criar o atalho.</string>
     <string name="starting_activity">Iniciando atividade: <xliff:g id="activity_name" example=".main.MainActivity">%1$s</xliff:g></string>
     <string name="create_shortcut">Criar Atalho</string>
-    <string name="edit_shortcut">Editar Atalho</string>
     <string name="shortcut_name">Nome do Atalho</string>
     <string name="package_name">Nome do Pacote</string>
     <string name="class_name">Nome da Classe</string>
-    <string name="error_invalid_icon_resource">Recurso de ícone inválido</string>
-    <string name="error_invalid_icon_format">Formato de ícone inválido</string>
     <string name="icon_picker">Seletor de Ícone</string>
     <string name="license">Licença</string>
     <string name="third_party">Bibliotecas e Ícones de terceiros</string>
     <string name="credits">Créditos</string>
-    <string name="credits_message">"Aos autores de
+    <string name="credits_message">Aos autores do
 \n- The Android Open Source Project
-\n- &lt;a href=\"https://github.com/zhaobozhen/libraries\"&gt;Absinthe\'s libraries&lt;/a&gt;
-\n- &lt;a href=\"https://github.com/butzist/ActivityLauncher\"&gt;Activity Launcher&lt;/a&gt;
-\n- &lt;a href=\"https://bitbucket.org/oF2pks/fdroid-applications-info\"&gt;Apps_packages Info&lt;/a&gt;
-\n- &lt;a href=\"https://github.com/zhaobao/AppsMonitor\"&gt;AppsMonitor&lt;/a&gt;
-\n- &lt;a href=\"https://github.com/8enet/AppOpsX\"&gt;AppOpsX&lt;/a&gt;ChangeLog Library&lt;/a&gt;
-\n- &lt;a href=\"https://github.com/gabrielemariotti/changeloglib\"&gt;
-\n- &lt;a href=\"https://bitbucket.org/oF2pks/fdroid-classyshark3xodus\"&gt;ClassySharkAndroid&lt;/a&gt;
-\n- &lt;a href=\"https://github.com/billthefarmer/editor\"&gt;Editor&lt;/a&gt;
-\n- &lt;a href=\"https://github.com/nex3z/FlowLayout\"&gt;FlowLayout&lt;/a&gt;
-\n- &lt;a href=\"https://github.com/k3b/intent-intercept\"&gt;Intent Intercept&lt;/a&gt;
-\n- &lt;a href=\"https://github.com/YarikSOffice/lingver\"&gt;Lingver&lt;/a&gt;
-\n- &lt;a href=\"https://github.com/topjohnwu/Magisk\"&gt;Magisk&lt;/a&gt;
-\n- &lt;a href=\"https://github.com/zhanghai/MaterialFiles\"&gt;Material Files&lt;/a&gt;
-\n- &lt;a href=\"https://github.com/pluscubed/matlog\"&gt;MatLog&lt;/a&gt;
-\n- &lt;a href=\"https://github.com/matrix-org/matrix-android-sdk\"&gt;Matrix Android SDK&lt;/a&gt;
-\n- &lt;a href=\"https://github.com/jensstein/oandbackup\"&gt;OAndBackup&lt;/a&gt;
-\n- &lt;a href=\"https://github.com/open-keychain/open-keychain\"&gt;Open Keychain&lt;/a&gt;
-\n- &lt;a href=\"https://github.com/Aefyr/SAI\"&gt;SAI&lt;/a&gt;
-\n- &lt;a href=\"https://github.com/RikkaApps/Shizuku\"&gt;Shizuku&lt;/a&gt;
-\n- &lt;a href=\"https://github.com/tuyafeng/Watt\"&gt;Watt&lt;/a&gt;
-\nCrédito do logo original: &lt;a href=\"https://github.com/Atrate\"&gt;Atrate&lt;/a&gt;. "</string>
+\n- <a href="https://github.com/zhaobozhen/libraries">Absinthe\'s libraries</a>
+\n- <a href="https://github.com/butzist/ActivityLauncher">Activity Launcher</a>
+\n- <a href="https://bitbucket.org/oF2pks/fdroid-applications-info">Apps_packages Info</a>
+\n- <a href="https://github.com/zhaobao/AppsMonitor">AppsMonitor</a>
+\n- <a href="https://github.com/8enet/AppOpsX">AppOpsX</a>
+\n- <a href="https://github.com/gabrielemariotti/changeloglib">ChangeLog Library</a>
+\n- <a href="https://bitbucket.org/oF2pks/fdroid-classyshark3xodus">ClassySharkAndroid</a>
+\n- <a href="https://github.com/billthefarmer/editor">Editor</a>
+\n- <a href="https://github.com/nex3z/FlowLayout">FlowLayout</a>
+\n- <a href="https://github.com/k3b/intent-intercept">Intent Intercept</a>
+\n- <a href="https://github.com/YarikSOffice/lingver">Lingver</a>
+\n- <a href="https://github.com/topjohnwu/Magisk">Magisk</a>
+\n- <a href="https://github.com/zhanghai/MaterialFiles">Material Files</a>
+\n- <a href="https://github.com/pluscubed/matlog">MatLog</a>
+\n- <a href="https://github.com/matrix-org/matrix-android-sdk">Matrix Android SDK</a>
+\n- <a href="https://github.com/jensstein/oandbackup">OAndBackup</a>
+\n- <a href="https://github.com/open-keychain/open-keychain">Open Keychain</a>
+\n- <a href="https://github.com/Aefyr/SAI">SAI</a>
+\n- <a href="https://github.com/RikkaApps/Shizuku">Shizuku</a>
+\n- <a href="https://github.com/tuyafeng/Watt">Watt</a>
+\nOriginal logo credit: <a href="https://github.com/Atrate">Atrate</a>. </string>
     <string name="word_wrap">Alternar quebra de palavra</string>
     <string name="class_viewer">Visualizador de Classe</string>
     <string name="toggle_class_listing">Alternar Lista de Classes</string>
@@ -110,6 +106,7 @@
     <string name="all_classes">Todas as classes</string>
     <plurals name="main_list_date_days">
         <item quantity="one"><xliff:g id="last_update_date" example="20/10/2020">%1$s</xliff:g> <xliff:g id="day_no" example="5">%2$d</xliff:g> dia</item>
+        <item quantity="many"><xliff:g id="last_update_date" example="20/10/2020">%1$s</xliff:g> <xliff:g id="day_no" example="5">%2$d</xliff:g> dias</item>
         <item quantity="other"><xliff:g id="last_update_date" example="20/10/2020">%1$s</xliff:g> <xliff:g id="day_no" example="5">%2$d</xliff:g> dias</item>
     </plurals>
     <string name="no_shared_libs">Nenhuma biblioteca compartilhada</string>
@@ -120,14 +117,17 @@
     <string name="usage_7_days">Últimos 7 dias</string>
     <plurals name="usage_months">
         <item quantity="one">%1$d mês</item>
+        <item quantity="many">%1$d meses</item>
         <item quantity="other">%1$d meses</item>
     </plurals>
     <plurals name="usage_days">
         <item quantity="one">%1$d dia</item>
+        <item quantity="many">%1$d dias</item>
         <item quantity="other">%1$d dias</item>
     </plurals>
     <plurals name="usage_hours">
         <item quantity="one">%1$d hora</item>
+        <item quantity="many">%1$d horas</item>
         <item quantity="other">%1$d horas</item>
     </plurals>
     <string name="usage_less_than_a_minute">Menos de um minuto</string>
@@ -175,8 +175,6 @@
     <string name="stopped">Parado</string>
     <string name="disable">Desativar</string>
     <string name="enable">Ativar</string>
-    <string name="failed_to_disable"><xliff:g id="app_name" example="App Manager">%1$s</xliff:g> não pôde ser desativado.</string>
-    <string name="failed_to_enable"><xliff:g id="app_name" example="App Manager">%1$s</xliff:g> não pôde ser ativado.</string>
     <string name="force_stop">Forçar parada</string>
     <string name="failed_to_stop"><xliff:g id="app_name" example="App Manager">%1$s</xliff:g> não pôde ser parado.</string>
     <string name="storage_and_cache">Armazenamento e Cache</string>
@@ -192,12 +190,12 @@
     <string name="app_settings">Configurações</string>
     <string name="usage_yesterday">Ontem</string>
     <string name="exodus_link">Link do εxodus</string>
-    <string name="sort_by_disabled_app">Desativado primeiro</string>
     <string name="sort_by_blocked_components">Bloqueado primeiro</string>
     <string name="external_data_dir">Diretório de Dados Externo</string>
     <string name="external_multiple_data_dir">Diretório de Dados Externo <xliff:g id="dir_no" example="1">%1$d</xliff:g></string>
     <plurals name="no_of_times_opened">
         <item quantity="one">%1$d vez</item>
+        <item quantity="many">%1$d vezes</item>
         <item quantity="other">%1$d vezes</item>
     </plurals>
     <string name="sort_by_last_used">Último usado</string>
@@ -212,10 +210,10 @@
     <string name="the_export_was_successful">Exportado</string>
     <plurals name="failed_to_import_files">
         <item quantity="one">%1$d arquivo não pôde ser importado.</item>
+        <item quantity="many">%1$d arquivos não puderam ser importados.</item>
         <item quantity="other">%1$d arquivos não puderam ser importados.</item>
     </plurals>
     <string name="apk_updater">APK Updater</string>
-    <string name="store">Loja</string>
     <string name="running_apps">Aplicativos em Execução</string>
     <string name="kill_process">Encerrar</string>
     <string name="disable_background_run">Deter a operação em segundo plano</string>
@@ -228,23 +226,23 @@
     <string name="export_blocking_rules">Exportar Regras de Bloqueio</string>
     <plurals name="alert_failed_to_clear_data">
         <item quantity="one">%1$d aplicativo não pôde ter os dados limpos</item>
+        <item quantity="many">%1$d aplicativos não puderam ter os dados limpos</item>
         <item quantity="other">%1$d aplicativos não puderam ter os dados limpos</item>
-    </plurals>
-    <plurals name="alert_failed_to_disable">
-        <item quantity="one">%1$d aplicativo não pôde ser desativado</item>
-        <item quantity="other">%1$d aplicativos não puderam ser desativados</item>
     </plurals>
     <plurals name="alert_failed_to_uninstall">
         <item quantity="one">%1$d aplicativo não pôde ser desinstalado</item>
+        <item quantity="many">%1$d aplicativos não puderam ser desinstalados</item>
         <item quantity="other">%1$d aplicativos não puderam ser desinstalados</item>
     </plurals>
     <plurals name="alert_failed_to_disable_background">
         <item quantity="one">Inapto de deter %1$d aplicativo de executar em segundo plano</item>
+        <item quantity="many">Inapto de deter %1$d aplicativos de executar em segundo plano</item>
         <item quantity="other">Inapto de deter %1$d aplicativos de executar em segundo plano</item>
     </plurals>
     <string name="the_operation_was_successful">Feito</string>
     <plurals name="alert_failed_to_force_stop">
         <item quantity="one">%1$d aplicativo não pôde ser forçado a parar</item>
+        <item quantity="many">%1$d aplicativos não puderam ser forçados a parar</item>
         <item quantity="other">%1$d aplicativos não puderam ser forçados a parar</item>
     </plurals>
     <string name="toggle_kill_for_system_apps">Alternar encerramento de aplicativos de sistema</string>
@@ -290,6 +288,7 @@
     <string name="unknown_op">Operação Desconhecida</string>
     <plurals name="alert_failed_to_disable_trackers">
         <item quantity="one">%1$d aplicativo não pôde ter os rastreadores desativados</item>
+        <item quantity="many">%1$d aplicativos não puderam ter os rastreadores desativados</item>
         <item quantity="other">%1$d aplicativos não puderam ter os rastreadores desativados</item>
     </plurals>
     <string name="failed_to_grant_permission">A permissão não pôde ser concedida</string>
@@ -303,6 +302,7 @@
     <string name="manifest_viewer">Visualizador de Manifest</string>
     <plurals name="no_of_trackers">
         <item quantity="one">%1$d rastreador</item>
+        <item quantity="many">%1$d rastreadores</item>
         <item quantity="other">%1$d rastreadores</item>
     </plurals>
     <string name="install">Instalar</string>
@@ -313,7 +313,6 @@
     <string name="clear_cache">Limpar Cache</string>
     <string name="block_unblock_trackers_description">Bloquear ou desbloquear componentes de propagandas e rastreamento em todos os aplicativos instalados</string>
     <string name="block_components_dots">Bloquear componentes…</string>
-    <string name="block_components_description">Bloquear todos os componentes identificados pelas assinaturas especificadas</string>
     <string name="clear_data_from_uninstalled_apps">Limpar dados dos aplicativos desinstalados</string>
     <string name="clear_data_from_uninstalled_apps_description">Limpar dados dos aplicativos que foram desinstalados com a flag <tt>DONT_DELETE_DATA</tt></string>
     <string name="clear_app_cache">Limpar cache do aplicativo</string>
@@ -326,6 +325,7 @@
     <string name="failed_to_parse_some_numbers">Não foi possível analisar alguns números</string>
     <plurals name="no_of_splits">
         <item quantity="one">%1$d divisão</item>
+        <item quantity="many">%1$d divisões</item>
         <item quantity="other">%1$d divisões</item>
     </plurals>
     <string name="package_name_is_installed_successfully"><xliff:g id="app_name" example="App Manager">%1$s</xliff:g> instalado</string>
@@ -334,7 +334,6 @@
     <string name="filter_system_apps">Aplicativos do sistema</string>
     <string name="filter_apps_with_rules">Aplicativos com regras</string>
     <string name="select_all">Selecionar Tudo</string>
-    <string name="filter_disabled_apps">Aplicativos desativados</string>
     <string name="installed_version">Versão Instalada</string>
     <string name="trackers">Rastreadores</string>
     <string name="components">Componentes</string>
@@ -350,26 +349,32 @@
     <string name="backup_options">Opções de Backup</string>
     <plurals name="failed_to_backup_some_apk_files">
         <item quantity="one">%1$d aplicativo não pôde ter o backup feito</item>
+        <item quantity="many">%1$d aplicativos não puderam ter o backup feito</item>
         <item quantity="other">%1$d aplicativos não puderam ter o backup feito</item>
     </plurals>
     <plurals name="alert_failed_to_backup">
         <item quantity="one">%1$d aplicativo não pôde ter o backup feito</item>
+        <item quantity="many">%1$d aplicativos não puderam ter o backup feito</item>
         <item quantity="other">%1$d aplicativos não puderam ter o backup feito</item>
     </plurals>
     <plurals name="alert_failed_to_restore">
         <item quantity="one">%1$d aplicativo não pôde ser restaurado</item>
+        <item quantity="many">%1$d aplicativos não puderam ser restaurados</item>
         <item quantity="other">%1$d aplicativos não puderam ser restaurados</item>
     </plurals>
     <plurals name="alert_failed_to_delete_backup">
         <item quantity="one">%1$d backup não pôde ser excluído</item>
+        <item quantity="many">%1$d backups não puderam ser excluídos</item>
         <item quantity="other">%1$d backups não puderam ser excluídos</item>
     </plurals>
     <plurals name="alert_failed_to_unblock_trackers">
         <item quantity="one">%1$d aplicativo não pôde ter os rastreadores desbloqueados</item>
+        <item quantity="many">%1$d aplicativos não puderam ter os rastreadores desbloqueados</item>
         <item quantity="other">%1$d aplicativos não puderam ter os rastreadores desbloqueados</item>
     </plurals>
     <plurals name="alert_failed_to_block_components">
         <item quantity="one">%1$d aplicativo não pôde ter os componentes bloqueados</item>
+        <item quantity="many">%1$d aplicativos não puderam ter os componentes bloqueados</item>
         <item quantity="other">%1$d aplicativos não puderam ter os componentes bloqueados</item>
     </plurals>
     <string name="apply_to_system_apps">Aplicar aos aplicativos do sistema</string>
@@ -448,12 +453,9 @@
     <string name="type_long">Número inteiro longo</string>
     <string name="key_name">Nome da Chave</string>
     <string name="long_integer_value">Valor do número inteiro longo</string>
-    <plurals name="alert_failed_to_enable">
-        <item quantity="one">%1$d aplicativo não pôde ser ativado</item>
-        <item quantity="other">%1$d aplicativos não puderam ser ativados</item>
-    </plurals>
     <plurals name="backup_exists_are_you_sure">
         <item quantity="one">O backup já existe. Tem certeza\?</item>
+        <item quantity="many">Mais de um aplicativo já tem um backup. Tem certeza\?</item>
         <item quantity="other">Mais de um aplicativo já tem um backup. Tem certeza\?</item>
     </plurals>
     <string name="pref_backup_flags_msg">Adicionar uma predefinição para opções de backup remove o fardo de selecionar flags toda vez que você faz backup/restaura.</string>
@@ -470,14 +472,17 @@
     <string name="orientation_no_sensor">Nenhum sensor</string>
     <plurals name="other_trackers_and_classes">
         <item quantity="one"><xliff:g id="tracker_no" example="8">%1$d</xliff:g> rastreadores com <xliff:g id="class_no" example="50">%2$d</xliff:g> classes</item>
+        <item quantity="many"><xliff:g id="tracker_no" example="8">%1$d</xliff:g> rastreadores com <xliff:g id="class_no" example="50">%2$d</xliff:g> classes</item>
         <item quantity="other"><xliff:g id="tracker_no" example="8">%1$d</xliff:g> rastreadores com <xliff:g id="class_no" example="50">%2$d</xliff:g> classes</item>
     </plurals>
     <plurals name="two_trackers_and_classes">
         <item quantity="one">2 rastreadores com <xliff:g id="class_no" example="50">%1$d</xliff:g> classes</item>
+        <item quantity="many">2 rastreadores com <xliff:g id="class_no" example="50">%1$d</xliff:g> classes</item>
         <item quantity="other">2 rastreadores com <xliff:g id="class_no" example="50">%1$d</xliff:g> classes</item>
     </plurals>
     <plurals name="tracker_and_classes">
         <item quantity="one">1 rastreador com <xliff:g id="class_no" example="50">%1$d</xliff:g> classe</item>
+        <item quantity="many">1 rastreador com <xliff:g id="class_no" example="50">%1$d</xliff:g> classes</item>
         <item quantity="other">1 rastreador com <xliff:g id="class_no" example="50">%1$d</xliff:g> classes</item>
     </plurals>
     <string name="termux">Termux</string>
@@ -487,14 +492,17 @@
     <string name="backup_obb_media">OBB e Mídia</string>
     <plurals name="missing_signatures">
         <item quantity="one">%1$d assinatura ausente</item>
+        <item quantity="many">%1$d assinaturas ausentes</item>
         <item quantity="other">%1$d assinaturas ausentes</item>
     </plurals>
     <plurals name="libraries">
         <item quantity="one">%1$d biblioteca</item>
+        <item quantity="many">%1$d bibliotecas</item>
         <item quantity="other">%1$d bibliotecas</item>
     </plurals>
     <plurals name="classes">
         <item quantity="one">%1$d classe</item>
+        <item quantity="many">%1$d classes</item>
         <item quantity="other">%1$d classes</item>
     </plurals>
     <string name="type">Tipo</string>
@@ -616,7 +624,6 @@
     <string name="state_sleeping">Dormindo</string>
     <string name="state_multithreaded">Multithreaded</string>
     <string name="systemless_app">Aplicativo sem Sistema</string>
-    <string name="presets">Predefinições</string>
     <string name="keystore">KeyStore</string>
     <string name="send_crash_report">Enviar relatório de travamento</string>
     <string name="tap_to_submit_crash_report">Toque para enviar o relatório de travamento.</string>
@@ -636,9 +643,7 @@
     <string name="none">Nenhuma</string>
     <string name="encryption">Criptografia</string>
     <string name="select_user">Selecionar usuário</string>
-    <string name="pref_show_users_in_installer_msg">Mostrar uma lista de usuários para selecionar antes de instalar um aplicativo externo. Requer root ou ADB.</string>
     <string name="failed_to_duplicate_profile">Não foi possível duplicar o perfil</string>
-    <string name="pref_show_users_in_installer">Mostrar usuários no instalador</string>
     <string name="send_selected">Enviar selecionado</string>
     <string name="input_permissions_description">Insira permissões com espaços, p. ex. <tt>com.permission.GET_ACCOUNTS android.permission.ACCESS_MEDIA_LOCATION</tt> etc. Use <tt>*</tt> para solicitar todas as permissões.</string>
     <string name="input_permissions">Inserir permissões</string>
@@ -652,7 +657,6 @@
     <string name="profile_clear_data_msg">Limpa os dados dos aplicativos</string>
     <string name="profile_clear_cache_msg">Limpa o cache de aplicativo dos aplicativos</string>
     <string name="profile_force_stop_msg">Força a parada dos aplicativos</string>
-    <string name="profile_disable_msg">Desativa ou ativa aplicativos com base no estado</string>
     <string name="allow_routine_ops_msg">Permitir que o perfil seja usado nas operações de rotina</string>
     <string name="profile_state">Estado do perfil</string>
     <string name="allow_routine_ops">Permitir operações de rotina</string>
@@ -684,11 +688,13 @@
     <string name="not_verified">Não verificado</string>
     <string name="verified">Verificado</string>
     <plurals name="verified_with_warning">
-        <item quantity="one">Verificado com %d aviso</item>
-        <item quantity="other">Verificado com %d avisos</item>
+        <item quantity="one">Verificado com %d alerta</item>
+        <item quantity="many">Verificado com %d alertas</item>
+        <item quantity="other">Verificado com %d alertas</item>
     </plurals>
     <plurals name="app_signing_signature_schemes_pl">
         <item quantity="one">Esquema de assinatura</item>
+        <item quantity="many">Esquemas de assinatura</item>
         <item quantity="other">Esquemas de assinatura</item>
     </plurals>
     <string name="input_keystore_pass_description">Insere a senha do KeyStore do App Manager. Se é tua primeira vez vendo isto, use um gerador de senha para gerar uma e salve-a num lugar seguro antes de inseri-la aqui.</string>
@@ -739,6 +745,7 @@
     <string name="about_device">Sobre o dispositivo</string>
     <plurals name="alert_failed_to_set_app_ops">
         <item quantity="one">%1$d aplicativo não pôde ter operações de aplicativo definidas</item>
+        <item quantity="many">%1$d aplicativos não puderam ter operações de aplicativo definidas</item>
         <item quantity="other">%1$d aplicativos não puderam ter operações de aplicativo definidas</item>
     </plurals>
     <string name="set_mode_for_app_ops_dots">Definir modo para operações de aplicativo…</string>
@@ -769,6 +776,7 @@
     <string name="disable_background_run_description">Define o modo <i>ignore</i> para as seguintes operações de aplicativo: <tt>RUN_IN_BACKGROUND</tt> (do Android 7.0) e <tt>RUN_ANY_IN_BACKGROUND</tt> (do Android 9).</string>
     <plurals name="no_of_components">
         <item quantity="one">%1$d componente</item>
+        <item quantity="many">%1$d componentes</item>
         <item quantity="other">%1$d componentes</item>
     </plurals>
     <string name="backup_custom_users_description">Realizar backups apenas para os usuários especificados</string>
@@ -850,10 +858,7 @@
     <string name="uninstalled_apps">Aplicativos desinstalados</string>
     <string name="internal_data">Dados internos</string>
     <string name="pkcs12_keystore">PKCS #12 KeyStore (P12)</string>
-    <string name="source_code_links">GitHub: https://github.com/MuntashirAkon/AppManager
-\nGitLab: https://gitlab.com/muntashir/AppManager
-\nRiseup: https://0xacab.org/muntashir/AppManager
-\nCodeberg: https://codeberg.org/muntashir/AppManager</string>
+    <string name="source_code_links"><a href="https://github.com/MuntashirAkon/AppManager">GitHub</a> • <a href="https://gitlab.com/muntashir/AppManager">GitLab</a> • <a href="https://0xacab.org/muntashir/AppManager">Riseup</a> • <a href="https://codeberg.org/muntashir/AppManager">Codeberg</a></string>
     <string name="bouncy_castle_keystore">Bouncy Castle KeyStore (BKS)</string>
     <string name="input_key">Insira uma chave (em hexadecimal)</string>
     <string name="expiry_date_cannot_be_empty">A data de validade não pode estar vazia.</string>
@@ -915,6 +920,7 @@
     <string name="unable_to_save_log">Não é possível salvar o registro. Você inseriu um nome de arquivo válido\?</string>
     <plurals name="toast_log_truncated">
         <item quantity="one">Registro muito grande, mostrando última %d linha.</item>
+        <item quantity="many">Registro muito grande, mostrando últimas %d linhas.</item>
         <item quantity="other">Registro muito grande, mostrando últimas %d linhas.</item>
     </plurals>
     <string name="toast_invalid_selection">Seleção inválida. Por favor, tente de novo.</string>
@@ -989,9 +995,9 @@
     <string name="orientation_right_to_left">Da direita para a esquerda</string>
     <string name="orientation_left_to_right">Da esquerda para a direita</string>
     <string name="orientation_follow_locale">Seguir o local</string>
-    <string name="pref_layout_orientation">Orientação do layout</string>
     <plurals name="file_deletion_confirmation">
         <item quantity="one">%d arquivo será excluído</item>
+        <item quantity="many">%d arquivos serão excluídos</item>
         <item quantity="other">%d arquivos serão excluídos</item>
     </plurals>
     <string name="hidden">Oculto</string>
@@ -1010,16 +1016,14 @@
     <string name="port_number_empty">O número de porta está vazio.</string>
     <string name="port_number">Porta</string>
     <string name="adb_connect">Conectar</string>
-    <string name="wireless_debugging_not_supported">A depuração sem fio não é suportada nesta plataforma.</string>
     <string name="wireless_debugging">Depuração sem fio</string>
     <string name="unknown_net_policy">Política de rede desconhecida (%1$s - %2$X)</string>
     <string name="failed_to_prevent_background_run">Inapto de deter %1$s de executar em segundo plano</string>
-    <string name="app_signing_signature_mismatch_for_data_only_app">Não foi possível instalar o aplicativo devido ao descompasso de assinatura. O aplicativo foi desinstalado sem limpar seus dados.</string>
-    <string name="community_links">Telegram: https://t.me/AppManagerChannel
-\nTwitter: https://twitter.com/AppManagerNews</string>
+    <string name="community_links"><a href="https://t.me/AppManagerChannel">Canal no Telegram</a> • <a href="https://twitter.com/AppManagerNews">Twitter</a></string>
     <string name="community">Comunidade</string>
     <plurals name="alert_failed_to_import_backups">
         <item quantity="one">%1$d backup não pôde ser importado</item>
+        <item quantity="many">%1$d backups não puderam ser importados</item>
         <item quantity="other">%1$d backups não puderam ser importados</item>
     </plurals>
     <string name="import_from_tb">Importar do Titanium Backup</string>
@@ -1035,7 +1039,6 @@
     <string name="permission_flags">Bandeiras de permissão</string>
     <string name="pref_selected_users_msg">Restringir o App Manager a trabalhar apenas com os usuários selecionados.</string>
     <string name="pref_selected_users">Usuários selecionados</string>
-    <string name="enable_disable">Ativar/desativar</string>
     <string name="error_with_details">Erro: %s</string>
     <string name="files">Arquivos</string>
     <string name="storage">Armazenamento</string>
@@ -1052,6 +1055,7 @@
     <string name="pid">ID do processo</string>
     <plurals name="pref_thread_count_msg">
         <item quantity="one">Execute no máximo %1$d operação em paralelo</item>
+        <item quantity="many">Execute no máximo %1$d operações em paralelo</item>
         <item quantity="other">Execute no máximo %1$d operações em paralelo</item>
     </plurals>
     <string name="pref_thread_count_hint">O valor deve estar entre 0 e %1$d onde 0 significa <i>número máximo de operações em determinado momento</i>.</string>
@@ -1099,6 +1103,7 @@
     <string name="pref_disable_description">Desative apenas componentes. Não recomendado para usuários root, pois os aplicativos podem contornar isso. Nos modos ADB, os aplicativos somente de teste podem ser desabilitados com este método.</string>
     <plurals name="usage_minutes">
         <item quantity="one">%1$d min</item>
+        <item quantity="many">%1$d mins</item>
         <item quantity="other">%1$d mins</item>
     </plurals>
     <string name="vt_checking">VirusTotal: Verificando…</string>
@@ -1119,6 +1124,7 @@
     <string name="process_id">ID do Processo</string>
     <plurals name="usage_seconds">
         <item quantity="one">%1$d seg</item>
+        <item quantity="many">%1$d segs</item>
         <item quantity="other">%1$d segs</item>
     </plurals>
     <string name="toggle_internet">Usar a internet</string>
@@ -1155,7 +1161,7 @@
     <string name="primary_abi">ABI primária</string>
     <string name="zygote_preload_name">Nome de pré-carregamento do Zygote</string>
     <string name="endianness_little_endian">Little endian</string>
-    <string name="hidden_api_enf_policy_warn">Warn (acesso total à API oculta, mas emite avisos)</string>
+    <string name="hidden_api_enf_policy_warn">Warn (acesso total à API oculta, mas emite alertas)</string>
     <string name="pref_saved_apk_name_format">Formato de Nome de APK Salvo</string>
     <string name="pref_saved_apk_name_format_msg">O formato a ser usado para nomear os arquivos APK ao salvá-los.</string>
     <string name="auth_manager_description">Para iniciar um Intent a partir de um aplicativo externo, é necessário fornecer um campo extra chamado <tt>auth</tt>, e deve conter a seguinte chave:</string>
@@ -1209,4 +1215,98 @@
     <string name="troubleshooting">Solução de problemas</string>
     <string name="pref_reload_apps">Recarregar apps</string>
     <string name="changelog_type_new">Novo</string>
+    <string name="suspend_app_description">Este é o método de congelamento mais fraco. Um aplicativo suspenso ainda pode aparecer no iniciador, mas ficará esmaecido e não poderá ser iniciado.</string>
+    <string name="hide_app_description">Este método é recomendado apenas para uso diário. Um aplicativo oculto aparece como se estivesse desinstalado. Mas o aplicativo pode reaparecer se for reinstalado ou atualizado.</string>
+    <string name="pref_appearance_description">Tema, orientação, recursos, etc.</string>
+    <string name="failed_to_freeze">Não foi possível congelar <xliff:g id="app_name" example="App Manager">%1$s</xliff:g>.</string>
+    <string name="failed_to_unfreeze">Não foi possível descongelar <xliff:g id="app_name" example="App Manager">%1$s</xliff:g>.</string>
+    <string name="freeze_unfreeze">Congelar/descongelar</string>
+    <string name="profile_freeze_msg">Congela ou descongela aplicativos com base no estado</string>
+    <string name="pref_default_freezing_method">Método de congelamento padrão</string>
+    <string name="pref_default_freezing_method_description">Método a ser usado por padrão em locais onde não há opção de selecionar um método de congelamento.</string>
+    <string name="suspend_app">Suspender</string>
+    <string name="hide_app">Esconder</string>
+    <plurals name="alert_failed_to_freeze">
+        <item quantity="one">Não foi possível congelar %1$d aplicativo</item>
+        <item quantity="many">Não foi possível congelar %1$d aplicativos</item>
+        <item quantity="other">Não foi possível congelar %1$d aplicativos</item>
+    </plurals>
+    <plurals name="alert_failed_to_unfreeze">
+        <item quantity="one">Não foi possível descongelar %1$d aplicativo</item>
+        <item quantity="many">Não foi possível descongelar %1$d aplicativos</item>
+        <item quantity="other">Não foi possível descongelar %1$d aplicativos</item>
+    </plurals>
+    <string name="disable_app_description">Método de congelamento recomendado. Ele desativa o aplicativo e todos os seus componentes, mas todos os atalhos serão perdidos.</string>
+    <string name="sort_by_frozen_app">Congelado primeiro</string>
+    <string name="filter_frozen_apps">Aplicativos congelados</string>
+    <string name="pref_privacy">Privacidade</string>
+    <string name="pref_privacy_description">Bloqueio de tela, autorização, etc.</string>
+    <string name="user_manual">Manual do usuário</string>
+    <string name="get_help">Obter ajuda</string>
+    <string name="pref_advanced_pref">Usuários, formato de nome do APK, execução paralela, etc.</string>
+    <string name="pref_version_changelog">Versão/Registro de alterações</string>
+    <string name="fm_open_with_for_this_file_only">Apenas para este arquivo</string>
+    <string name="file_modification_date">Modificado</string>
+    <string name="file_accessed_date">Acessado</string>
+    <string name="file_creation_date">Criado</string>
+    <string name="file_open_as">Abrir como…</string>
+    <string name="file_open_with_custom_activity">Personalizado</string>
+    <string name="open_as_video">Vídeo</string>
+    <string name="open_as_archive">Arquivo</string>
+    <string name="open_as_folder">Pasta</string>
+    <string name="open_as_other">Outro</string>
+    <string name="delete_filename">Apagar %s</string>
+    <string name="confirm_file_deletion">Sim, apagar</string>
+    <string name="on_unfreeze_open_application">Abrir app após o descongelamento</string>
+    <string name="file_open_with">Abrir com</string>
+    <string name="file_shortcut_target_file">Arquivo de destino</string>
+    <string name="file_properties">Propriedades</string>
+    <string name="file_cut">Cortar</string>
+    <string name="fm_always_open_with">Sempre abrir</string>
+    <string name="open_as_text">Texto</string>
+    <string name="open_as_image">Imagem</string>
+    <string name="renamed_successfully">Renomeado</string>
+    <string name="sort_by_data_usage">Uso de dados</string>
+    <string name="confirm_uninstallation">Confirmar desinstalação</string>
+    <string name="action_optimize_app">Otimizar</string>
+    <string name="app_manager_build_expired">Atualização necessária</string>
+    <string name="action_stop_service">Parar</string>
+    <string name="tap_to_freeze_app">Toque para congelar</string>
+    <string name="unix_file_permissions">Modo</string>
+    <string name="file_owner_id">Proprietário (UID)</string>
+    <string name="calculating_file_size">Calculando…</string>
+    <string name="sort_by_filename">Nome</string>
+    <string name="sort_by_last_modified">Última alteração</string>
+    <string name="sort_by_file_size">Tamanho do arquivo</string>
+    <string name="sort_by_file_type">Tipo de arquivo</string>
+    <string name="file_open_with_os_default_dialog">Abrir com a caixa de diálogo padrão do SO</string>
+    <string name="freeze_on_phone_locked">Congelar o app automaticamente quando o telefone estiver bloqueado</string>
+    <string name="on_open_application_no_recents">Não mostrar o app iniciado nos Recentes</string>
+    <string name="file_change_open_with">Alterar abrir com</string>
+    <string name="waiting_for_the_phone_to_be_locked">Esperando que o telefone seja bloqueado…</string>
+    <string name="option_display_folders_on_top">Pastas no topo</string>
+    <string name="export_app_list">Exportar lista de aplicações</string>
+    <string name="action_continue">Continuar</string>
+    <string name="title_terminal_emulator">Terminal</string>
+    <string name="grant_required_permission">Conceder permissão necessária</string>
+    <string name="filter_apps_with_ssaid">Com SSAID</string>
+    <string name="filter_apps_with_saf">Com SAF</string>
+    <string name="filter_apps_with_keystore">Com KeyStore</string>
+    <string name="install_for_another_user">Instalar para…</string>
+    <string name="title_labs_activity">Labs</string>
+    <string name="action_run">Iniciar</string>
+    <string name="optimize_option_clear_profile_data">Limpar dados de perfil anteriores</string>
+    <string name="optimize_option_force_compilation">Forçar compilação mesmo quando não for necessário</string>
+    <string name="selinux_context">Contexto SELinux</string>
+    <string name="file_group_id">Grupo (GID)</string>
+    <string name="app_manager_build_expiring_soon_warning">Esta versão do App Manager expirará muito em breve. Atualize-o para a versão mais recente.</string>
+    <string name="adb_incomplete_usb_debugging_title">Depuração USB incompleta</string>
+    <string name="class_hierarchy">Hierarquia</string>
+    <string name="title_perform_runtime_optimization_to_apps">Executar a otimização de tempo de execução</string>
+    <string name="app_manager_build_expired_message">Para garantir a segurança do seu dispositivo e dos seus dados, a versão do App Manager em uso foi desativada. Você tem de atualizá-lo para a versão mais recente para continuar a usá-lo ou desinstalá-lo se não estiver disponível nenhuma atualização.</string>
+    <string name="batch_ops_runtime_optimization">Otimização do tempo de execução</string>
+    <string name="export_option_markdown">Markdown</string>
+    <string name="export_app_list_select_format">Selecione o formato para exportar a lista de aplicativos</string>
+    <string name="title_domains_supported_by_the_app">Domínios suportados</string>
+    <string name="app_info_tag_open_links">Abrir links</string>
 </resources>

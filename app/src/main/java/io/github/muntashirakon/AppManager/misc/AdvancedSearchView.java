@@ -2,6 +2,8 @@
 
 package io.github.muntashirakon.AppManager.misc;
 
+import static com.google.android.material.theme.overlay.MaterialThemeOverlay.wrap;
+
 import android.annotation.SuppressLint;
 import android.app.SearchableInfo;
 import android.content.Context;
@@ -39,8 +41,6 @@ import io.github.muntashirakon.AppManager.R;
 import io.github.muntashirakon.util.UiUtils;
 import io.github.muntashirakon.widget.SearchView;
 
-import static com.google.android.material.theme.overlay.MaterialThemeOverlay.wrap;
-
 public class AdvancedSearchView extends SearchView {
     @IntDef(flag = true, value = {
             SEARCH_TYPE_CONTAINS,
@@ -68,7 +68,7 @@ public class AdvancedSearchView extends SearchView {
      */
     public static final int SEARCH_TYPE_REGEX = 1 << 3;
 
-    private static final int DEF_STYLE_RES = R.style.Widget_AppTheme_SearchView;
+    private static final int DEF_STYLE_RES = io.github.muntashirakon.ui.R.style.Widget_AppTheme_SearchView;
 
     @SearchType
     private int mType = SEARCH_TYPE_CONTAINS;
@@ -144,22 +144,22 @@ public class AdvancedSearchView extends SearchView {
     }
 
     public AdvancedSearchView(@NonNull Context context, @Nullable AttributeSet attrs) {
-        this(context, attrs, R.attr.searchViewStyle);
+        this(context, attrs, androidx.appcompat.R.attr.searchViewStyle);
     }
 
     @SuppressLint("RestrictedApi")
     public AdvancedSearchView(@NonNull Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
         super(wrap(context, attrs, defStyleAttr, DEF_STYLE_RES), attrs, defStyleAttr);
         context = getContext();
-        mSearchSrcTextView = findViewById(R.id.search_src_text);
-        mSearchTypeSelectionButton = findViewById(R.id.search_mag_icon);
+        mSearchSrcTextView = findViewById(com.google.android.material.R.id.search_src_text);
+        mSearchTypeSelectionButton = findViewById(com.google.android.material.R.id.search_mag_icon);
         mSearchTypeSelectionButton.setImageResource(R.drawable.ic_filter_menu);
         mSearchTypeSelectionButton.setBackground(UiUtils.getDrawable(context, android.R.attr.selectableItemBackgroundBorderless));
         mSearchTypeSelectionButton.setOnClickListener(onClickSearchIcon);
         final TypedArray a = ThemeEnforcement.obtainStyledAttributes(
-                context, attrs, R.styleable.SearchView, defStyleAttr, DEF_STYLE_RES);
-        mQueryHint = a.getText(R.styleable.SearchView_queryHint);
-        mSearchHintIcon = a.getDrawable(R.styleable.SearchView_searchHintIcon);
+                context, attrs, io.github.muntashirakon.ui.R.styleable.SearchView, defStyleAttr, DEF_STYLE_RES);
+        mQueryHint = a.getText(io.github.muntashirakon.ui.R.styleable.SearchView_queryHint);
+        mSearchHintIcon = a.getDrawable(io.github.muntashirakon.ui.R.styleable.SearchView_searchHintIcon);
         a.recycle();
         setIconified(isIconified());
         updateQueryHint();
@@ -330,7 +330,7 @@ public class AdvancedSearchView extends SearchView {
         }
     }
 
-    public static boolean matches(String query, String text, @SearchType int type) {
+    public static boolean matches(@NonNull String query, @NonNull String text, @SearchType int type) {
         switch (type) {
             case SEARCH_TYPE_CONTAINS:
                 return text.contains(query);
@@ -353,7 +353,8 @@ public class AdvancedSearchView extends SearchView {
         List<String> getChoices(T object);
     }
 
-    public static <T> List<T> matches(String query, Collection<T> choices, ChoiceGenerator<T> generator, @SearchType int type) {
+    public static <T> List<T> matches(@NonNull String query, @Nullable Collection<T> choices,
+                                      @NonNull ChoiceGenerator<T> generator, @SearchType int type) {
         if (choices == null) return null;
         if (choices.size() == 0) return Collections.emptyList();
         List<T> results = new ArrayList<>(choices.size());
@@ -383,7 +384,8 @@ public class AdvancedSearchView extends SearchView {
         return results;
     }
 
-    public static <T> List<T> matches(String query, Collection<T> choices, ChoicesGenerator<T> generator, @SearchType int type) {
+    public static <T> List<T> matches(@NonNull String query, @Nullable Collection<T> choices,
+                                      @NonNull ChoicesGenerator<T> generator, @SearchType int type) {
         if (choices == null) return null;
         if (choices.size() == 0) return Collections.emptyList();
         List<T> results = new ArrayList<>(choices.size());

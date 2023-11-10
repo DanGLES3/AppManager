@@ -2,6 +2,7 @@
 
 package io.github.muntashirakon.AppManager.runningapps;
 
+import android.app.AppOpsManager;
 import android.app.Application;
 import android.content.pm.ApplicationInfo;
 import android.os.Build;
@@ -19,7 +20,6 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -31,22 +31,22 @@ import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-import io.github.muntashirakon.AppManager.appops.AppOpsManager;
-import io.github.muntashirakon.AppManager.appops.AppOpsService;
+import io.github.muntashirakon.AppManager.compat.AppOpsManagerCompat;
 import io.github.muntashirakon.AppManager.compat.PackageManagerCompat;
-import io.github.muntashirakon.AppManager.ipc.ps.DeviceMemoryInfo;
 import io.github.muntashirakon.AppManager.logs.Log;
 import io.github.muntashirakon.AppManager.misc.AdvancedSearchView;
 import io.github.muntashirakon.AppManager.runner.Runner;
 import io.github.muntashirakon.AppManager.scanner.vt.VirusTotal;
 import io.github.muntashirakon.AppManager.scanner.vt.VtFileReport;
 import io.github.muntashirakon.AppManager.scanner.vt.VtFileScanMeta;
+import io.github.muntashirakon.AppManager.settings.Prefs;
 import io.github.muntashirakon.AppManager.types.UserPackagePair;
-import io.github.muntashirakon.AppManager.utils.AppPref;
 import io.github.muntashirakon.AppManager.utils.DigestUtils;
 import io.github.muntashirakon.AppManager.utils.MultithreadedExecutor;
 import io.github.muntashirakon.io.Path;
 import io.github.muntashirakon.io.Paths;
+import io.github.muntashirakon.proc.ProcFs;
+import io.github.muntashirakon.proc.ProcMemoryInfo;
 
 public class RunningAppsViewModel extends AndroidViewModel {
     @RunningAppsActivity.SortOrder
@@ -59,8 +59,8 @@ public class RunningAppsViewModel extends AndroidViewModel {
 
     public RunningAppsViewModel(@NonNull Application application) {
         super(application);
-        mSortOrder = AppPref.getInt(AppPref.PrefKey.PREF_RUNNING_APPS_SORT_ORDER_INT);
-        mFilter = AppPref.getInt(AppPref.PrefKey.PREF_RUNNING_APPS_FILTER_FLAGS_INT);
+        mSortOrder = Prefs.RunningApps.getSortOrder();
+        mFilter = Prefs.RunningApps.getFilters();
         mVt = VirusTotal.getInstance();
     }
 
@@ -104,35 +104,34 @@ public class RunningAppsViewModel extends AndroidViewModel {
                 return;
             }
             String sha256 = DigestUtils.getHexDigest(DigestUtils.SHA_256, proxyFile);
-            try (InputStream is = proxyFile.openInputStream()) {
-                mVt.fetchReportsOrScan(proxyFile.getName(), proxyFile.length(), is, sha256,
-                        new VirusTotal.FullScanResponseInterface() {
-                            @Override
-                            public boolean scanFile() {
-                                mUploadingEnabled = false;
-                                mUploadingEnabledWatcher = new CountDownLatch(1);
-                                mVtFileScanMeta.postValue(new Pair<>(processItem, null));
-                                try {
-                                    mUploadingEnabledWatcher.await(2, TimeUnit.MINUTES);
-                                } catch (InterruptedException ignore) {
-                                }
-                                return mUploadingEnabled;
-                            }
+            try {
+                mVt.fetchReportsOrScan(proxyFile, sha256, new VirusTotal.FullScanResponseInterface() {
+                    @Override
+                    public boolean scanFile() {
+                        mUploadingEnabled = false;
+                        mUploadingEnabledWatcher = new CountDownLatch(1);
+                        mVtFileScanMeta.postValue(new Pair<>(processItem, null));
+                        try {
+                            mUploadingEnabledWatcher.await(2, TimeUnit.MINUTES);
+                        } catch (InterruptedException ignore) {
+                        }
+                        return mUploadingEnabled;
+                    }
 
-                            @Override
-                            public void onScanningInitiated() {
-                            }
+                    @Override
+                    public void onScanningInitiated() {
+                    }
 
-                            @Override
-                            public void onScanCompleted(@NonNull VtFileScanMeta meta) {
-                                mVtFileScanMeta.postValue(new Pair<>(processItem, meta));
-                            }
+                    @Override
+                    public void onScanCompleted(@NonNull VtFileScanMeta meta) {
+                        mVtFileScanMeta.postValue(new Pair<>(processItem, meta));
+                    }
 
-                            @Override
-                            public void onReportReceived(@NonNull VtFileReport report) {
-                                mVtFileReport.postValue(new Pair<>(processItem, report));
-                            }
-                        });
+                    @Override
+                    public void onReportReceived(@NonNull VtFileReport report) {
+                        mVtFileReport.postValue(new Pair<>(processItem, report));
+                    }
+                });
             } catch (IOException e) {
                 e.printStackTrace();
                 mVtFileReport.postValue(new Pair<>(processItem, null));
@@ -180,23 +179,16 @@ public class RunningAppsViewModel extends AndroidViewModel {
     }
 
     @NonNull
-    private final MutableLiveData<DeviceMemoryInfo> mDeviceMemoryInfo = new MutableLiveData<>();
+    private final MutableLiveData<ProcMemoryInfo> mDeviceMemoryInfo = new MutableLiveData<>();
 
     @NonNull
-    public MutableLiveData<DeviceMemoryInfo> getDeviceMemoryInfo() {
+    public MutableLiveData<ProcMemoryInfo> getDeviceMemoryInfo() {
         return mDeviceMemoryInfo;
     }
 
     @AnyThread
     public void loadMemoryInfo() {
-        mExecutor.submit(() -> {
-            DeviceMemoryInfo deviceMemoryInfo = mDeviceMemoryInfo.getValue();
-            if (deviceMemoryInfo == null) {
-                deviceMemoryInfo = new DeviceMemoryInfo();
-            }
-            deviceMemoryInfo.reload();
-            mDeviceMemoryInfo.postValue(deviceMemoryInfo);
-        });
+        mExecutor.submit(() -> mDeviceMemoryInfo.postValue(ProcFs.getInstance().getMemoryInfo()));
     }
 
     private final MutableLiveData<Pair<ProcessItem, Boolean>> mKillProcessResult = new MutableLiveData<>();
@@ -252,14 +244,14 @@ public class RunningAppsViewModel extends AndroidViewModel {
             return true;
         }
         try {
-            AppOpsService appOpsService = new AppOpsService();
+            AppOpsManagerCompat appOpsManager = new AppOpsManagerCompat();
             boolean canRun;
             {
-                int mode = appOpsService.checkOperation(AppOpsManager.OP_RUN_IN_BACKGROUND, info.uid, info.packageName);
+                int mode = appOpsManager.checkOperation(AppOpsManagerCompat.OP_RUN_IN_BACKGROUND, info.uid, info.packageName);
                 canRun = (mode != AppOpsManager.MODE_IGNORED && mode != AppOpsManager.MODE_ERRORED);
             }
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                int mode = appOpsService.checkOperation(AppOpsManager.OP_RUN_ANY_IN_BACKGROUND, info.uid, info.packageName);
+                int mode = appOpsManager.checkOperation(AppOpsManagerCompat.OP_RUN_ANY_IN_BACKGROUND, info.uid, info.packageName);
                 canRun |= (mode != AppOpsManager.MODE_IGNORED && mode != AppOpsManager.MODE_ERRORED);
             }
             return canRun;
@@ -271,15 +263,16 @@ public class RunningAppsViewModel extends AndroidViewModel {
     public void preventBackgroundRun(@NonNull ApplicationInfo info) {
         mExecutor.submit(() -> {
             try {
-                AppOpsService appOpsService = new AppOpsService();
+                AppOpsManagerCompat appOpsService = new AppOpsManagerCompat();
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                    appOpsService.setMode(AppOpsManager.OP_RUN_IN_BACKGROUND, info.uid, info.packageName,
+                    appOpsService.setMode(AppOpsManagerCompat.OP_RUN_IN_BACKGROUND, info.uid, info.packageName,
                             AppOpsManager.MODE_IGNORED);
                 }
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                    appOpsService.setMode(AppOpsManager.OP_RUN_ANY_IN_BACKGROUND, info.uid, info.packageName,
+                    appOpsService.setMode(AppOpsManagerCompat.OP_RUN_ANY_IN_BACKGROUND, info.uid, info.packageName,
                             AppOpsManager.MODE_IGNORED);
                 }
+                // TODO: 14/2/23 Store it to the rules
                 mPreventBackgroundRunResult.postValue(new Pair<>(info, true));
             } catch (RemoteException e) {
                 e.printStackTrace();
@@ -317,8 +310,8 @@ public class RunningAppsViewModel extends AndroidViewModel {
     }
 
     public void setSortOrder(int sortOrder) {
-        this.mSortOrder = sortOrder;
-        AppPref.set(AppPref.PrefKey.PREF_RUNNING_APPS_SORT_ORDER_INT, this.mSortOrder);
+        mSortOrder = sortOrder;
+        Prefs.RunningApps.setSortOrder(mSortOrder);
         mExecutor.submit(this::filterAndSort);
     }
 
@@ -327,14 +320,14 @@ public class RunningAppsViewModel extends AndroidViewModel {
     }
 
     public void addFilter(int filter) {
-        this.mFilter |= filter;
-        AppPref.set(AppPref.PrefKey.PREF_RUNNING_APPS_FILTER_FLAGS_INT, this.mFilter);
+        mFilter |= filter;
+        Prefs.RunningApps.setFilters(mFilter);
         mExecutor.submit(this::filterAndSort);
     }
 
     public void removeFilter(int filter) {
-        this.mFilter &= ~filter;
-        AppPref.set(AppPref.PrefKey.PREF_RUNNING_APPS_FILTER_FLAGS_INT, this.mFilter);
+        mFilter &= ~filter;
+        Prefs.RunningApps.setFilters(mFilter);
         mExecutor.submit(this::filterAndSort);
     }
 

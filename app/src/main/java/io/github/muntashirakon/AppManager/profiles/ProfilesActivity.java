@@ -2,9 +2,12 @@
 
 package io.github.muntashirakon.AppManager.profiles;
 
+import static io.github.muntashirakon.AppManager.profiles.ProfileApplierActivity.ST_ADVANCED;
+import static io.github.muntashirakon.AppManager.profiles.ProfileApplierActivity.ST_SIMPLE;
+
 import android.content.Intent;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
-import android.os.RemoteException;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -34,43 +37,48 @@ import org.json.JSONException;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 
 import io.github.muntashirakon.AppManager.BaseActivity;
 import io.github.muntashirakon.AppManager.R;
-import io.github.muntashirakon.AppManager.details.LauncherIconCreator;
 import io.github.muntashirakon.AppManager.logs.Log;
-import io.github.muntashirakon.AppManager.utils.FileUtils;
+import io.github.muntashirakon.AppManager.profiles.struct.AppsProfile;
+import io.github.muntashirakon.AppManager.shortcut.CreateShortcutDialogFragment;
 import io.github.muntashirakon.AppManager.utils.UIUtils;
+import io.github.muntashirakon.AppManager.utils.Utils;
 import io.github.muntashirakon.AppManager.utils.appearance.ColorCodes;
+import io.github.muntashirakon.dialog.SearchableSingleChoiceDialogBuilder;
 import io.github.muntashirakon.dialog.TextInputDialogBuilder;
+import io.github.muntashirakon.io.Path;
+import io.github.muntashirakon.io.Paths;
 import io.github.muntashirakon.util.UiUtils;
 import io.github.muntashirakon.widget.RecyclerView;
 
 public class ProfilesActivity extends BaseActivity {
     private static final String TAG = "ProfilesActivity";
 
-    private ProfilesAdapter adapter;
-    private ProfilesViewModel model;
-    private LinearProgressIndicator progressIndicator;
+    private ProfilesAdapter mAdapter;
+    private ProfilesViewModel mModel;
+    private LinearProgressIndicator mProgressIndicator;
     @Nullable
-    private String profileName;
+    private String mProfileId;
 
-    private final ActivityResultLauncher<String> exportProfile = registerForActivityResult(
+    private final ActivityResultLauncher<String> mExportProfile = registerForActivityResult(
             new ActivityResultContracts.CreateDocument("application/json"),
             uri -> {
                 if (uri == null) {
                     // Back button pressed.
                     return;
                 }
-                if (profileName != null) {
+                if (mProfileId != null) {
                     // Export profile
                     try (OutputStream os = getContentResolver().openOutputStream(uri)) {
-                        ProfileMetaManager manager = new ProfileMetaManager(profileName);
-                        manager.writeProfile(os);
+                        Path profilePath = ProfileManager.findProfilePathById(mProfileId);
+                        AppsProfile profile = AppsProfile.fromPath(profilePath);
+                        profile.write(os);
                         Toast.makeText(this, R.string.the_export_was_successful, Toast.LENGTH_SHORT).show();
                     } catch (IOException | JSONException e) {
                         Log.e(TAG, "Error: ", e);
@@ -78,7 +86,7 @@ public class ProfilesActivity extends BaseActivity {
                     }
                 }
             });
-    private final ActivityResultLauncher<String> importProfile = registerForActivityResult(
+    private final ActivityResultLauncher<String> mImportProfile = registerForActivityResult(
             new ActivityResultContracts.GetContent(),
             uri -> {
                 if (uri == null) {
@@ -87,21 +95,18 @@ public class ProfilesActivity extends BaseActivity {
                 }
                 try {
                     // Verify
-                    String fileName = FileUtils.getFileName(getContentResolver(), uri);
-                    if (fileName == null) throw new IOException("File name cannot be empty.");
-                    fileName = FileUtils.trimExtension(fileName);
-                    String fileContent = FileUtils.getFileContent(getContentResolver(), uri);
-                    ProfileMetaManager manager = ProfileMetaManager.fromJSONString(fileName, fileContent);
+                    Path profilePath = Paths.get(uri);
+                    AppsProfile profile = AppsProfile.fromPath(profilePath);
+                    AppsProfile newProfile = AppsProfile.newProfile(profile.name, profile);
+                    Path innerProfilePath = ProfileManager.requireProfilePathById(newProfile.profileId);
                     // Save
-                    manager.writeProfile();
+                    try (OutputStream os = innerProfilePath.openOutputStream()) {
+                        newProfile.write(os);
+                    }
                     Toast.makeText(this, R.string.the_import_was_successful, Toast.LENGTH_SHORT).show();
-                    // Reload page
-                    new Thread(() -> model.loadProfiles()).start();
                     // Load imported profile
-                    Intent intent = new Intent(this, AppsProfileActivity.class);
-                    intent.putExtra(AppsProfileActivity.EXTRA_PROFILE_NAME, manager.getProfileName());
-                    startActivity(intent);
-                } catch (IOException | JSONException | RemoteException e) {
+                    startActivity(AppsProfileActivity.getProfileIntent(this, newProfile.profileId));
+                } catch (IOException | JSONException e) {
                     Log.e(TAG, "Error: ", e);
                     Toast.makeText(this, R.string.import_failed, Toast.LENGTH_SHORT).show();
                 }
@@ -111,15 +116,15 @@ public class ProfilesActivity extends BaseActivity {
     protected void onAuthenticated(@Nullable Bundle savedInstanceState) {
         setContentView(R.layout.activity_profiles);
         setSupportActionBar(findViewById(R.id.toolbar));
-        model = new ViewModelProvider(this).get(ProfilesViewModel.class);
-        progressIndicator = findViewById(R.id.progress_linear);
-        progressIndicator.setVisibilityAfterHide(View.GONE);
+        mModel = new ViewModelProvider(this).get(ProfilesViewModel.class);
+        mProgressIndicator = findViewById(R.id.progress_linear);
+        mProgressIndicator.setVisibilityAfterHide(View.GONE);
         RecyclerView listView = findViewById(android.R.id.list);
         listView.setLayoutManager(new LinearLayoutManager(this));
         listView.setEmptyView(findViewById(android.R.id.empty));
         UiUtils.applyWindowInsetsAsPaddingNoTop(listView);
-        adapter = new ProfilesAdapter(this);
-        listView.setAdapter(adapter);
+        mAdapter = new ProfilesAdapter(this);
+        listView.setAdapter(mAdapter);
         FloatingActionButton fab = findViewById(R.id.floatingActionButton);
         UiUtils.applyWindowInsetsAsMargin(fab);
         fab.setOnClickListener(v -> new TextInputDialogBuilder(this, R.string.input_profile_name)
@@ -128,31 +133,17 @@ public class ProfilesActivity extends BaseActivity {
                 .setNegativeButton(R.string.cancel, null)
                 .setPositiveButton(R.string.go, (dialog, which, profName, isChecked) -> {
                     if (!TextUtils.isEmpty(profName)) {
-                        Intent intent = new Intent(this, AppsProfileActivity.class);
                         //noinspection ConstantConditions
-                        intent.putExtra(AppsProfileActivity.EXTRA_NEW_PROFILE_NAME, profName.toString());
-                        intent.putExtra(AppsProfileActivity.EXTRA_NEW_PROFILE, true);
-                        startActivity(intent);
+                        startActivity(AppsProfileActivity.getNewProfileIntent(this, profName.toString()));
                     }
                 })
                 .show());
-        model.getProfiles().observe(this, profiles -> {
-            progressIndicator.hide();
-            adapter.setDefaultList(profiles);
+        mModel.getProfilesLiveData().observe(this, profiles -> {
+            mProgressIndicator.hide();
+            mAdapter.setDefaultList(profiles);
         });
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        if (progressIndicator != null) {
-            progressIndicator.show();
-        }
-        new Thread(() -> {
-            if (model != null) {
-                model.loadProfiles();
-            }
-        }).start();
+        mProgressIndicator.show();
+        mModel.loadProfiles();
     }
 
     @Override
@@ -167,35 +158,10 @@ public class ProfilesActivity extends BaseActivity {
         if (id == android.R.id.home) {
             finish();
         } else if (id == R.id.action_import) {
-            importProfile.launch("application/json");
+            mImportProfile.launch("application/json");
         } else if (id == R.id.action_refresh) {
-            progressIndicator.show();
-            new Thread(() -> model.loadProfiles()).start();
-        } else if (id == R.id.action_presets) {
-            String[] profiles = getResources().getStringArray(R.array.profiles);
-            new MaterialAlertDialogBuilder(this)
-                    .setTitle(R.string.presets)
-                    .setItems(profiles, (dialog, which) -> {
-                        String profile = profiles[which];
-                        new TextInputDialogBuilder(this, R.string.input_profile_name)
-                                .setTitle(R.string.new_profile)
-                                .setHelperText(R.string.input_profile_name_description)
-                                .setNegativeButton(R.string.cancel, null)
-                                .setPositiveButton(R.string.go, (dialog1, which1, profName, isChecked) -> {
-                                    if (!TextUtils.isEmpty(profName)) {
-                                        Intent intent = new Intent(this, AppsProfileActivity.class);
-                                        intent.putExtra(AppsProfileActivity.EXTRA_PROFILE_NAME, profile);
-                                        //noinspection ConstantConditions
-                                        intent.putExtra(AppsProfileActivity.EXTRA_NEW_PROFILE_NAME, profName.toString());
-                                        intent.putExtra(AppsProfileActivity.EXTRA_NEW_PROFILE, true);
-                                        intent.putExtra(AppsProfileActivity.EXTRA_IS_PRESET, true);
-                                        startActivity(intent);
-                                    }
-                                })
-                                .show();
-                    })
-                    .setNegativeButton(R.string.close, null)
-                    .show();
+            mProgressIndicator.show();
+            mModel.loadProfiles();
         } else return super.onOptionsItemSelected(item);
         return true;
     }
@@ -203,10 +169,10 @@ public class ProfilesActivity extends BaseActivity {
     static class ProfilesAdapter extends RecyclerView.Adapter<ProfilesAdapter.ViewHolder> implements Filterable {
         private Filter mFilter;
         private String mConstraint;
-        private String[] mDefaultList;
-        private String[] mAdapterList;
-        private HashMap<String, CharSequence> mAdapterMap;
-        private final ProfilesActivity activity;
+        private AppsProfile[] mDefaultList;
+        private AppsProfile[] mAdapterList;
+        private HashMap<AppsProfile, CharSequence> mAdapterMap;
+        private final ProfilesActivity mActivity;
         private final int mQueryStringHighlightColor;
 
         static class ViewHolder extends RecyclerView.ViewHolder {
@@ -222,12 +188,12 @@ public class ProfilesActivity extends BaseActivity {
         }
 
         ProfilesAdapter(@NonNull ProfilesActivity activity) {
-            this.activity = activity;
+            mActivity = activity;
             mQueryStringHighlightColor = ColorCodes.getQueryStringHighlightColor(activity);
         }
 
-        void setDefaultList(@NonNull HashMap<String, CharSequence> list) {
-            mDefaultList = list.keySet().toArray(new String[0]);
+        void setDefaultList(@NonNull HashMap<AppsProfile, CharSequence> list) {
+            mDefaultList = list.keySet().toArray(new AppsProfile[0]);
             mAdapterList = mDefaultList;
             mAdapterMap = list;
             notifyDataSetChanged();
@@ -246,94 +212,84 @@ public class ProfilesActivity extends BaseActivity {
         @NonNull
         @Override
         public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-            View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.m3_preference, parent, false);
+            View view = LayoutInflater.from(parent.getContext()).inflate(io.github.muntashirakon.ui.R.layout.m3_preference, parent, false);
             return new ViewHolder(view);
         }
 
         @Override
         public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-            String profName = mAdapterList[position];
-            if (mConstraint != null && profName.toLowerCase(Locale.ROOT).contains(mConstraint)) {
+            AppsProfile profile = mAdapterList[position];
+            if (mConstraint != null && profile.name.toLowerCase(Locale.ROOT).contains(mConstraint)) {
                 // Highlight searched query
-                holder.title.setText(UIUtils.getHighlightedText(profName, mConstraint, mQueryStringHighlightColor));
+                holder.title.setText(UIUtils.getHighlightedText(profile.name, mConstraint, mQueryStringHighlightColor));
             } else {
-                holder.title.setText(profName);
+                holder.title.setText(profile.name);
             }
-            CharSequence value = mAdapterMap.get(profName);
+            CharSequence value = mAdapterMap.get(profile);
             holder.summary.setText(value != null ? value : "");
-            holder.itemView.setOnClickListener(v -> {
-                Intent intent = new Intent(activity, AppsProfileActivity.class);
-                intent.putExtra(AppsProfileActivity.EXTRA_PROFILE_NAME, profName);
-                activity.startActivity(intent);
-            });
+            holder.itemView.setOnClickListener(v ->
+                    mActivity.startActivity(AppsProfileActivity.getProfileIntent(mActivity, profile.profileId)));
             holder.itemView.setOnLongClickListener(v -> {
-                PopupMenu popupMenu = new PopupMenu(activity, v);
+                PopupMenu popupMenu = new PopupMenu(mActivity, v);
+                popupMenu.setForceShowIcon(true);
                 popupMenu.inflate(R.menu.activity_profiles_popup_actions);
                 popupMenu.setOnMenuItemClickListener(item -> {
                     int id = item.getItemId();
                     if (id == R.id.action_apply) {
-                        final String[] statesL = new String[]{
-                                activity.getString(R.string.on),
-                                activity.getString(R.string.off)
-                        };
-                        @ProfileMetaManager.ProfileState final List<String> states = Arrays.asList(ProfileMetaManager.STATE_ON, ProfileMetaManager.STATE_OFF);
-                        new MaterialAlertDialogBuilder(activity)
-                                .setTitle(R.string.profile_state)
-                                .setSingleChoiceItems(statesL, -1, (dialog, which) -> {
-                                    Intent aIntent = new Intent(activity, ProfileApplierService.class);
-                                    aIntent.putExtra(ProfileApplierService.EXTRA_PROFILE_NAME, profName);
-                                    aIntent.putExtra(ProfileApplierService.EXTRA_PROFILE_STATE, states.get(which));
-                                    ContextCompat.startForegroundService(activity, aIntent);
-                                    dialog.dismiss();
+                        Intent intent = ProfileApplierActivity.getShortcutIntent(mActivity, profile.profileId, null, null);
+                        mActivity.startActivity(intent);
+                    } else if (id == R.id.action_delete) {
+                        new MaterialAlertDialogBuilder(mActivity)
+                                .setTitle(mActivity.getString(R.string.delete_filename, profile.name))
+                                .setMessage(R.string.are_you_sure)
+                                .setPositiveButton(R.string.cancel, null)
+                                .setNegativeButton(R.string.ok, (dialog, which) -> {
+                                    if (ProfileManager.deleteProfile(profile.profileId)) {
+                                        Toast.makeText(mActivity, R.string.deleted_successfully, Toast.LENGTH_SHORT).show();
+                                    } else {
+                                        Toast.makeText(mActivity, R.string.deletion_failed, Toast.LENGTH_SHORT).show();
+                                    }
                                 })
                                 .show();
-                    } else if (id == R.id.action_delete) {
-                        ProfileMetaManager manager = new ProfileMetaManager(profName);
-                        if (manager.deleteProfile()) {
-                            Toast.makeText(activity, R.string.deleted_successfully, Toast.LENGTH_SHORT).show();
-                            new Thread(() -> activity.model.loadProfiles()).start();
-                        } else {
-                            Toast.makeText(activity, R.string.deletion_failed, Toast.LENGTH_SHORT).show();
-                        }
                     } else if (id == R.id.action_routine_ops) {
                         // TODO(7/11/20): Setup routine operations for this profile
-                        Toast.makeText(activity, "Not yet implemented", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(mActivity, "Not yet implemented", Toast.LENGTH_SHORT).show();
                     } else if (id == R.id.action_duplicate) {
-                        new TextInputDialogBuilder(activity, R.string.input_profile_name)
+                        new TextInputDialogBuilder(mActivity, R.string.input_profile_name)
                                 .setTitle(R.string.new_profile)
                                 .setHelperText(R.string.input_profile_name_description)
                                 .setNegativeButton(R.string.cancel, null)
                                 .setPositiveButton(R.string.go, (dialog, which, newProfName, isChecked) -> {
                                     if (!TextUtils.isEmpty(newProfName)) {
-                                        Intent intent = new Intent(activity, AppsProfileActivity.class);
-                                        intent.putExtra(AppsProfileActivity.EXTRA_PROFILE_NAME, profName);
                                         //noinspection ConstantConditions
-                                        intent.putExtra(AppsProfileActivity.EXTRA_NEW_PROFILE_NAME, newProfName.toString());
-                                        intent.putExtra(AppsProfileActivity.EXTRA_NEW_PROFILE, true);
-                                        activity.startActivity(intent);
+                                        mActivity.startActivity(AppsProfileActivity.getCloneProfileIntent(mActivity,
+                                                profile.profileId, newProfName.toString()));
                                     }
                                 })
                                 .show();
                     } else if (id == R.id.action_export) {
-                        activity.profileName = profName;
-                        activity.exportProfile.launch(profName + ".am.json");
+                        mActivity.mProfileId = profile.profileId;
+                        mActivity.mExportProfile.launch(profile.name + ".am.json");
+                    }  else if (id == R.id.action_copy) {
+                        Utils.copyToClipboard(mActivity, profile.name, profile.profileId);
                     } else if (id == R.id.action_shortcut) {
                         final String[] shortcutTypesL = new String[]{
-                                activity.getString(R.string.simple),
-                                activity.getString(R.string.advanced)
+                                mActivity.getString(R.string.simple),
+                                mActivity.getString(R.string.advanced)
                         };
-                        final String[] shortcutTypes = new String[]{AppsProfileActivity.ST_SIMPLE, AppsProfileActivity.ST_ADVANCED};
-                        new MaterialAlertDialogBuilder(activity)
-                                .setTitle(R.string.profile_state)
-                                .setSingleChoiceItems(shortcutTypesL, -1, (dialog, which) -> {
-                                    Intent intent = new Intent(activity, AppsProfileActivity.class);
-                                    intent.putExtra(AppsProfileActivity.EXTRA_PROFILE_NAME, profName);
-                                    intent.putExtra(AppsProfileActivity.EXTRA_SHORTCUT_TYPE, shortcutTypes[which]);
-                                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                                    intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                                    LauncherIconCreator.createLauncherIcon(activity,
-                                            profName + " - " + shortcutTypesL[which], ContextCompat
-                                                    .getDrawable(activity, R.drawable.ic_launcher_foreground), intent);
+                        final String[] shortcutTypes = new String[]{ST_SIMPLE, ST_ADVANCED};
+                        new SearchableSingleChoiceDialogBuilder<>(mActivity, shortcutTypes, shortcutTypesL)
+                                .setTitle(R.string.create_shortcut)
+                                .setOnSingleChoiceClickListener((dialog, which, item1, isChecked) -> {
+                                    if (!isChecked) {
+                                        return;
+                                    }
+                                    Drawable icon = Objects.requireNonNull(ContextCompat.getDrawable(mActivity, R.drawable.ic_launcher_foreground));
+                                    ProfileShortcutInfo shortcutInfo = new ProfileShortcutInfo(profile.profileId,
+                                            profile.name, shortcutTypes[which], shortcutTypesL[which]);
+                                    shortcutInfo.setIcon(UIUtils.getBitmapFromDrawable(icon));
+                                    CreateShortcutDialogFragment dialog1 = CreateShortcutDialogFragment.getInstance(shortcutInfo);
+                                    dialog1.show(mActivity.getSupportFragmentManager(), CreateShortcutDialogFragment.TAG);
                                     dialog.dismiss();
                                 })
                                 .show();
@@ -354,20 +310,20 @@ public class ProfilesActivity extends BaseActivity {
                         String constraint = charSequence.toString().toLowerCase(Locale.ROOT);
                         mConstraint = constraint;
                         FilterResults filterResults = new FilterResults();
-                        if (constraint.length() == 0) {
+                        if (constraint.isEmpty()) {
                             filterResults.count = 0;
                             filterResults.values = null;
                             return filterResults;
                         }
 
-                        List<String> list = new ArrayList<>(mDefaultList.length);
-                        for (String item : mDefaultList) {
-                            if (item.toLowerCase(Locale.ROOT).contains(constraint))
+                        List<AppsProfile> list = new ArrayList<>(mDefaultList.length);
+                        for (AppsProfile item : mDefaultList) {
+                            if (item.name.toLowerCase(Locale.ROOT).contains(constraint))
                                 list.add(item);
                         }
 
                         filterResults.count = list.size();
-                        filterResults.values = list.toArray(new String[0]);
+                        filterResults.values = list.toArray(new AppsProfile[0]);
                         return filterResults;
                     }
 
@@ -376,7 +332,7 @@ public class ProfilesActivity extends BaseActivity {
                         if (filterResults.values == null) {
                             mAdapterList = mDefaultList;
                         } else {
-                            mAdapterList = (String[]) filterResults.values;
+                            mAdapterList = (AppsProfile[]) filterResults.values;
                         }
                         notifyDataSetChanged();
                     }

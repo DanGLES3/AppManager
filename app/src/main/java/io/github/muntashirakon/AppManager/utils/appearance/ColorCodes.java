@@ -11,12 +11,12 @@ import androidx.core.content.ContextCompat;
 import com.google.android.material.color.MaterialColors;
 import com.google.android.material.elevation.SurfaceColors;
 
-import io.github.muntashirakon.AppManager.R;
+import io.github.muntashirakon.ui.R;
 
 public final class ColorCodes {
     @ColorInt
     public static int getListItemColor0(@NonNull Context context) {
-        return MaterialColors.getColor(context, R.attr.colorSurface, ColorCodes.class.getCanonicalName());
+        return MaterialColors.getColor(context, com.google.android.material.R.attr.colorSurface, ColorCodes.class.getCanonicalName());
     }
 
     @ColorInt
@@ -71,6 +71,14 @@ public final class ColorCodes {
         return ContextCompat.getColor(context, R.color.disabled_user);
     }
 
+    public static int getAppWriteAndExecuteIndicatorColor(@NonNull Context context) {
+        return ContextCompat.getColor(context, R.color.red);
+    }
+
+    public static int getBloatwareIndicatorColor(@NonNull Context context) {
+        return ContextCompat.getColor(context, R.color.tracker);
+    }
+
     public static int getAppSuspendedIndicatorColor(@NonNull Context context) {
         return ContextCompat.getColor(context, R.color.stopped);
     }
@@ -121,6 +129,18 @@ public final class ColorCodes {
 
     public static int getScannerTrackerIndicatorColor(@NonNull Context context) {
         return ContextCompat.getColor(context, R.color.electric_red);
+    }
+
+    public static int getRemovalSafeIndicatorColor(@NonNull Context context) {
+        return ContextCompat.getColor(context, R.color.stopped);
+    }
+
+    public static int getRemovalReplaceIndicatorColor(@NonNull Context context) {
+        return ContextCompat.getColor(context, R.color.sand_tan);
+    }
+
+    public static int getRemovalCautionIndicatorColor(@NonNull Context context) {
+        return ContextCompat.getColor(context, R.color.tracker);
     }
 
     public static int getScannerNoTrackerIndicatorColor(@NonNull Context context) {

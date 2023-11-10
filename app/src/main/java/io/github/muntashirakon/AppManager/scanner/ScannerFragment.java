@@ -2,6 +2,11 @@
 
 package io.github.muntashirakon.AppManager.scanner;
 
+import static io.github.muntashirakon.AppManager.utils.UIUtils.getColoredText;
+import static io.github.muntashirakon.AppManager.utils.UIUtils.getMonospacedText;
+import static io.github.muntashirakon.AppManager.utils.UIUtils.getPrimaryText;
+import static io.github.muntashirakon.AppManager.utils.UIUtils.getSmallerText;
+
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ApplicationInfo;
@@ -9,6 +14,7 @@ import android.os.Bundle;
 import android.text.Spannable;
 import android.text.SpannableStringBuilder;
 import android.text.Spanned;
+import android.text.TextUtils;
 import android.util.Pair;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -22,7 +28,6 @@ import androidx.collection.ArrayMap;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
-import com.android.internal.util.TextUtils;
 import com.google.android.material.card.MaterialCardView;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
@@ -43,28 +48,25 @@ import io.github.muntashirakon.AppManager.R;
 import io.github.muntashirakon.AppManager.scanner.vt.VtFileReport;
 import io.github.muntashirakon.AppManager.scanner.vt.VtFileReportScanItem;
 import io.github.muntashirakon.AppManager.settings.FeatureController;
-import io.github.muntashirakon.AppManager.types.SearchableMultiChoiceDialogBuilder;
-import io.github.muntashirakon.AppManager.utils.AppPref;
+import io.github.muntashirakon.AppManager.settings.Prefs;
 import io.github.muntashirakon.AppManager.utils.ArrayUtils;
 import io.github.muntashirakon.AppManager.utils.DigestUtils;
 import io.github.muntashirakon.AppManager.utils.LangUtils;
 import io.github.muntashirakon.AppManager.utils.PackageUtils;
+import io.github.muntashirakon.AppManager.utils.TextUtilsCompat;
 import io.github.muntashirakon.AppManager.utils.appearance.ColorCodes;
+import io.github.muntashirakon.dialog.SearchableMultiChoiceDialogBuilder;
 import io.github.muntashirakon.util.UiUtils;
-
-import static io.github.muntashirakon.AppManager.utils.UIUtils.getColoredText;
-import static io.github.muntashirakon.AppManager.utils.UIUtils.getMonospacedText;
-import static io.github.muntashirakon.AppManager.utils.UIUtils.getPrimaryText;
-import static io.github.muntashirakon.AppManager.utils.UIUtils.getSmallerText;
 
 public class ScannerFragment extends Fragment {
     private CharSequence mAppName;
     private ScannerViewModel mViewModel;
     private ScannerActivity mActivity;
 
-    private MaterialCardView vtContainerView;
-    private TextView vtTitleView;
-    private TextView vtDescriptionView;
+    private MaterialCardView mVtContainerView;
+    private TextView mVtTitleView;
+    private TextView mVtDescriptionView;
+    private TextView pithusDescriptionView;
 
     @Nullable
     @Override
@@ -81,8 +83,13 @@ public class ScannerFragment extends Fragment {
         classesView.setCardBackgroundColor(cardColor);
         MaterialCardView trackersView = view.findViewById(R.id.tracker);
         trackersView.setCardBackgroundColor(cardColor);
-        vtContainerView = view.findViewById(R.id.vt);
-        vtContainerView.setCardBackgroundColor(cardColor);
+        mVtContainerView = view.findViewById(R.id.vt);
+        mVtContainerView.setCardBackgroundColor(cardColor);
+        mVtTitleView = view.findViewById(R.id.vt_title);
+        mVtDescriptionView = view.findViewById(R.id.vt_description);
+        MaterialCardView pithusContainerView = view.findViewById(R.id.pithus);
+        pithusContainerView.setCardBackgroundColor(cardColor);
+        pithusDescriptionView = view.findViewById(R.id.pithus_description);
         MaterialCardView libsView = view.findViewById(R.id.libs);
         libsView.setCardBackgroundColor(cardColor);
         MaterialCardView apkInfoView = view.findViewById(R.id.apk);
@@ -91,8 +98,21 @@ public class ScannerFragment extends Fragment {
         signaturesView.setCardBackgroundColor(cardColor);
         MaterialCardView missingLibsView = view.findViewById(R.id.missing_libs);
         missingLibsView.setCardBackgroundColor(cardColor);
+        boolean isInternetEnabled = FeatureController.isInternetEnabled();
+        // VirusTotal
+        if (!isInternetEnabled || Prefs.VirusTotal.getApiKey() == null) {
+            mVtContainerView.setVisibility(View.GONE);
+            view.findViewById(R.id.vt_disclaimer).setVisibility(View.GONE);
+        }
+        // Pithus
+        if (!isInternetEnabled) {
+            pithusContainerView.setVisibility(View.GONE);
+        }
         // Checksum
         mViewModel.apkChecksumsLiveData().observe(getViewLifecycleOwner(), checksums -> {
+            if (checksums == null) {
+                return;
+            }
             List<CharSequence> lines = new ArrayList<>();
             for (Pair<String, String> digest : checksums) {
                 lines.add(new SpannableStringBuilder()
@@ -100,7 +120,7 @@ public class ScannerFragment extends Fragment {
                         .append(getMonospacedText(digest.second)));
             }
             ((TextView) view.findViewById(R.id.apk_title)).setText(R.string.apk_checksums);
-            ((TextView) view.findViewById(R.id.apk_description)).setText(TextUtils.joinSpannable("\n", lines));
+            ((TextView) view.findViewById(R.id.apk_description)).setText(TextUtilsCompat.joinSpannable("\n", lines));
         });
         // Package info: Title & subtitle
         mViewModel.packageInfoLiveData().observe(getViewLifecycleOwner(), packageInfo -> {
@@ -164,18 +184,11 @@ public class ScannerFragment extends Fragment {
                         .show());
             }
         });
-        // VirusTotal
-        if (!FeatureController.isInternetEnabled() || AppPref.getVtApiKey() == null) {
-            vtContainerView.setVisibility(View.GONE);
-            view.findViewById(R.id.vt_disclaimer).setVisibility(View.GONE);
-        }
-        vtTitleView = view.findViewById(R.id.vt_title);
-        vtDescriptionView = view.findViewById(R.id.vt_description);
         mViewModel.vtFileScanMetaLiveData().observe(getViewLifecycleOwner(), vtFileScanMeta -> {
             if (vtFileScanMeta == null) {
                 // Uploading
-                vtTitleView.setText(R.string.vt_uploading);
-                if (AppPref.getBoolean(AppPref.PrefKey.PREF_VIRUS_TOTAL_PROMPT_BEFORE_UPLOADING_BOOL)) {
+                mVtTitleView.setText(R.string.vt_uploading);
+                if (Prefs.VirusTotal.promptBeforeUpload()) {
                     new MaterialAlertDialogBuilder(mActivity)
                             .setTitle(R.string.scan_in_vt)
                             .setMessage(R.string.vt_confirm_uploading_file)
@@ -186,23 +199,32 @@ public class ScannerFragment extends Fragment {
                 } else mViewModel.enableUploading();
             } else {
                 // Upload completed and queued
-                vtTitleView.setText(R.string.vt_queued);
-                vtDescriptionView.setText(vtFileScanMeta.getPermalink());
+                mVtTitleView.setText(R.string.vt_queued);
+                mVtDescriptionView.setText(vtFileScanMeta.getPermalink());
             }
         });
         mViewModel.vtFileReportLiveData().observe(getViewLifecycleOwner(), vtFileReport -> {
             if (vtFileReport == null) {
                 // Failed
-                vtTitleView.setText(R.string.vt_failed);
-                vtDescriptionView.setText(null);
-                vtContainerView.setOnClickListener(null);
+                mVtTitleView.setText(R.string.vt_failed);
+                mVtDescriptionView.setText(null);
+                mVtContainerView.setOnClickListener(null);
             } else if (vtFileReport.getPositives() == null) {
                 // Still queued
-                vtTitleView.setText(R.string.vt_queued);
-                vtDescriptionView.setText(vtFileReport.getPermalink());
+                mVtTitleView.setText(R.string.vt_queued);
+                mVtDescriptionView.setText(vtFileReport.getPermalink());
             } else {
                 // Successful
                 publishVirusTotalReport(vtFileReport);
+            }
+        });
+        mViewModel.getPithusReportLiveData().observe(getViewLifecycleOwner(), url -> {
+            if (url != null) {
+                // Report available
+                pithusDescriptionView.setText(url);
+            } else {
+                // Report unavailable
+                pithusDescriptionView.setText(R.string.report_not_available);
             }
         });
         // Load summary for the APK file
@@ -242,10 +264,10 @@ public class ScannerFragment extends Fragment {
             detectedList.addAll(undetectedList);
             result = UiUtils.getOrderedList(detectedList);
         } else result = null;
-        vtTitleView.setText(getColoredText(resultSummary, color));
+        mVtTitleView.setText(getColoredText(resultSummary, color));
         if (result != null) {
-            vtDescriptionView.setText(R.string.tap_to_see_details);
-            vtContainerView.setOnClickListener(v -> {
+            mVtDescriptionView.setText(R.string.tap_to_see_details);
+            mVtContainerView.setOnClickListener(v -> {
                 VirusTotalDialog fragment = VirusTotalDialog.getInstance(resultSummary, scanDate, result, permalink);
                 fragment.show(getParentFragmentManager(), VirusTotalDialog.TAG);
             });
@@ -314,7 +336,7 @@ public class ScannerFragment extends Fragment {
         int totalTrackersFound = foundTrackerInfoMap.size();
         if (totalTrackersFound > 0) {
             foundTrackerList.append(getString(R.string.found_trackers)).append(" ").append(
-                    TextUtils.joinSpannable(", ", foundTrackerNames));
+                    TextUtilsCompat.joinSpannable(", ", foundTrackerNames));
         }
         int totalTrackerClasses = mViewModel.getTrackerClasses().size();
         // Get summary

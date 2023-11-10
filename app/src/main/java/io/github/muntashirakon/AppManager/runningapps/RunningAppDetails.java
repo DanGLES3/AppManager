@@ -17,6 +17,7 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.widget.LinearLayoutCompat;
+import androidx.core.os.BundleCompat;
 
 import com.google.android.material.button.MaterialButton;
 
@@ -24,7 +25,7 @@ import java.util.Locale;
 
 import io.github.muntashirakon.AppManager.R;
 import io.github.muntashirakon.AppManager.details.AppDetailsActivity;
-import io.github.muntashirakon.AppManager.imagecache.ImageLoader;
+import io.github.muntashirakon.AppManager.self.imagecache.ImageLoader;
 import io.github.muntashirakon.AppManager.utils.DateUtils;
 import io.github.muntashirakon.dialog.CapsuleBottomSheetDialogFragment;
 
@@ -43,8 +44,6 @@ public class RunningAppDetails extends CapsuleBottomSheetDialogFragment {
         return fragment;
     }
 
-    private final ImageLoader mImageLoader = new ImageLoader();
-
     @NonNull
     @Override
     public View initRootView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -54,7 +53,7 @@ public class RunningAppDetails extends CapsuleBottomSheetDialogFragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        ProcessItem processItem = requireArguments().getParcelable(ARG_PS_ITEM);
+        ProcessItem processItem = BundleCompat.getParcelable(requireArguments(), ARG_PS_ITEM, ProcessItem.class);
         if (processItem == null) {
             dismiss();
             return;
@@ -100,7 +99,7 @@ public class RunningAppDetails extends CapsuleBottomSheetDialogFragment {
         if (processItem instanceof AppProcessItem) {
             PackageInfo packageInfo = ((AppProcessItem) processItem).packageInfo;
             appContainer.setVisibility(View.VISIBLE);
-            mImageLoader.displayImage(packageInfo.packageName, packageInfo.applicationInfo, appIcon);
+            ImageLoader.getInstance().displayImage(packageInfo.packageName, packageInfo.applicationInfo, appIcon);
             appLabel.setText(packageInfo.applicationInfo.loadLabel(requireContext().getPackageManager()));
             packageName.setText(packageInfo.packageName);
             openAppInfoButton.setOnClickListener(v -> {

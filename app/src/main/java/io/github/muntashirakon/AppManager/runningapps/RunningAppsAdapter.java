@@ -5,6 +5,7 @@ package io.github.muntashirakon.AppManager.runningapps;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ApplicationInfo;
+import android.os.Process;
 import android.text.Spannable;
 import android.text.TextUtils;
 import android.text.format.Formatter;
@@ -33,15 +34,19 @@ import java.util.Collections;
 import java.util.List;
 
 import io.github.muntashirakon.AppManager.R;
-import io.github.muntashirakon.AppManager.ipc.ps.DeviceMemoryInfo;
+import io.github.muntashirakon.AppManager.compat.ManifestCompat;
 import io.github.muntashirakon.AppManager.logcat.LogViewerActivity;
 import io.github.muntashirakon.AppManager.logcat.struct.SearchCriteria;
+import io.github.muntashirakon.AppManager.self.SelfPermissions;
+import io.github.muntashirakon.AppManager.self.imagecache.ImageLoader;
 import io.github.muntashirakon.AppManager.settings.FeatureController;
 import io.github.muntashirakon.AppManager.settings.Ops;
+import io.github.muntashirakon.AppManager.settings.Prefs;
 import io.github.muntashirakon.AppManager.utils.LangUtils;
 import io.github.muntashirakon.AppManager.utils.UIUtils;
 import io.github.muntashirakon.AppManager.utils.appearance.ColorCodes;
 import io.github.muntashirakon.io.Paths;
+import io.github.muntashirakon.proc.ProcMemoryInfo;
 import io.github.muntashirakon.widget.MultiSelectionView;
 
 public class RunningAppsAdapter extends MultiSelectionView.Adapter<MultiSelectionView.ViewHolder> {
@@ -54,7 +59,7 @@ public class RunningAppsAdapter extends MultiSelectionView.Adapter<MultiSelectio
     private final Object mLock = new Object();
     @NonNull
     private List<ProcessItem> mProcessItems = Collections.emptyList();
-    private DeviceMemoryInfo mDeviceMemoryInfo;
+    private ProcMemoryInfo mProcMemoryInfo;
 
     private final int mCardColor;
     @ColorInt
@@ -63,7 +68,7 @@ public class RunningAppsAdapter extends MultiSelectionView.Adapter<MultiSelectio
     RunningAppsAdapter(@NonNull RunningAppsActivity activity) {
         super();
         mActivity = activity;
-        mModel = activity.mModel;
+        mModel = activity.model;
         mCardColor = ColorCodes.getListItemColor1(activity);
         mQueryStringHighlightColor = ColorCodes.getQueryStringHighlightColor(activity);
         mHighlightColor = ColorCodes.getListItemSelectionColor(activity);
@@ -77,8 +82,8 @@ public class RunningAppsAdapter extends MultiSelectionView.Adapter<MultiSelectio
         notifySelectionChange();
     }
 
-    public void setDeviceMemoryInfo(DeviceMemoryInfo deviceMemoryInfo) {
-        mDeviceMemoryInfo = deviceMemoryInfo;
+    public void setDeviceMemoryInfo(ProcMemoryInfo procMemoryInfo) {
+        mProcMemoryInfo = procMemoryInfo;
         notifyItemChanged(0);
     }
 
@@ -115,15 +120,15 @@ public class RunningAppsAdapter extends MultiSelectionView.Adapter<MultiSelectio
     }
 
     public void onBindViewHolder(@NonNull HeaderViewHolder holder) {
-        if (mDeviceMemoryInfo == null) {
+        if (mProcMemoryInfo == null) {
             return;
         }
         Context context = holder.itemView.getContext();
         // Memory
-        long appMemory = mDeviceMemoryInfo.getApplicationMemory();
-        long cachedMemory = mDeviceMemoryInfo.getCachedMemory();
-        long buffers = mDeviceMemoryInfo.getBuffers();
-        long freeMemory = mDeviceMemoryInfo.getFreeMemory();
+        long appMemory = mProcMemoryInfo.getApplicationMemory();
+        long cachedMemory = mProcMemoryInfo.getCachedMemory();
+        long buffers = mProcMemoryInfo.getBuffers();
+        long freeMemory = mProcMemoryInfo.getFreeMemory();
         double total = appMemory + cachedMemory + buffers + freeMemory;
         if (total == 0) {
             // Error due to parsing failure, etc.
@@ -139,19 +144,19 @@ public class RunningAppsAdapter extends MultiSelectionView.Adapter<MultiSelectio
             setLayoutWidth(holder.mMemoryInfoChartChildren[2], (int) (width * buffers / total));
         });
         holder.mMemoryShortInfoView.setText(UIUtils.getStyledKeyValue(context, R.string.memory, Formatter
-                .formatFileSize(context, mDeviceMemoryInfo.getUsedMemory()) + "/" + Formatter
-                .formatFileSize(context, mDeviceMemoryInfo.getTotalMemory())));
+                .formatFileSize(context, mProcMemoryInfo.getUsedMemory()) + "/" + Formatter
+                .formatFileSize(context, mProcMemoryInfo.getTotalMemory())));
         // Set color info
         Spannable memInfo = UIUtils.charSequenceToSpannable(context.getString(R.string.memory_chart_info, Formatter
                         .formatShortFileSize(context, appMemory), Formatter.formatShortFileSize(context, cachedMemory),
                 Formatter.formatShortFileSize(context, buffers), Formatter.formatShortFileSize(context, freeMemory)));
-        setColors(holder.itemView, memInfo, new int[]{R.attr.colorOnSurface, R.attr.colorPrimary, R.attr.colorTertiary,
-                R.attr.colorSurfaceVariant});
+        setColors(holder.itemView, memInfo, new int[]{com.google.android.material.R.attr.colorOnSurface, androidx.appcompat.R.attr.colorPrimary, com.google.android.material.R.attr.colorTertiary,
+                com.google.android.material.R.attr.colorSurfaceVariant});
         holder.mMemoryInfoView.setText(memInfo);
 
         // Swap
-        long usedSwap = mDeviceMemoryInfo.getUsedSwap();
-        long totalSwap = mDeviceMemoryInfo.getTotalSwap();
+        long usedSwap = mProcMemoryInfo.getUsedSwap();
+        long totalSwap = mProcMemoryInfo.getTotalSwap();
         if (totalSwap == 0) {
             holder.mSwapInfoChart.setVisibility(View.GONE);
             holder.mSwapShortInfoView.setVisibility(View.GONE);
@@ -168,7 +173,7 @@ public class RunningAppsAdapter extends MultiSelectionView.Adapter<MultiSelectio
         // Set color and size info
         Spannable swapInfo = UIUtils.charSequenceToSpannable(context.getString(R.string.swap_chart_info, Formatter
                 .formatShortFileSize(context, usedSwap), Formatter.formatShortFileSize(context, totalSwap - usedSwap)));
-        setColors(holder.itemView, swapInfo, new int[]{R.attr.colorOnSurface, R.attr.colorSurfaceVariant});
+        setColors(holder.itemView, swapInfo, new int[]{com.google.android.material.R.attr.colorOnSurface, com.google.android.material.R.attr.colorSurfaceVariant});
         holder.mSwapInfoView.setText(swapInfo);
     }
 
@@ -183,7 +188,8 @@ public class RunningAppsAdapter extends MultiSelectionView.Adapter<MultiSelectio
         } else applicationInfo = null;
         String processName = processItem.name;
         // Load icon
-        mActivity.imageLoader.displayImage(processName, applicationInfo, holder.icon);
+        holder.icon.setTag(processName);
+        ImageLoader.getInstance().displayImage(processName, applicationInfo, holder.icon);
         // Set process name
         holder.processName.setText(UIUtils.getHighlightedText(processName, mModel.getQuery(), mQueryStringHighlightColor));
         // Set package name
@@ -211,11 +217,12 @@ public class RunningAppsAdapter extends MultiSelectionView.Adapter<MultiSelectio
         // Set more
         holder.more.setOnClickListener(v -> {
             PopupMenu popupMenu = new PopupMenu(mActivity, holder.more);
+            popupMenu.setForceShowIcon(true);
             popupMenu.inflate(R.menu.activity_running_apps_popup_actions);
             Menu menu = popupMenu.getMenu();
             // Set kill
             MenuItem killItem = menu.findItem(R.id.action_kill);
-            if ((processItem.uid >= 10000 || mActivity.enableKillForSystem) && !Ops.isAdb()) {
+            if ((processItem.uid >= Process.FIRST_APPLICATION_UID || Prefs.RunningApps.enableKillForSystemApps()) && Ops.isRoot()) {
                 killItem.setVisible(true).setOnMenuItemClickListener(item -> {
                     mModel.killProcess(processItem);
                     return true;
@@ -242,14 +249,22 @@ public class RunningAppsAdapter extends MultiSelectionView.Adapter<MultiSelectio
                     return true;
                 });
             } else scanVtIem.setVisible(false);
-            // Set others
+            // Set force-stop
             MenuItem forceStopItem = menu.findItem(R.id.action_force_stop);
+            if (applicationInfo != null) {
+                forceStopItem.setOnMenuItemClickListener(item -> {
+                            mModel.forceStop(applicationInfo);
+                            return true;
+                        })
+                        .setEnabled(SelfPermissions.checkSelfOrRemotePermission(ManifestCompat.permission.FORCE_STOP_PACKAGES));
+            } else forceStopItem.setEnabled(false);
             MenuItem bgItem = menu.findItem(R.id.action_disable_background);
             if (applicationInfo != null) {
-                forceStopItem.setVisible(true).setOnMenuItemClickListener(item -> {
-                    mModel.forceStop(applicationInfo);
-                    return true;
-                });
+                forceStopItem.setOnMenuItemClickListener(item -> {
+                            mModel.forceStop(applicationInfo);
+                            return true;
+                        })
+                        .setVisible(SelfPermissions.checkSelfOrRemotePermission(ManifestCompat.permission.FORCE_STOP_PACKAGES));
                 if (mModel.canRunInBackground(applicationInfo)) {
                     bgItem.setVisible(true).setOnMenuItemClickListener(item -> {
                         mModel.preventBackgroundRun(applicationInfo);
@@ -284,7 +299,7 @@ public class RunningAppsAdapter extends MultiSelectionView.Adapter<MultiSelectio
     @Override
     public long getItemId(int position) {
         if (position == 0) {
-            return mDeviceMemoryInfo != null ? mDeviceMemoryInfo.hashCode() : View.NO_ID;
+            return mProcMemoryInfo != null ? mProcMemoryInfo.hashCode() : View.NO_ID;
         }
         synchronized (mLock) {
             return mProcessItems.get(position - 1).hashCode();

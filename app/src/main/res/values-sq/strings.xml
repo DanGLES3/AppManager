@@ -8,7 +8,6 @@
     <string name="uninstall">Fshi</string>
     <string name="class_name">Emri i klasës</string>
     <string name="uses_feature">Përdorimi veçorive</string>
-    <string name="edit_shortcut">Modifiko Shkurtoren</string>
     <string name="system">Sistemi</string>
     <string name="data_received">Të dhënat e marra</string>
     <string name="app_info">Info app</string>
@@ -39,11 +38,9 @@
     <string name="orientation">Orientimi</string>
     <string name="sort_by_package_name">Emri i paketës</string>
     <string name="sort_by_domain">App të user-it së pari</string>
-    <string name="error_invalid_icon_resource">Burim i pavlefshëm i ikonës</string>
     <string name="user">Përdoruesi</string>
     <string name="user_app">App te përdoruesit</string>
     <string name="app_not_installed">Aplikacioni nuk është i instaluar</string>
-    <string name="error_invalid_icon_format">Format i pavlefshëm i ikonës</string>
     <string name="about">Rreth</string>
     <string name="paths_and_directories">Rrugët &amp; Direktoritë</string>
     <string name="data_size">Të dhënat</string>
@@ -81,7 +78,6 @@
     <string name="signatures">Firmat</string>
     <string name="configurations">Konfigurimet</string>
     <string name="source_dir">Direktoria e burimit</string>
-    <string name="instructions">Udhëzimet</string>
     <string name="error_verbose_pin_shortcut">Lëshuesi aktual nuk e mbështet PinShortcut. Nuk mund të krijohet shkurtore.</string>
     <string name="credits">Kreditë</string>
     <string name="grant_uri_permission">Jepni lejet URI</string>
@@ -133,7 +129,6 @@
     <string name="keyboard_type">Lloji i tastierës</string>
     <string name="touchscreen">Ekran me prekje</string>
     <string name="force_stop">Ndalo me forcë</string>
-    <string name="sort_by_disabled_app">Te ç\'aktivizuarat së pari</string>
     <string name="view_in_settings">Shiko te Cilësimet</string>
     <string name="add_item">Shto artikull</string>
     <string name="day">Ditë</string>
@@ -181,7 +176,6 @@
     <string name="block_trackers">Blloko gjurmuesit</string>
     <string name="sort_by_component_name">Emri komponetëve</string>
     <string name="external_data_dir">Vedndodhja e të dhënave të jashtme</string>
-    <string name="store">Dyqani</string>
     <string name="user_with_id">Prdorues: <xliff:g id="user_id" example="0">%1$d</xliff:g></string>
     <string name="import_options">Opsionet e Importit</string>
     <string name="pref_import_msg">Importoni rregullat e bllokimit të eksportuara më parë nga \"Menaxheri i aplikacionit\".</string>
@@ -252,10 +246,6 @@
         <item quantity="one">%1$d hr</item>
         <item quantity="other">%1$d hrs</item>
     </plurals>
-    <plurals name="alert_failed_to_disable">
-        <item quantity="one">%1$d aplikacion nuk mund të çaktivizohet</item>
-        <item quantity="other">%1$d aplikacionet nuk mund të çaktivizohen</item>
-    </plurals>
     <plurals name="tracker_and_classes">
         <item quantity="one">1 tracker with <xliff:g id="class_no" example="50">%1$d</xliff:g> class</item>
         <item quantity="other">1 tracker with <xliff:g id="class_no" example="50">%1$d</xliff:g> classes</item>
@@ -298,8 +288,6 @@
     <string name="app_usage">Përdorimi aplikacionit</string>
     <string name="key_name">Emri kyç</string>
     <string name="enable">Aktivizo</string>
-    <string name="failed_to_disable">Nuk mund të Ç\'aktivizohet<xliff:g id="emri-app-it" shembull="App Manager">%1$s</xliff:g>.</string>
-    <string name="failed_to_enable">Nuk mund të aktivizohet <xliff:g id="emri_app-it" shembull="App Manager">%1$s</xliff:g>.</string>
     <string name="external_multiple_data_dir">Vendndodhja e të dhënave të jashtme <xliff:g id="dir_no" example="1">%1$d</xliff:g></string>
     <string name="app_settings">Cilësimet</string>
     <string name="running_apps">Aplikacionet ne ekzekutim</string>
@@ -330,4 +318,37 @@
         <item quantity="one">%1$d day</item>
         <item quantity="other">%1$d days</item>
     </plurals>
+    <string name="external_apk_no_app_op">APK-ja e jashtme nuk ka asnje veprim aplikacioni</string>
+    <string name="install">Instaloje</string>
+    <plurals name="no_of_trackers">
+        <item quantity="one">Gjurmuesi %1$d</item>
+        <item quantity="other">Gjurmuesat %1$d</item>
+    </plurals>
+    <plurals name="no_of_components">
+        <item quantity="one">Përbërësi %1$d</item>
+        <item quantity="other">Përbërësit %1$d</item>
+    </plurals>
+    <string name="failed_to_deny_dangerous_perms">Num munda t\'i heq të gjitha lejet e rrezikshme</string>
+    <string name="sort_by_denied_permissions">Të refuzuarat në fillim</string>
+    <string name="deny_dangerous_permissions">Refuzoji lejet e rrezikshme</string>
+    <string name="unknown_op">Veprim i panjohur</string>
+    <string name="failed_to_reset_app_ops">Nuk munda t\'i zeroj opset e aplikacionit</string>
+    <string name="launch_app">Lançoje</string>
+    <string name="changelog">Regjistri i ndryshimeve</string>
+    <string name="source_code">Kodi i burimit</string>
+    <string name="never_ask">Mos pyet kurrë</string>
+    <string name="one_click_ops">Opse me 1 klikim</string>
+    <string name="manifest_viewer">Shikuesi i manifestuar</string>
+    <string name="failed_to_deny_dangerous_app_ops">Nuk munda t\'i heq të gjitha opset e rrezikshme të aplikacionit</string>
+    <string name="sort_by_dangerous_permissions">Të rrezikshmet në fillim</string>
+    <string name="failed_to_grant_permission">Num munda t\'i jap lejen</string>
+    <string name="sort_by_app_ops_values">Vlera ops e aplikacionit</string>
+    <string name="failed_to_revoke_permission">Nuk munda t\'i heq lejen</string>
+    <string name="sort_by_permission_names">Emri i lejes</string>
+    <plurals name="alert_failed_to_disable_trackers">
+        <item quantity="one">Nuk munda t\'i heq gjurmuesit nga aplikacioni %1$d</item>
+        <item quantity="other">Nuk munda t\'i heq gjurmuesit nga aplikacionet %1$d</item>
+    </plurals>
+    <string name="update">Përditësoje</string>
+    <string name="sort_by_tracker_components">Gjurmuesit në fillim</string>
 </resources>

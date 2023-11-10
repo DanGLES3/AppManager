@@ -3,13 +3,12 @@
 package io.github.muntashirakon.AppManager.logcat;
 
 import android.app.Activity;
-import android.content.ClipData;
-import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.Intent;
 import android.database.MatrixCursor;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.PowerManager;
 import android.provider.BaseColumns;
 import android.text.TextUtils;
 import android.view.MenuItem;
@@ -25,7 +24,6 @@ import androidx.annotation.Nullable;
 import androidx.annotation.WorkerThread;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.widget.SearchView;
 import androidx.core.content.ContextCompat;
 import androidx.cursoradapter.widget.CursorAdapter;
 import androidx.cursoradapter.widget.SimpleCursorAdapter;
@@ -58,25 +56,24 @@ import io.github.muntashirakon.AppManager.logcat.helper.SaveLogHelper;
 import io.github.muntashirakon.AppManager.logcat.helper.ServiceHelper;
 import io.github.muntashirakon.AppManager.logcat.struct.LogLine;
 import io.github.muntashirakon.AppManager.logcat.struct.SearchCriteria;
+import io.github.muntashirakon.AppManager.settings.Prefs;
 import io.github.muntashirakon.AppManager.settings.SettingsActivity;
-import io.github.muntashirakon.AppManager.utils.AppPref;
 import io.github.muntashirakon.AppManager.utils.BetterActivityResult;
+import io.github.muntashirakon.AppManager.utils.CpuUtils;
 import io.github.muntashirakon.AppManager.utils.MultithreadedExecutor;
 import io.github.muntashirakon.AppManager.utils.StoragePermission;
+import io.github.muntashirakon.AppManager.utils.ThreadUtils;
 import io.github.muntashirakon.AppManager.utils.UIUtils;
-import io.github.muntashirakon.AppManager.utils.UiThreadHandler;
 import io.github.muntashirakon.dialog.TextInputDropdownDialogBuilder;
 import io.github.muntashirakon.io.Path;
 import io.github.muntashirakon.io.Paths;
 import io.github.muntashirakon.util.UiUtils;
-
-import static io.github.muntashirakon.AppManager.logcat.LogViewerRecyclerAdapter.CONTEXT_MENU_COPY_ID;
-import static io.github.muntashirakon.AppManager.logcat.LogViewerRecyclerAdapter.CONTEXT_MENU_FILTER_ID;
+import io.github.muntashirakon.widget.SearchView;
 
 // Copyright 2012 Nolan Lawson
 // Copyright 2021 Muntashir Al-Islam
 public class LogViewerActivity extends BaseActivity implements SearchView.OnQueryTextListener,
-        LogViewerRecyclerAdapter.ViewHolder.OnClickListener, SearchView.OnSuggestionListener {
+        LogViewerRecyclerAdapter.ViewHolder.OnSearchByClickListener, SearchView.OnSuggestionListener {
     public static final String TAG = LogViewerActivity.class.getSimpleName();
 
     public interface SearchingInterface {
@@ -92,7 +89,7 @@ public class LogViewerActivity extends BaseActivity implements SearchView.OnQuer
     // how many suggestions to keep in the autosuggestions text
     private static final int MAX_NUM_SUGGESTIONS = 1000;
 
-    private static final String INTENT_FILENAME = "filename";
+    public static final String EXTRA_FILENAME = "filename";
 
     private LinearProgressIndicator mProgressIndicator;
     private ExtendedFloatingActionButton mStopRecordingFab;
@@ -107,12 +104,13 @@ public class LogViewerActivity extends BaseActivity implements SearchView.OnQuer
     @Nullable
     private SearchingInterface mSearchingInterface;
     private LogViewerViewModel mViewModel;
+    private PowerManager.WakeLock mWakeLock;
 
-    private final MultithreadedExecutor executor = MultithreadedExecutor.getNewInstance();
-    private final BetterActivityResult<Intent, ActivityResult> activityLauncher =
+    private final MultithreadedExecutor mExecutor = MultithreadedExecutor.getNewInstance();
+    private final BetterActivityResult<Intent, ActivityResult> mActivityLauncher =
             BetterActivityResult.registerActivityForResult(this);
-    private final StoragePermission storagePermission = StoragePermission.init(this);
-    private final BetterActivityResult<String, Uri> saveLauncher = BetterActivityResult
+    private final StoragePermission mStoragePermission = StoragePermission.init(this);
+    private final BetterActivityResult<String, Uri> mSaveLauncher = BetterActivityResult
             .registerForActivityResult(this, new ActivityResultContracts.CreateDocument("*/*"));
 
     public static void startChooser(@NonNull Context context, @Nullable String subject,
@@ -148,17 +146,17 @@ public class LogViewerActivity extends BaseActivity implements SearchView.OnQuer
             mSearchView.setOnSuggestionListener(this);
         }
 
-        mSearchSuggestionsAdapter = new SimpleCursorAdapter(this, R.layout.item_checked_text_view, null,
+        mSearchSuggestionsAdapter = new SimpleCursorAdapter(this, io.github.muntashirakon.ui.R.layout.auto_complete_dropdown_item, null,
                 new String[]{"suggestion"}, new int[]{android.R.id.text1},
                 CursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER);
         mSearchView.setSuggestionsAdapter(mSearchSuggestionsAdapter);
 
         // Set removal of sensitive info
-        LogLine.omitSensitiveInfo = AppPref.getBoolean(AppPref.PrefKey.PREF_LOG_VIEWER_OMIT_SENSITIVE_INFO_BOOL);
+        LogLine.omitSensitiveInfo = Prefs.LogViewer.omitSensitiveInfo();
 
         if ("record".equals(getIntent().getStringExtra("shortcut_action"))) {
             // Handle shortcut
-            storagePermission.request(granted -> {
+            mStoragePermission.request(granted -> {
                 if (granted) {
                     startLogRecorder();
                 }
@@ -172,10 +170,8 @@ public class LogViewerActivity extends BaseActivity implements SearchView.OnQuer
         });
 
         // Set collapsed mode
-        mViewModel.setCollapsedMode(!AppPref.getBoolean(AppPref.PrefKey.PREF_LOG_VIEWER_EXPAND_BY_DEFAULT_BOOL));
+        mViewModel.setCollapsedMode(!Prefs.LogViewer.expandByDefault());
 
-        // Grant read logs permission if not already
-        mViewModel.grantReadLogsPermission();
         // It doesn't matter whether the permission has been granted or not, we can start logging
         mViewModel.observeLoggingFinished().observe(this, finished -> {
             if (finished) {
@@ -216,7 +212,7 @@ public class LogViewerActivity extends BaseActivity implements SearchView.OnQuer
                         sendLogDetails.getAttachment());
             } else {
                 // Open SAF activity
-                saveLauncher.launch(sendLogDetails.getAttachment().getName(), uri -> {
+                mSaveLauncher.launch(sendLogDetails.getAttachment().getName(), uri -> {
                     if (uri == null) return;
                     mViewModel.saveLogs(Paths.get(uri), sendLogDetails);
                 });
@@ -244,10 +240,10 @@ public class LogViewerActivity extends BaseActivity implements SearchView.OnQuer
 
     private void startLogRecorder() {
         String logFilename = SaveLogHelper.createLogFilename();
-        executor.submit(() -> {
+        mExecutor.submit(() -> {
             // Start recording logs
             Intent intent = ServiceHelper.getLogcatRecorderServiceIfNotAlreadyRunning(this, logFilename,
-                    "", AppPref.getInt(AppPref.PrefKey.PREF_LOG_VIEWER_DEFAULT_LOG_LEVEL_INT));
+                    "", Prefs.LogViewer.getLogLevel());
             runOnUiThread(() -> {
                 if (intent != null) {
                     ContextCompat.startForegroundService(this, intent);
@@ -267,12 +263,14 @@ public class LogViewerActivity extends BaseActivity implements SearchView.OnQuer
     private void startLogging() {
         applyFiltersFromIntent(getIntent());
         Uri dataUri = IntentCompat.getDataUri(getIntent());
-        String filename = getIntent().getStringExtra(INTENT_FILENAME);
+        String filename = getIntent().getStringExtra(EXTRA_FILENAME);
         if (dataUri != null) {
             openLogFile(dataUri);
         } else if (filename != null) {
             openLogFile(filename);
         } else {
+            mWakeLock = CpuUtils.getPartialWakeLock("logcat_activity");
+            mWakeLock.acquire();
             startLiveLogViewer(false);
         }
     }
@@ -310,7 +308,7 @@ public class LogViewerActivity extends BaseActivity implements SearchView.OnQuer
         super.onNewIntent(intent);
         applyFiltersFromIntent(intent);
         Uri dataUri = IntentCompat.getDataUri(intent);
-        String filename = intent.getStringExtra(INTENT_FILENAME);
+        String filename = intent.getStringExtra(EXTRA_FILENAME);
         if (dataUri != null) {
             openLogFile(dataUri);
         } else if (filename != null) {
@@ -320,8 +318,9 @@ public class LogViewerActivity extends BaseActivity implements SearchView.OnQuer
 
     @Override
     public void onDestroy() {
+        CpuUtils.releaseWakeLock(mWakeLock);
         super.onDestroy();
-        executor.shutdownNow();
+        mExecutor.shutdownNow();
     }
 
     private void startLiveLogViewer(boolean force) {
@@ -381,22 +380,14 @@ public class LogViewerActivity extends BaseActivity implements SearchView.OnQuer
     }
 
     @Override
-    public boolean onMenuItemClick(MenuItem item, LogLine logLine) {
+    public boolean onSearchByClick(MenuItem item, LogLine logLine) {
         if (logLine != null) {
-            switch (item.getItemId()) {
-                case CONTEXT_MENU_COPY_ID:
-                    ClipboardManager clipboard = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
-                    clipboard.setPrimaryClip(ClipData.newPlainText(null, logLine.getOriginalLine()));
-                    Toast.makeText(this, R.string.copied_to_clipboard, Toast.LENGTH_SHORT).show();
-                    return true;
-                case CONTEXT_MENU_FILTER_ID:
-                    if (logLine.getProcessId() == -1) {
-                        // invalid line
-                        return false;
-                    }
-                    showSearchByDialog(logLine);
-                    return true;
+            if (logLine.getProcessId() == -1) {
+                // invalid line
+                return false;
             }
+            showSearchByDialog(logLine);
+            return true;
         }
         return false;
     }
@@ -430,8 +421,10 @@ public class LogViewerActivity extends BaseActivity implements SearchView.OnQuer
         return false;
     }
 
-    LinearProgressIndicator getProgressBar() {
-        return mProgressIndicator;
+    void hideProgressBar() {
+        if (mProgressIndicator != null) {
+            mProgressIndicator.hide();
+        }
     }
 
     void setLogsToBeShared(boolean logsToBeShared, boolean displayLoader) {
@@ -452,9 +445,9 @@ public class LogViewerActivity extends BaseActivity implements SearchView.OnQuer
 
     void displayLogViewerSettings() {
         Intent intent = SettingsActivity.getIntent(this, "log_viewer_prefs");
-        activityLauncher.launch(intent, result -> {
+        mActivityLauncher.launch(intent, result -> {
             // Preferences may have changed
-            mViewModel.setCollapsedMode(!AppPref.getBoolean(AppPref.PrefKey.PREF_LOG_VIEWER_EXPAND_BY_DEFAULT_BOOL));
+            mViewModel.setCollapsedMode(!Prefs.LogViewer.expandByDefault());
             if (result.getResultCode() == Activity.RESULT_FIRST_USER) {
                 Intent data = result.getData();
                 if (data != null && data.getBooleanExtra("bufferChanged", false)) {
@@ -469,7 +462,7 @@ public class LogViewerActivity extends BaseActivity implements SearchView.OnQuer
         View view = View.inflate(this, R.layout.dialog_searchby, null);
         AlertDialog dialog = new MaterialAlertDialogBuilder(this)
                 .setTitle(R.string.filter_choice)
-                .setIcon(R.drawable.ic_search)
+                .setIcon(io.github.muntashirakon.ui.R.drawable.ic_search)
                 .setView(view)
                 .setNegativeButton(R.string.close, null)
                 .show();
@@ -537,11 +530,11 @@ public class LogViewerActivity extends BaseActivity implements SearchView.OnQuer
     protected void handleNewFilterText(String text, final LogFilterAdapter logFilterAdapter) {
         final String trimmed = text.trim();
         if (!TextUtils.isEmpty(trimmed)) {
-            executor.submit(() -> {
+            mExecutor.submit(() -> {
                 LogFilterDao dao = AppsDb.getInstance().logFilterDao();
                 long id = dao.insert(trimmed);
                 LogFilter logFilter = dao.get(id);
-                UiThreadHandler.run(() -> {
+                ThreadUtils.postOnMainThread(() -> {
                     if (logFilter != null) {
                         logFilterAdapter.add(logFilter);
                         logFilterAdapter.sort(LogFilter.COMPARATOR);
@@ -588,14 +581,14 @@ public class LogViewerActivity extends BaseActivity implements SearchView.OnQuer
     }
 
     private void resetDisplay() {
-        mViewModel.setCollapsedMode(!AppPref.getBoolean(AppPref.PrefKey.PREF_LOG_VIEWER_EXPAND_BY_DEFAULT_BOOL));
+        mViewModel.setCollapsedMode(!Prefs.LogViewer.expandByDefault());
         // Populate suggestions with existing filters (if any)
-        executor.submit(this::addFiltersToSuggestions);
+        mExecutor.submit(this::addFiltersToSuggestions);
         resetFilter();
     }
 
     private void resetFilter() {
-        mViewModel.setLogLevel(AppPref.getInt(AppPref.PrefKey.PREF_LOG_VIEWER_DEFAULT_LOG_LEVEL_INT));
+        mViewModel.setLogLevel(Prefs.LogViewer.getLogLevel());
         search(mSearchQuery);
     }
 

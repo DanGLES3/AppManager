@@ -2,24 +2,38 @@
 
 package io.github.muntashirakon.AppManager.utils;
 
+import static io.github.muntashirakon.AppManager.compat.PackageManagerCompat.MATCH_DISABLED_COMPONENTS;
+import static io.github.muntashirakon.AppManager.compat.PackageManagerCompat.MATCH_UNINSTALLED_PACKAGES;
+import static io.github.muntashirakon.AppManager.utils.UIUtils.getBoldString;
+import static io.github.muntashirakon.AppManager.utils.UIUtils.getColoredText;
+import static io.github.muntashirakon.AppManager.utils.UIUtils.getMonospacedText;
+import static io.github.muntashirakon.AppManager.utils.UIUtils.getPrimaryText;
+import static io.github.muntashirakon.AppManager.utils.UIUtils.getStyledKeyValue;
+import static io.github.muntashirakon.AppManager.utils.UIUtils.getTitleText;
+
 import android.annotation.SuppressLint;
 import android.annotation.UserIdInt;
 import android.app.usage.IStorageStatsManager;
 import android.app.usage.StorageStats;
 import android.content.ComponentName;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.ComponentInfo;
 import android.content.pm.IPackageManager;
 import android.content.pm.IPackageStatsObserver;
+import android.content.pm.LauncherActivityInfo;
+import android.content.pm.LauncherApps;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
-import android.content.pm.PackageStats;
+import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.pm.Signature;
 import android.content.pm.SigningInfo;
 import android.os.Build;
+import android.os.PowerManager;
 import android.os.RemoteException;
+import android.os.UserHandle;
 import android.os.UserHandleHidden;
 import android.os.storage.StorageManagerHidden;
 import android.system.ErrnoException;
@@ -29,12 +43,14 @@ import android.util.Pair;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.RequiresPermission;
 import androidx.annotation.WorkerThread;
 import androidx.core.content.pm.PackageInfoCompat;
 
 import com.android.apksig.ApkVerifier;
 import com.android.apksig.apk.ApkFormatException;
-import com.android.internal.util.TextUtils;
+
+import org.jetbrains.annotations.Contract;
 
 import java.io.File;
 import java.io.IOException;
@@ -49,23 +65,23 @@ import java.security.interfaces.RSAPublicKey;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
-import io.github.muntashirakon.AppManager.AppManager;
+import aosp.libcore.util.HexEncoding;
 import io.github.muntashirakon.AppManager.R;
+import io.github.muntashirakon.AppManager.apk.signing.Signer;
 import io.github.muntashirakon.AppManager.apk.signing.SignerInfo;
-import io.github.muntashirakon.AppManager.appops.AppOpsManager;
-import io.github.muntashirakon.AppManager.appops.AppOpsService;
-import io.github.muntashirakon.AppManager.backup.BackupUtils;
+import io.github.muntashirakon.AppManager.compat.AppOpsManagerCompat;
 import io.github.muntashirakon.AppManager.compat.PackageManagerCompat;
 import io.github.muntashirakon.AppManager.db.entity.App;
 import io.github.muntashirakon.AppManager.db.entity.Backup;
@@ -73,7 +89,7 @@ import io.github.muntashirakon.AppManager.db.utils.AppDb;
 import io.github.muntashirakon.AppManager.ipc.ProxyBinder;
 import io.github.muntashirakon.AppManager.logs.Log;
 import io.github.muntashirakon.AppManager.main.ApplicationItem;
-import io.github.muntashirakon.AppManager.misc.OsEnvironment;
+import io.github.muntashirakon.AppManager.misc.OidMap;
 import io.github.muntashirakon.AppManager.rules.RuleType;
 import io.github.muntashirakon.AppManager.rules.compontents.ComponentUtils;
 import io.github.muntashirakon.AppManager.runner.Runner;
@@ -87,58 +103,19 @@ import io.github.muntashirakon.io.Path;
 import io.github.muntashirakon.io.Paths;
 import io.github.muntashirakon.io.UidGidPair;
 
-import static io.github.muntashirakon.AppManager.utils.UIUtils.getBoldString;
-import static io.github.muntashirakon.AppManager.utils.UIUtils.getColoredText;
-import static io.github.muntashirakon.AppManager.utils.UIUtils.getMonospacedText;
-import static io.github.muntashirakon.AppManager.utils.UIUtils.getPrimaryText;
-import static io.github.muntashirakon.AppManager.utils.UIUtils.getStyledKeyValue;
-import static io.github.muntashirakon.AppManager.utils.UIUtils.getTitleText;
-
 public final class PackageUtils {
     public static final String TAG = PackageUtils.class.getSimpleName();
 
     public static final File PACKAGE_STAGING_DIRECTORY = new File("/data/local/tmp");
-
-    public static final int flagSigningInfo;
-    public static final int flagSigningInfoApk;
-    public static final int flagDisabledComponents;
-    public static final int flagMatchUninstalled;
-
-    static {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-            flagSigningInfo = PackageManager.GET_SIGNING_CERTIFICATES;
-        } else {
-            //noinspection deprecation
-            flagSigningInfo = PackageManager.GET_SIGNATURES;
-        }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            flagSigningInfoApk = PackageManager.GET_SIGNING_CERTIFICATES;
-        } else {
-            //noinspection deprecation
-            flagSigningInfoApk = PackageManager.GET_SIGNATURES;
-        }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            flagDisabledComponents = PackageManager.MATCH_DISABLED_COMPONENTS;
-        } else {
-            //noinspection deprecation
-            flagDisabledComponents = PackageManager.GET_DISABLED_COMPONENTS;
-        }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            flagMatchUninstalled = PackageManager.MATCH_UNINSTALLED_PACKAGES;
-        } else {
-            //noinspection deprecation
-            flagMatchUninstalled = PackageManager.GET_UNINSTALLED_PACKAGES;
-        }
-    }
 
     @NonNull
     public static ArrayList<UserPackagePair> getUserPackagePairs(@NonNull List<ApplicationItem> applicationItems) {
         ArrayList<UserPackagePair> userPackagePairList = new ArrayList<>();
         int currentUser = UserHandleHidden.myUserId();
         for (ApplicationItem item : applicationItems) {
-            if (item.userHandles != null) {
-                for (int userHandle : item.userHandles)
-                    userPackagePairList.add(new UserPackagePair(item.packageName, userHandle));
+            if (item.userIds.length > 0) {
+                for (int userId : item.userIds)
+                    userPackagePairList.add(new UserPackagePair(item.packageName, userId));
             } else {
                 userPackagePairList.add(new UserPackagePair(item.packageName, currentUser));
             }
@@ -149,74 +126,88 @@ public final class PackageUtils {
     /**
      * List all applications stored in App Manager database as well as from the system.
      *
-     * @param executor    Retrieve applications from the system using the given thread instead of the current thread.
-     * @param loadBackups Load/List backup metadata
+     * @param loadInBackground Retrieve applications from the system using the given thread instead of the current thread.
+     * @param loadBackups      Load/List backup metadata
      * @return List of applications, which could be the cached version if the executor parameter is {@code null}.
      */
     @WorkerThread
     @NonNull
     public static List<ApplicationItem> getInstalledOrBackedUpApplicationsFromDb(@NonNull Context context,
-                                                                                 @Nullable ExecutorService executor,
+                                                                                 boolean loadInBackground,
                                                                                  boolean loadBackups) {
         HashMap<String, ApplicationItem> applicationItems = new HashMap<>();
         AppDb appDb = new AppDb();
         List<App> apps = appDb.getAllApplications();
-        if (apps.size() == 0 || executor == null) {
-            // Load app list for the first time
-            Log.d(TAG, "Loading apps for the first time.");
-            appDb.loadInstalledOrBackedUpApplications(context);
-            apps = appDb.getAllApplications();
-        } else {
-            // Update list of apps safely in the background
-            executor.submit(() -> {
-                appDb.updateApplications(context);
-                if (loadBackups) {
-                    appDb.updateBackups(context);
-                }
-            });
+        if (loadInBackground && apps.isEmpty()) {
+            // Force-load in foreground
+            loadInBackground = false;
         }
-        HashMap<String, Backup> backups = BackupUtils.getAllLatestBackupMetadataFromDb();
+        if (!loadInBackground) {
+            PowerManager.WakeLock wakeLock = CpuUtils.getPartialWakeLock("appDbUpdater");
+            try {
+                wakeLock.acquire();
+                // Load app list for the first time
+                Log.d(TAG, "Loading apps for the first time.");
+                appDb.loadInstalledOrBackedUpApplications(context);
+                apps = appDb.getAllApplications();
+            } finally {
+                CpuUtils.releaseWakeLock(wakeLock);
+            }
+        }
+        Map<String, Backup> backups = appDb.getBackups(false);
         int thisUser = UserHandleHidden.myUserId();
         // Get application items from apps
         for (App app : apps) {
-            ApplicationItem item = new ApplicationItem();
-            item.packageName = app.packageName;
+            ApplicationItem item;
+            ApplicationItem oldItem = applicationItems.get(app.packageName);
             if (app.isInstalled) {
-                ApplicationItem oldItem = applicationItems.get(app.packageName);
+                boolean newItem = oldItem == null || !oldItem.isInstalled;
                 if (oldItem != null) {
-                    // Item already exists, add the user handle and continue
-                    oldItem.userHandles = ArrayUtils.appendInt(oldItem.userHandles, app.userId);
-                    oldItem.isInstalled = true;
-                    if (app.userId != thisUser) {
-                        // This user has the highest priority
-                        continue;
-                    }
+                    // Item already exists
                     item = oldItem;
                 } else {
-                    // Item doesn't exist, add the user handle
-                    item.userHandles = ArrayUtils.appendInt(item.userHandles, app.userId);
-                    item.isInstalled = true;
+                    // Item doesn't exist
+                    item = new ApplicationItem();
                     applicationItems.put(app.packageName, item);
+                    item.packageName = app.packageName;
+                }
+                item.userIds = ArrayUtils.appendInt(item.userIds, app.userId);
+                item.isInstalled = true;
+                item.openCount += app.openCount;
+                item.screenTime += app.screenTime;
+                if (item.lastUsageTime == 0L || item.lastUsageTime < app.lastUsageTime) {
+                    item.lastUsageTime = app.lastUsageTime;
+                }
+                item.hasKeystore |= app.hasKeystore;
+                item.usesSaf |= app.usesSaf;
+                if (app.ssaid != null) {
+                    item.ssaid = app.ssaid;
+                }
+                item.totalSize += app.codeSize + app.dataSize;
+                item.dataUsage += app.wifiDataUsage + app.mobileDataUsage;
+                if (!newItem && app.userId != thisUser) {
+                    // This user has the highest priority
+                    continue;
                 }
             } else {
                 // App not installed but may be installed in other profiles
-                if (applicationItems.containsKey(app.packageName)) {
+                if (oldItem != null) {
                     // Item exists, use the previous status
                     continue;
                 } else {
                     // Item doesn't exist, don't add user handle
+                    item = new ApplicationItem();
+                    item.packageName = app.packageName;
+                    applicationItems.put(app.packageName, item);
                     item.isInstalled = false;
+                    item.hasKeystore |= app.hasKeystore;
                 }
-                applicationItems.put(app.packageName, item);
             }
-            if (backups.containsKey(item.packageName)) {
-                item.backup = backups.get(item.packageName);
-                backups.remove(item.packageName);
-            }
+            item.backup = backups.remove(item.packageName);
             item.flags = app.flags;
             item.uid = app.uid;
-            item.debuggable = (app.flags & ApplicationInfo.FLAG_DEBUGGABLE) != 0;
-            item.isUser = (app.flags & ApplicationInfo.FLAG_SYSTEM) == 0;
+            item.debuggable = app.isDebuggable();
+            item.isUser = !app.isSystemApp();
             item.isDisabled = !app.isEnabled;
             item.label = app.packageLabel;
             item.sdk = app.sdk;
@@ -231,12 +222,6 @@ public final class PackageUtils {
             item.blockedCount = app.rulesCount;
             item.trackerCount = app.trackerCount;
             item.lastActionTime = app.lastActionTime;
-            for (int userId : item.userHandles) {
-                PackageSizeInfo sizeInfo = getPackageSizeInfo(context, item.packageName, userId, null);
-                if (sizeInfo != null) {
-                    item.totalSize += sizeInfo.getTotalSize();
-                }
-            }
         }
         // Add rest of the backups
         for (String packageName : backups.keySet()) {
@@ -244,6 +229,7 @@ public final class PackageUtils {
             if (backup == null) continue;
             ApplicationItem item = new ApplicationItem();
             item.packageName = backup.packageName;
+            applicationItems.put(backup.packageName, item);
             item.backup = backup;
             item.versionName = backup.versionName;
             item.versionCode = backup.versionCode;
@@ -254,29 +240,70 @@ public final class PackageUtils {
             item.isDisabled = false;
             item.isInstalled = false;
             item.hasSplits = backup.hasSplits;
-            applicationItems.put(backup.packageName, item);
+            item.hasKeystore = backup.hasKeyStore;
+        }
+        if (loadInBackground) {
+            // Update list of apps safely in the background.
+            // We need to do this here to avoid locks in AppDb
+            ThreadUtils.postOnBackgroundThread(() -> {
+                PowerManager.WakeLock wakeLock = CpuUtils.getPartialWakeLock("appDbUpdater");
+                try {
+                    wakeLock.acquire();
+                    if (loadBackups) {
+                        appDb.loadInstalledOrBackedUpApplications(context);
+                    } else appDb.updateApplications(context);
+                } finally {
+                    CpuUtils.releaseWakeLock(wakeLock);
+                }
+            });
         }
         return new ArrayList<>(applicationItems.values());
     }
 
     @NonNull
     public static List<PackageInfo> getAllPackages(int flags) {
-        List<PackageInfo> applicationInfoList = new ArrayList<>();
-        for (int userId : Users.getUsersIds()) {
-            try {
-                applicationInfoList.addAll(PackageManagerCompat.getInstalledPackages(flags, userId));
-            } catch (RemoteException ignore) {
-            }
-        }
-        return applicationInfoList;
+        return getAllPackages(flags, false);
     }
 
     @NonNull
+    public static List<PackageInfo> getAllPackages(int flags, boolean currentUserOnly) {
+        if (currentUserOnly) {
+            return ExUtils.requireNonNullElse(() -> PackageManagerCompat.getInstalledPackages(flags,
+                    UserHandleHidden.myUserId()), Collections.emptyList());
+        }
+        List<PackageInfo> packageInfoList = new ArrayList<>();
+        for (int userId : Users.getUsersIds()) {
+            try {
+                packageInfoList.addAll(PackageManagerCompat.getInstalledPackages(flags, userId));
+                if (ThreadUtils.isInterrupted()) {
+                    break;
+                }
+            } catch (Exception e) {
+                Log.w(TAG, "Could not retrieve package info list for user " + userId, e);
+            }
+        }
+        return packageInfoList;
+    }
+
+
+    @NonNull
     public static List<ApplicationInfo> getAllApplications(int flags) {
+        return getAllApplications(flags, false);
+    }
+
+    @NonNull
+    public static List<ApplicationInfo> getAllApplications(int flags, boolean currentUserOnly) {
+        if (currentUserOnly) {
+            return ExUtils.requireNonNullElse(() -> PackageManagerCompat.getInstalledApplications(flags,
+                    UserHandleHidden.myUserId()), Collections.emptyList());
+        }
         List<ApplicationInfo> applicationInfoList = new ArrayList<>();
         for (int userId : Users.getUsersIds()) {
             try {
                 applicationInfoList.addAll(PackageManagerCompat.getInstalledApplications(flags, userId));
+                if (ThreadUtils.isInterrupted()) {
+                    break;
+                }
             } catch (RemoteException ignore) {
             }
         }
@@ -284,6 +311,7 @@ public final class PackageUtils {
     }
 
     @WorkerThread
+    @RequiresPermission("android.permission.PACKAGE_USAGE_STATS")
     @Nullable
     public static PackageSizeInfo getPackageSizeInfo(@NonNull Context context, @NonNull String packageName,
                                                      @UserIdInt int userHandle, @Nullable UUID storageUuid) {
@@ -303,7 +331,7 @@ public final class PackageUtils {
                         new IPackageStatsObserver.Stub() {
                             @SuppressWarnings("deprecation")
                             @Override
-                            public void onGetStatsCompleted(final PackageStats pStats, boolean succeeded) {
+                            public void onGetStatsCompleted(final android.content.pm.PackageStats pStats, boolean succeeded) {
                                 try {
                                     if (succeeded) packageSizeInfo.set(new PackageSizeInfo(pStats));
                                 } finally {
@@ -315,7 +343,7 @@ public final class PackageUtils {
             } catch (RemoteException | InterruptedException | SecurityException e) {
                 Log.e(TAG, e);
             }
-        } else if (PermissionUtils.hasUsageStatsPermission(context)) {
+        } else {
             try {
                 IStorageStatsManager storageStatsManager = IStorageStatsManager.Stub.asInterface(ProxyBinder
                         .getService(Context.STORAGE_STATS_SERVICE));
@@ -323,8 +351,8 @@ public final class PackageUtils {
                 StorageStats storageStats = storageStatsManager.queryStatsForPackage(uuidString, packageName,
                         userHandle, context.getPackageName());
                 packageSizeInfo.set(new PackageSizeInfo(packageName, storageStats, userHandle));
-            } catch (RemoteException e) {
-                Log.e(TAG, e);
+            } catch (Throwable e) {
+                Log.w(TAG, e);
             }
         }
         return packageSizeInfo.get();
@@ -335,7 +363,8 @@ public final class PackageUtils {
         try {
             PackageInfo packageInfo = PackageManagerCompat.getPackageInfo(packageName,
                     PackageManager.GET_ACTIVITIES | PackageManager.GET_RECEIVERS | PackageManager.GET_PROVIDERS
-                            | flagDisabledComponents | flagMatchUninstalled | PackageManager.GET_SERVICES,
+                            | MATCH_DISABLED_COMPONENTS | MATCH_UNINSTALLED_PACKAGES | PackageManager.GET_SERVICES
+                            | PackageManagerCompat.MATCH_STATIC_SHARED_AND_SDK_LIBRARIES,
                     userHandle);
             return collectComponentClassNames(packageInfo);
         } catch (Throwable e) {
@@ -351,10 +380,6 @@ public final class PackageUtils {
         // Add activities
         if (packageInfo.activities != null) {
             for (ActivityInfo activityInfo : packageInfo.activities) {
-                if (activityInfo.targetActivity != null) {
-                    // We need real class name exclusively
-                    componentClasses.put(activityInfo.targetActivity, RuleType.ACTIVITY);
-                }
                 componentClasses.put(activityInfo.name, RuleType.ACTIVITY);
             }
         }
@@ -391,11 +416,11 @@ public final class PackageUtils {
     @NonNull
     public static Collection<Integer> getFilteredAppOps(String packageName, @UserIdInt int userHandle, @NonNull int[] appOps, int mode) {
         List<Integer> filteredAppOps = new ArrayList<>();
-        AppOpsService appOpsService = new AppOpsService();
+        AppOpsManagerCompat appOpsManager = new AppOpsManagerCompat();
         int uid = PackageUtils.getAppUid(new UserPackagePair(packageName, userHandle));
         for (int appOp : appOps) {
             try {
-                if (appOpsService.checkOperation(appOp, uid, packageName) != mode) {
+                if (appOpsManager.checkOperation(appOp, uid, packageName) != mode) {
                     filteredAppOps.add(appOp);
                 }
             } catch (Exception e) {
@@ -406,47 +431,88 @@ public final class PackageUtils {
     }
 
     @NonNull
-    public static HashMap<String, RuleType> getUserDisabledComponentsForPackage(String packageName, @UserIdInt int userHandle) {
-        HashMap<String, RuleType> componentClasses = collectComponentClassNames(packageName, userHandle);
+    public static HashMap<String, RuleType> getUserDisabledComponentsForPackage(String packageName, @UserIdInt int userId) {
+        HashMap<String, RuleType> componentClasses = collectComponentClassNames(packageName, userId);
         HashMap<String, RuleType> disabledComponents = new HashMap<>();
-        PackageManager pm = AppManager.getContext().getPackageManager();
         for (String componentName : componentClasses.keySet()) {
-            if (isComponentDisabledByUser(pm, packageName, componentName))
-                disabledComponents.put(componentName, componentClasses.get(componentName));
+            try {
+                if (isComponentDisabledByUser(packageName, componentName, userId)) {
+                    disabledComponents.put(componentName, componentClasses.get(componentName));
+                }
+            } catch (NameNotFoundException ignore) {
+                // Component unavailable
+            }
         }
         disabledComponents.putAll(ComponentUtils.getIFWRulesForPackage(packageName));
         return disabledComponents;
     }
 
     @SuppressLint("SwitchIntDef")
-    public static boolean isComponentDisabledByUser(@NonNull PackageManager pm, @NonNull String packageName, @NonNull String componentClassName) {
-        ComponentName componentName = new ComponentName(packageName, componentClassName);
-        switch (pm.getComponentEnabledSetting(componentName)) {
-            case PackageManager.COMPONENT_ENABLED_STATE_DISABLED_USER:
-                return true;
-            case PackageManager.COMPONENT_ENABLED_STATE_DISABLED:
-            case PackageManager.COMPONENT_ENABLED_STATE_DISABLED_UNTIL_USED:
-            case PackageManager.COMPONENT_ENABLED_STATE_ENABLED:
-            case PackageManager.COMPONENT_ENABLED_STATE_DEFAULT:
-            default:
-                return false;
+    public static boolean isComponentDisabledByUser(@NonNull String packageName, @NonNull String componentClassName,
+                                                    @UserIdInt int userId)
+            throws SecurityException, NameNotFoundException {
+        try {
+            ComponentName componentName = new ComponentName(packageName, componentClassName);
+            switch (PackageManagerCompat.getComponentEnabledSetting(componentName, userId)) {
+                case PackageManager.COMPONENT_ENABLED_STATE_DISABLED_USER:
+                    return true;
+                case PackageManager.COMPONENT_ENABLED_STATE_DISABLED:
+                case PackageManager.COMPONENT_ENABLED_STATE_DISABLED_UNTIL_USED:
+                case PackageManager.COMPONENT_ENABLED_STATE_ENABLED:
+                case PackageManager.COMPONENT_ENABLED_STATE_DEFAULT:
+                default:
+                    return false;
+            }
+        } catch (IllegalArgumentException e) {
+            throw (NameNotFoundException) new NameNotFoundException(e.getMessage()).initCause(e);
         }
     }
 
     @Nullable
     public static String[] getPermissionsForPackage(String packageName, @UserIdInt int userId)
-            throws PackageManager.NameNotFoundException, RemoteException {
-        PackageInfo info = PackageManagerCompat.getPackageInfo(packageName, PackageManager.GET_PERMISSIONS, userId);
+            throws NameNotFoundException, RemoteException {
+        PackageInfo info = PackageManagerCompat.getPackageInfo(packageName, PackageManager.GET_PERMISSIONS
+                | PackageManagerCompat.MATCH_STATIC_SHARED_AND_SDK_LIBRARIES, userId);
         return info.requestedPermissions;
+    }
+
+    @Nullable
+    public static Intent getLaunchIntentForPackage(@NonNull Context context,
+                                                   @NonNull String packageName,
+                                                   @UserIdInt int userId) {
+        if (userId == UserHandleHidden.myUserId()) {
+            return context.getPackageManager().getLaunchIntentForPackage(packageName);
+        }
+        UserHandle userHandle = Users.getUserHandle(userId);
+        if (userHandle != null) {
+            LauncherApps launcherApps = (LauncherApps) context.getSystemService(Context.LAUNCHER_APPS_SERVICE);
+            try {
+                if (!launcherApps.isPackageEnabled(packageName, userHandle)) {
+                    return null;
+                }
+                List<LauncherActivityInfo> activityInfoList = launcherApps.getActivityList(packageName, userHandle);
+                if (activityInfoList.size() > 0) {
+                    Intent launchIntent = new Intent(Intent.ACTION_MAIN);
+                    launchIntent.addCategory(Intent.CATEGORY_LAUNCHER);
+                    launchIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK
+                            | Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED);
+                    launchIntent.setComponent(activityInfoList.get(0).getComponentName());
+                    return launchIntent;
+                }
+            } catch (Throwable th) {
+                th.printStackTrace();
+            }
+        }
+        return null;
     }
 
     @NonNull
     public static String getPackageLabel(@NonNull PackageManager pm, String packageName) {
         try {
             @SuppressLint("WrongConstant")
-            ApplicationInfo applicationInfo = pm.getApplicationInfo(packageName, flagMatchUninstalled);
+            ApplicationInfo applicationInfo = pm.getApplicationInfo(packageName, MATCH_UNINSTALLED_PACKAGES);
             return pm.getApplicationLabel(applicationInfo).toString();
-        } catch (PackageManager.NameNotFoundException ignore) {
+        } catch (NameNotFoundException ignore) {
         }
         return packageName;
     }
@@ -454,7 +520,8 @@ public final class PackageUtils {
     @NonNull
     public static CharSequence getPackageLabel(@NonNull PackageManager pm, String packageName, int userHandle) {
         try {
-            ApplicationInfo applicationInfo = PackageManagerCompat.getApplicationInfo(packageName, 0, userHandle);
+            ApplicationInfo applicationInfo = PackageManagerCompat.getApplicationInfo(packageName,
+                    PackageManagerCompat.MATCH_STATIC_SHARED_AND_SDK_LIBRARIES, userHandle);
             return applicationInfo.loadLabel(pm);
         } catch (Exception ignore) {
         }
@@ -473,16 +540,9 @@ public final class PackageUtils {
         return appLabels;
     }
 
-    public static int getAppUid(@Nullable ApplicationInfo applicationInfo) {
-        return applicationInfo != null ? applicationInfo.uid : 0;
-    }
-
     public static int getAppUid(@NonNull UserPackagePair pair) {
-        try {
-            return PackageManagerCompat.getApplicationInfo(pair.getPackageName(), 0, pair.getUserHandle()).uid;
-        } catch (Exception ignore) {
-        }
-        return -1;
+        return ExUtils.requireNonNullElse(() -> PackageManagerCompat.getApplicationInfo(pair.getPackageName(),
+                PackageManagerCompat.MATCH_STATIC_SHARED_AND_SDK_LIBRARIES, pair.getUserId()).uid, -1);
     }
 
     public static boolean isTestOnlyApp(@NonNull ApplicationInfo applicationInfo) {
@@ -498,42 +558,9 @@ public final class PackageUtils {
         return sourceDir;
     }
 
-    @NonNull
-    public static String[] getDataDirs(@NonNull ApplicationInfo applicationInfo, boolean loadInternal,
-                                       boolean loadExternal, boolean loadMediaObb) {
-        ArrayList<String> dataDirs = new ArrayList<>();
-        if (applicationInfo.dataDir == null) {
-            throw new RuntimeException("Data directory cannot be empty.");
-        }
-        if (loadInternal) {
-            dataDirs.add(applicationInfo.dataDir);
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N && applicationInfo.deviceProtectedDataDir != null &&
-                    !applicationInfo.dataDir.equals(applicationInfo.deviceProtectedDataDir)) {
-                dataDirs.add(applicationInfo.deviceProtectedDataDir);
-            }
-        }
-        int userHandle = UserHandleHidden.getUserId(applicationInfo.uid);
-        OsEnvironment.UserEnvironment ue = OsEnvironment.getUserEnvironment(userHandle);
-        if (loadExternal) {
-            Path[] externalFiles = ue.buildExternalStorageAppDataDirs(applicationInfo.packageName);
-            for (Path externalFile : externalFiles) {
-                if (externalFile != null && externalFile.exists())
-                    dataDirs.add(externalFile.getFilePath());
-            }
-        }
-        if (loadMediaObb) {
-            List<Path> externalFiles = new ArrayList<>();
-            externalFiles.addAll(Arrays.asList(ue.buildExternalStorageAppMediaDirs(applicationInfo.packageName)));
-            externalFiles.addAll(Arrays.asList(ue.buildExternalStorageAppObbDirs(applicationInfo.packageName)));
-            for (Path externalFile : externalFiles) {
-                if (externalFile != null && externalFile.exists())
-                    dataDirs.add(externalFile.getFilePath());
-            }
-        }
-        return dataDirs.toArray(new String[0]);
-    }
-
-    public static String getHiddenCodePathOrDefault(String packageName, String defaultPath) {
+    @Nullable
+    @Contract("_,!null -> !null")
+    public static String getHiddenCodePathOrDefault(@NonNull String packageName, @Nullable String defaultPath) {
         Runner.Result result = Runner.runCommand(RunnerUtils.CMD_PM + " dump " + packageName + " | grep codePath");
         if (result.isSuccessful()) {
             List<String> paths = result.getOutputAsList();
@@ -544,44 +571,14 @@ public final class PackageUtils {
                 if (start != -1) return codePath.substring(start + 1);
             }
         }
-        return new File(defaultPath).getParent();
-    }
-
-    @NonNull
-    public static List<Integer> getAppOpModes() {
-        List<Integer> appOpModes = new ArrayList<>();
-        appOpModes.add(AppOpsManager.MODE_ALLOWED);
-        appOpModes.add(AppOpsManager.MODE_IGNORED);
-        appOpModes.add(AppOpsManager.MODE_ERRORED);
-        appOpModes.add(AppOpsManager.MODE_DEFAULT);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            appOpModes.add(AppOpsManager.MODE_FOREGROUND);
-        }
-        if (MiuiUtils.isMiui()) {
-            appOpModes.add(AppOpsManager.MODE_ASK);
-        }
-        return appOpModes;
-    }
-
-    @NonNull
-    public static List<Integer> getAppOps() {
-        List<Integer> appOps = new ArrayList<>();
-        for (int i = 0; i < AppOpsManager._NUM_OP; ++i) {
-            appOps.add(i);
-        }
-        if (MiuiUtils.isMiui()) {
-            for (int op = AppOpsManager.MIUI_OP_START + 1; op < AppOpsManager.MIUI_OP_END; ++op) {
-                appOps.add(op);
-            }
-        }
-        return appOps;
+        return defaultPath != null ? new File(defaultPath).getParent() : null;
     }
 
     @NonNull
     public static CharSequence[] getAppOpModeNames(@NonNull List<Integer> appOpModes) {
         CharSequence[] appOpModeNames = new CharSequence[appOpModes.size()];
         for (int i = 0; i < appOpModes.size(); ++i) {
-            appOpModeNames[i] = AppOpsManager.modeToName(appOpModes.get(i));
+            appOpModeNames[i] = AppOpsManagerCompat.modeToName(appOpModes.get(i));
         }
         return appOpModeNames;
     }
@@ -590,7 +587,7 @@ public final class PackageUtils {
     public static CharSequence[] getAppOpNames(@NonNull List<Integer> appOps) {
         CharSequence[] appOpNames = new CharSequence[appOps.size()];
         for (int i = 0; i < appOps.size(); ++i) {
-            appOpNames[i] = AppOpsManager.opToName(appOps.get(i));
+            appOpNames[i] = AppOpsManagerCompat.opToName(appOps.get(i));
         }
         return appOpNames;
     }
@@ -773,7 +770,7 @@ public final class PackageUtils {
         builder.append(getStyledKeyValue(ctx, R.string.validity, ctx.getText(validity), separator))
                 .append("\n")
                 .append(getPrimaryText(ctx, ctx.getString(R.string.serial_no) + separator))
-                .append(getMonospacedText(Utils.bytesToHex(certificate.getSerialNumber().toByteArray())))
+                .append(getMonospacedText(HexEncoding.encodeToString(certificate.getSerialNumber().toByteArray(), false)))
                 .append("\n");
         // Checksums
         builder.append(getTitleText(ctx, ctx.getString(R.string.checksums))).append("\n");
@@ -791,7 +788,7 @@ public final class PackageUtils {
                 .append(getStyledKeyValue(ctx, "OID", certificate.getSigAlgOID(), separator))
                 .append("\n")
                 .append(getPrimaryText(ctx, ctx.getString(R.string.app_signing_signature) + separator))
-                .append(getMonospacedText(Utils.bytesToHex(certificate.getSignature()))).append("\n");
+                .append(getMonospacedText(HexEncoding.encodeToString(certificate.getSignature(), false))).append("\n");
         // Public key used by Google: https://github.com/google/conscrypt
         // 1. X509PublicKey (PublicKey)
         // 2. OpenSSLRSAPublicKey (RSAPublicKey)
@@ -808,7 +805,7 @@ public final class PackageUtils {
                     .append(getStyledKeyValue(ctx, R.string.rsa_exponent, rsaPublicKey.getPublicExponent().toString(), separator))
                     .append("\n")
                     .append(getPrimaryText(ctx, ctx.getString(R.string.rsa_modulus) + separator))
-                    .append(getMonospacedText(Utils.bytesToHex(rsaPublicKey.getModulus().toByteArray())));
+                    .append(getMonospacedText(HexEncoding.encodeToString(rsaPublicKey.getModulus().toByteArray(), false)));
         } else if (publicKey instanceof ECPublicKey) {
             ECPublicKey ecPublicKey = (ECPublicKey) publicKey;
             builder.append("\n")
@@ -821,18 +818,20 @@ public final class PackageUtils {
         if (critSet != null && !critSet.isEmpty()) {
             builder.append("\n").append(getTitleText(ctx, ctx.getString(R.string.critical_exts)));
             for (String oid : critSet) {
+                String oidName = OidMap.getName(oid);
                 builder.append("\n- ")
-                        .append(getPrimaryText(ctx, oid + separator))
-                        .append(getMonospacedText(Utils.bytesToHex(certificate.getExtensionValue(oid))));
+                        .append(getPrimaryText(ctx, (oidName != null ? oidName : oid) + separator))
+                        .append(getMonospacedText(HexEncoding.encodeToString(certificate.getExtensionValue(oid), false)));
             }
         }
         Set<String> nonCritSet = certificate.getNonCriticalExtensionOIDs();
         if (nonCritSet != null && !nonCritSet.isEmpty()) {
             builder.append("\n").append(getTitleText(ctx, ctx.getString(R.string.non_critical_exts)));
             for (String oid : nonCritSet) {
+                String oidName = OidMap.getName(oid);
                 builder.append("\n- ")
-                        .append(getPrimaryText(ctx, oid + separator))
-                        .append(getMonospacedText(Utils.bytesToHex(certificate.getExtensionValue(oid))));
+                        .append(getPrimaryText(ctx, (oidName != null ? oidName : oid) + separator))
+                        .append(getMonospacedText(HexEncoding.encodeToString(certificate.getExtensionValue(oid), false)));
             }
         }
         return builder;
@@ -859,14 +858,17 @@ public final class PackageUtils {
         }
         if (result.isVerified()) {
             if (warnCount == 0) {
-                builder.append(getColoredText(getTitleText(ctx, "\u2714 " +
+                builder.append(getColoredText(getTitleText(ctx, "✔ " +
                         ctx.getString(R.string.verified)), colorSuccess));
             } else {
-                builder.append(getColoredText(getTitleText(ctx, "\u2714 " + ctx.getResources()
+                builder.append(getColoredText(getTitleText(ctx, "✔ " + ctx.getResources()
                         .getQuantityString(R.plurals.verified_with_warning, warnCount, warnCount)), colorSuccess));
             }
             if (result.isSourceStampVerified()) {
-                builder.append("\n\u2714 ").append(ctx.getString(R.string.source_stamp_verified));
+                String source = Signer.getSourceStampSource(result.getSourceStampInfo());
+                if (source != null) {
+                    builder.append("\n✔ ").append(ctx.getString(R.string.source_stamp_verified_and_identified_to_be_from_source, source));
+                } else builder.append("\n✔ ").append(ctx.getString(R.string.source_stamp_verified));
             }
             List<CharSequence> sigSchemes = new LinkedList<>();
             if (result.isVerifiedUsingV1Scheme()) sigSchemes.add("v1");
@@ -875,21 +877,24 @@ public final class PackageUtils {
             if (result.isVerifiedUsingV4Scheme()) sigSchemes.add("v4");
             builder.append("\n").append(getPrimaryText(ctx, ctx.getResources()
                     .getQuantityString(R.plurals.app_signing_signature_schemes_pl, sigSchemes.size()) + LangUtils.getSeparatorString()));
-            builder.append(TextUtils.joinSpannable(", ", sigSchemes));
+            builder.append(TextUtilsCompat.joinSpannable(", ", sigSchemes));
         } else {
-            builder.append(getColoredText(getTitleText(ctx, "\u2718 " + ctx.getString(R.string.not_verified)), colorFailure));
+            builder.append(getColoredText(getTitleText(ctx, "✘ " + ctx.getString(R.string.not_verified)), colorFailure));
         }
         builder.append("\n");
         // If there are errors, no certificate info will be loaded
-        builder.append(TextUtils.joinSpannable("\n", errors)).append("\n");
+        builder.append(TextUtilsCompat.joinSpannable("\n", errors)).append("\n");
         return builder;
     }
 
     public static void ensurePackageStagingDirectoryPrivileged() throws ErrnoException {
+        if (!Paths.get("/data/local").canWrite()) {
+            return;
+        }
         Path psd = Paths.get(PACKAGE_STAGING_DIRECTORY);
         if (!psd.isDirectory()) {
             // Recreate directory
-            Path parent = psd.getParentFile();
+            Path parent = psd.getParent();
             if (parent == null) {
                 throw new IllegalStateException("Parent should be /data/local");
             }

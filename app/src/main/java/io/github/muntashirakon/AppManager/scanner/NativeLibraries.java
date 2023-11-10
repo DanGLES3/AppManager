@@ -27,8 +27,10 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
 
+import aosp.libcore.util.HexEncoding;
 import io.github.muntashirakon.AppManager.R;
 import io.github.muntashirakon.AppManager.logs.Log;
+import io.github.muntashirakon.AppManager.utils.LangUtils;
 import io.github.muntashirakon.util.LocalizedString;
 
 public class NativeLibraries {
@@ -36,7 +38,94 @@ public class NativeLibraries {
 
     private static final int ELF_MAGIC = 0x7f454c46; // 0x7f ELF
 
-    public static class NativeLib implements LocalizedString {
+    public static abstract class NativeLib implements LocalizedString {
+        @NonNull
+        private final String mPath;
+        @NonNull
+        private final String mName;
+        private final long mSize;
+        private final byte[] mMagic;
+
+        protected NativeLib(@NonNull String path, long size, byte[] magic) {
+            mPath = path;
+            mName = new File(path).getName();
+            mSize = size;
+            mMagic = magic;
+        }
+
+        @NonNull
+        public String getPath() {
+            return mPath;
+        }
+
+        @NonNull
+        public String getName() {
+            return mName;
+        }
+
+        public long getSize() {
+            return mSize;
+        }
+
+        public byte[] getMagic() {
+            return mMagic;
+        }
+
+        @NonNull
+        public static NativeLib parse(@NonNull String path, long size, @NonNull InputStream is) throws IOException {
+            byte[] header = new byte[20]; // First 20 bytes is enough
+            is.read(header);
+            ByteBuffer buffer = ByteBuffer.wrap(header);
+            int magic = buffer.getInt();
+            if (magic != ELF_MAGIC) {
+                // Invalid library
+                Log.w(TAG, "Invalid header magic 0x%x at path %s", magic, path);
+                return new InvalidLib(path, size, header);
+            }
+            ElfLib elfLib = new ElfLib(path, size);
+            elfLib.mArch = buffer.get(); // EI_CLASS
+            elfLib.mEndianness = buffer.get(); // EI_DATA
+            if (elfLib.mEndianness == ElfLib.ENDIANNESS_LITTLE_ENDIAN) {
+                buffer.order(ByteOrder.LITTLE_ENDIAN);
+            }
+            buffer.position(16);
+            elfLib.mType = buffer.getChar(); // e_type
+            elfLib.mIsa = buffer.getChar(); // e_machine
+            return elfLib;
+        }
+    }
+
+    public static class InvalidLib extends NativeLib {
+        protected InvalidLib(@NonNull String path, long size, byte[] magic) {
+            super(path, size, magic);
+        }
+
+        @NonNull
+        @Override
+        public CharSequence toLocalizedString(@NonNull Context context) {
+            StringBuilder sb = new StringBuilder();
+            if (getSize() != -1) {
+                sb.append(Formatter.formatFileSize(context, getSize())).append(", ");
+            }
+            sb.append("Magic")
+                    .append(LangUtils.getSeparatorString())
+                    .append(HexEncoding.encodeToString(getMagic()))
+                    .append("\n")
+                    .append(getPath());
+            return sb;
+        }
+
+        @NonNull
+        @Override
+        public String toString() {
+            return "InvalidLib{" +
+                    "mPath='" + getPath() + '\'' +
+                    ", mName='" + getName() + '\'' +
+                    '}';
+        }
+    }
+
+    public static class ElfLib extends NativeLib {
         public static final int ARCH_NONE = 0; // ELFCLASSNONE
         public static final int ARCH_32BIT = 1; // ELFCLASS32
         public static final int ARCH_64BIT = 2; // ELFCLASS64
@@ -66,11 +155,6 @@ public class NativeLibraries {
         public @interface Type {
         }
 
-        @NonNull
-        private final String mName;
-        private final long mSize;
-        @NonNull
-        private String mPath;
         @Arch
         private int mArch;
         @Endianness
@@ -79,28 +163,8 @@ public class NativeLibraries {
         private int mType;
         private int mIsa;
 
-        private NativeLib(@NonNull String path, long size) {
-            mPath = path;
-            mName = new File(path).getName();
-            mSize = size;
-        }
-
-        @NonNull
-        public String getPath() {
-            return mPath;
-        }
-
-        public void setPath(@NonNull String path) {
-            this.mPath = path;
-        }
-
-        @NonNull
-        public String getName() {
-            return mName;
-        }
-
-        public long getSize() {
-            return mSize;
+        private ElfLib(@NonNull String path, long size) {
+            super(path, size, new byte[]{0x7f, 0x45, 0x4c, 0x46});
         }
 
         @Arch
@@ -150,9 +214,9 @@ public class NativeLibraries {
         @NonNull
         @Override
         public String toString() {
-            return "NativeLib{" +
-                    "mPath='" + mPath + '\'' +
-                    ", mName='" + mName + '\'' +
+            return "ElfLib{" +
+                    "mPath='" + getPath() + '\'' +
+                    ", mName='" + getName() + '\'' +
                     ", mArch=" + mArch +
                     ", mEndianness=" + mEndianness +
                     ", mType=" + mType +
@@ -164,8 +228,8 @@ public class NativeLibraries {
         @Override
         public CharSequence toLocalizedString(@NonNull Context context) {
             StringBuilder sb = new StringBuilder();
-            if (mSize != -1) {
-                sb.append(Formatter.formatFileSize(context, mSize)).append(", ");
+            if (getSize() != -1) {
+                sb.append(Formatter.formatFileSize(context, getSize())).append(", ");
             }
             switch (mArch) {
                 case ARCH_32BIT:
@@ -200,34 +264,13 @@ public class NativeLibraries {
                     sb.append(context.getString(R.string.so_type_executable)).append(", ");
                     break;
             }
-            sb.append(getIsaString()).append("\n").append(mPath);
+            sb.append(getIsaString()).append("\n").append(getPath());
             return sb;
-        }
-
-        @NonNull
-        public static NativeLib parse(@NonNull String path, long size, @NonNull InputStream is) throws IOException {
-            byte[] header = new byte[20]; // First 20 bytes is enough
-            is.read(header);
-            ByteBuffer buffer = ByteBuffer.wrap(header);
-            int magic = buffer.getInt();
-            if (magic != ELF_MAGIC) {
-                throw new IOException(String.format("Invalid header magic 0x%x", magic));
-            }
-            NativeLib nativeLib = new NativeLib(path, size);
-            nativeLib.mArch = buffer.get(); // EI_CLASS
-            nativeLib.mEndianness = buffer.get(); // EI_DATA
-            if (nativeLib.mEndianness == ENDIANNESS_LITTLE_ENDIAN) {
-                buffer.order(ByteOrder.LITTLE_ENDIAN);
-            }
-            buffer.position(16);
-            nativeLib.mType = buffer.getChar(); // e_type
-            nativeLib.mIsa = buffer.getChar(); // e_machine
-            return nativeLib;
         }
     }
 
-    private final List<NativeLib> libs = new ArrayList<>();
-    private final Set<String> uniqueLibs = new HashSet<>();
+    private final List<NativeLib> mLibs = new ArrayList<>();
+    private final Set<String> mUniqueLibs = new HashSet<>();
 
     @WorkerThread
     public NativeLibraries(@NonNull File apkFile) throws IOException {
@@ -238,10 +281,10 @@ public class NativeLibraries {
                 if (zipEntry.getName().endsWith(".so")) {
                     try (InputStream is = zipFile.getInputStream(zipEntry)) {
                         NativeLib nativeLib = NativeLib.parse(zipEntry.getName(), zipEntry.getSize(), is);
-                        libs.add(nativeLib);
-                        uniqueLibs.add(nativeLib.getName());
+                        mLibs.add(nativeLib);
+                        mUniqueLibs.add(nativeLib.getName());
                     } catch (IOException e) {
-                        Log.w(TAG, "Could not load native library " + zipEntry.getName(), e);
+                        Log.w(TAG, "Could not load native library %s", e, zipEntry.getName());
                     }
                 }
             }
@@ -256,10 +299,10 @@ public class NativeLibraries {
                 if (zipEntry.getName().endsWith(".so")) {
                     try {
                         NativeLib nativeLib = NativeLib.parse(zipEntry.getName(), zipEntry.getSize(), zipInputStream);
-                        libs.add(nativeLib);
-                        uniqueLibs.add(nativeLib.getName());
+                        mLibs.add(nativeLib);
+                        mUniqueLibs.add(nativeLib.getName());
                     } catch (IOException e) {
-                        Log.w(TAG, "Could not load native library " + zipEntry.getName(), e);
+                        Log.w(TAG, "Could not load native library %s", e, zipEntry.getName());
                     }
                 }
             }
@@ -274,10 +317,10 @@ public class NativeLibraries {
             if (!zipEntry.isDirectory() && zipEntry.getName().endsWith(".so")) {
                 try (InputStream is = zipFile.getInputStream(zipEntry)) {
                     NativeLib nativeLib = NativeLib.parse(zipEntry.getName(), zipEntry.getSize(), is);
-                    libs.add(nativeLib);
-                    uniqueLibs.add(nativeLib.getName());
+                    mLibs.add(nativeLib);
+                    mUniqueLibs.add(nativeLib.getName());
                 } catch (IOException e) {
-                    Log.w(TAG, "Could not load native library " + zipEntry.getName(), e);
+                    Log.w(TAG, "Could not load native library %s", e, zipEntry.getName());
                 }
             }
         }
@@ -285,11 +328,11 @@ public class NativeLibraries {
 
     @NonNull
     public List<NativeLib> getLibs() {
-        return libs;
+        return mLibs;
     }
 
     @NonNull
     public Collection<String> getUniqueLibs() {
-        return uniqueLibs;
+        return mUniqueLibs;
     }
 }

@@ -1,5 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!-- SPDX-License-Identifier: GPL-3.0-or-later -->
+<?xml version="1.0" encoding="utf-8"?><!-- SPDX-License-Identifier: GPL-3.0-or-later -->
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
 
     <item
@@ -39,8 +38,16 @@
         android:title="@string/net_policy"
         android:icon="@drawable/ic_security_network" />
     <item
+        android:id="@+id/action_optimize"
+        android:title="@string/action_optimize_app"
+        android:icon="@drawable/ic_run_fast" />
+    <item
         android:id="@+id/action_export_blocking_rules"
         android:title="@string/export_blocking_rules"
+        android:icon="@drawable/ic_file_export" />
+    <item
+        android:id="@+id/action_export_app_list"
+        android:title="@string/export_app_list"
         android:icon="@drawable/ic_file_export" />
     <item
         android:id="@+id/action_add_to_profile"

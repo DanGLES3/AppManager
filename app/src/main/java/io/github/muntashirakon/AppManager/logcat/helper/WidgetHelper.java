@@ -2,7 +2,6 @@
 
 package io.github.muntashirakon.AppManager.logcat.helper;
 
-import android.annotation.SuppressLint;
 import android.app.PendingIntent;
 import android.appwidget.AppWidgetManager;
 import android.content.ComponentName;
@@ -12,9 +11,9 @@ import android.net.Uri;
 import android.widget.RemoteViews;
 
 import androidx.annotation.NonNull;
+import androidx.core.app.PendingIntentCompat;
 
 import io.github.muntashirakon.AppManager.R;
-import io.github.muntashirakon.AppManager.compat.PendingIntentCompat;
 import io.github.muntashirakon.AppManager.logcat.LogcatRecordingService;
 import io.github.muntashirakon.AppManager.logcat.RecordingWidgetProvider;
 import io.github.muntashirakon.AppManager.logs.Log;
@@ -44,7 +43,7 @@ public class WidgetHelper {
         for (int appWidgetId : appWidgetIds) {
             if (!PreferenceHelper.getWidgetExistsPreference(context, appWidgetId)) {
                 // android has a bug that sometimes keeps stale app widget ids around
-                Log.d("WidgetHelper", "Found stale app widget id " + appWidgetId + "; skipping...");
+                Log.d("WidgetHelper", "Found stale app widget id %d; skipping...", appWidgetId);
                 continue;
             }
             updateWidget(context, manager, appWidgetId, serviceRunning);
@@ -62,7 +61,6 @@ public class WidgetHelper {
         manager.updateAppWidget(appWidgetId, updateViews);
     }
 
-    @SuppressLint("WrongConstant")
     private static PendingIntent getPendingIntent(Context context, int appWidgetId) {
         Intent intent = new Intent(context, RecordingWidgetProvider.class);
         intent.setAction(RecordingWidgetProvider.ACTION_RECORD_OR_STOP);
@@ -71,8 +69,8 @@ public class WidgetHelper {
         // it seems to be a quasi-bug in Android
         Uri data = Uri.withAppendedPath(Uri.parse(RecordingWidgetProvider.URI_SCHEME + "://widget/id/#"), String.valueOf(appWidgetId));
         intent.setData(data);
-        return PendingIntent.getBroadcast(context, 0 /* no requestCode */, intent,
-                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntentCompat.FLAG_IMMUTABLE);
+        return PendingIntentCompat.getBroadcast(context, 0 /* no requestCode */, intent,
+                PendingIntent.FLAG_UPDATE_CURRENT, false);
     }
 
     private static int[] findAppWidgetIds(Context context) {

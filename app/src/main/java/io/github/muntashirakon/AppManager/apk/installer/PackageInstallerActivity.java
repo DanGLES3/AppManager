@@ -2,64 +2,6 @@
 
 package io.github.muntashirakon.AppManager.apk.installer;
 
-import android.annotation.UserIdInt;
-import android.content.ComponentName;
-import android.content.Intent;
-import android.content.ServiceConnection;
-import android.content.pm.ApplicationInfo;
-import android.content.pm.PackageInfo;
-import android.content.pm.PackageInstaller;
-import android.content.pm.PackageManager;
-import android.content.pm.UserInfo;
-import android.content.res.Resources;
-import android.net.Uri;
-import android.os.Bundle;
-import android.os.IBinder;
-import android.os.UserHandleHidden;
-import android.text.SpannableStringBuilder;
-import android.text.Spanned;
-import android.text.style.RelativeSizeSpan;
-import android.view.View;
-import android.widget.TextView;
-
-import androidx.activity.result.ActivityResultLauncher;
-import androidx.activity.result.contract.ActivityResultContracts;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.UiThread;
-import androidx.appcompat.app.AlertDialog;
-import androidx.core.content.ContextCompat;
-import androidx.core.content.pm.PackageInfoCompat;
-import androidx.fragment.app.FragmentManager;
-import androidx.lifecycle.ViewModelProvider;
-
-import com.google.android.material.dialog.MaterialAlertDialogBuilder;
-
-import java.io.File;
-import java.util.Iterator;
-import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicReference;
-
-import io.github.muntashirakon.AppManager.BaseActivity;
-import io.github.muntashirakon.AppManager.BuildConfig;
-import io.github.muntashirakon.AppManager.R;
-import io.github.muntashirakon.AppManager.accessibility.AccessibilityMultiplexer;
-import io.github.muntashirakon.AppManager.apk.ApkFile;
-import io.github.muntashirakon.AppManager.apk.splitapk.SplitApkChooser;
-import io.github.muntashirakon.AppManager.apk.whatsnew.WhatsNewDialogFragment;
-import io.github.muntashirakon.AppManager.details.AppDetailsActivity;
-import io.github.muntashirakon.AppManager.intercept.IntentCompat;
-import io.github.muntashirakon.AppManager.logs.Log;
-import io.github.muntashirakon.AppManager.settings.Ops;
-import io.github.muntashirakon.AppManager.types.ForegroundService;
-import io.github.muntashirakon.AppManager.utils.AppPref;
-import io.github.muntashirakon.AppManager.utils.PackageUtils;
-import io.github.muntashirakon.AppManager.utils.StoragePermission;
-import io.github.muntashirakon.AppManager.utils.UIUtils;
-import io.github.muntashirakon.AppManager.utils.Utils;
-import io.github.muntashirakon.dialog.DialogTitleBuilder;
-
 import static io.github.muntashirakon.AppManager.apk.installer.PackageInstallerCompat.STATUS_FAILURE_ABORTED;
 import static io.github.muntashirakon.AppManager.apk.installer.PackageInstallerCompat.STATUS_FAILURE_BLOCKED;
 import static io.github.muntashirakon.AppManager.apk.installer.PackageInstallerCompat.STATUS_FAILURE_CONFLICT;
@@ -73,76 +15,171 @@ import static io.github.muntashirakon.AppManager.apk.installer.PackageInstallerC
 import static io.github.muntashirakon.AppManager.apk.installer.PackageInstallerCompat.STATUS_FAILURE_SESSION_WRITE;
 import static io.github.muntashirakon.AppManager.apk.installer.PackageInstallerCompat.STATUS_FAILURE_STORAGE;
 import static io.github.muntashirakon.AppManager.apk.installer.PackageInstallerCompat.STATUS_SUCCESS;
-import static io.github.muntashirakon.AppManager.utils.UIUtils.getDialogTitle;
 
-public class PackageInstallerActivity extends BaseActivity implements WhatsNewDialogFragment.InstallInterface {
-    public static final String EXTRA_APK_FILE_KEY = "EXTRA_APK_FILE_KEY";
+import android.Manifest;
+import android.annotation.UserIdInt;
+import android.content.ComponentName;
+import android.content.Context;
+import android.content.Intent;
+import android.content.ServiceConnection;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageInstaller;
+import android.content.res.Resources;
+import android.net.Uri;
+import android.os.Bundle;
+import android.os.IBinder;
+import android.os.UserHandleHidden;
+import android.text.SpannableStringBuilder;
+import android.text.Spanned;
+import android.text.style.RelativeSizeSpan;
+import android.view.View;
+
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.UiThread;
+import androidx.appcompat.app.AlertDialog;
+import androidx.core.content.ContextCompat;
+import androidx.core.content.pm.PackageInfoCompat;
+import androidx.lifecycle.ViewModelProvider;
+
+import java.util.LinkedList;
+import java.util.Objects;
+import java.util.Queue;
+
+import io.github.muntashirakon.AppManager.BaseActivity;
+import io.github.muntashirakon.AppManager.BuildConfig;
+import io.github.muntashirakon.AppManager.R;
+import io.github.muntashirakon.AppManager.accessibility.AccessibilityMultiplexer;
+import io.github.muntashirakon.AppManager.apk.ApkSource;
+import io.github.muntashirakon.AppManager.apk.CachedApkSource;
+import io.github.muntashirakon.AppManager.apk.splitapk.SplitApkChooser;
+import io.github.muntashirakon.AppManager.apk.whatsnew.WhatsNewFragment;
+import io.github.muntashirakon.AppManager.compat.ApplicationInfoCompat;
+import io.github.muntashirakon.AppManager.details.AppDetailsActivity;
+import io.github.muntashirakon.AppManager.intercept.IntentCompat;
+import io.github.muntashirakon.AppManager.logs.Log;
+import io.github.muntashirakon.AppManager.self.SelfPermissions;
+import io.github.muntashirakon.AppManager.settings.Prefs;
+import io.github.muntashirakon.AppManager.types.ForegroundService;
+import io.github.muntashirakon.AppManager.utils.PackageUtils;
+import io.github.muntashirakon.AppManager.utils.StoragePermission;
+import io.github.muntashirakon.AppManager.utils.UIUtils;
+import io.github.muntashirakon.AppManager.utils.Utils;
+
+/**
+ * Activity that manages installing and confirming package installation. Actual installation is done by
+ * {@link PackageInstallerService}.
+ * <p>
+ * How the installer works:
+ * <ol>
+ * <li>When the installation of a package is requested, it is either stored in queue or loaded directly if the queue is
+ * empty.
+ * <li>Then, it is checked whether there's an already installed package by the same name. If there exists any, the user
+ * is offered to reinstall, upgrade or downgrade the package depending on the features supported by the present mode of
+ * operation. Otherwise, the user is asked to confirm installation. Before doing so, however, a changelog may be
+ * listed if it is enabled in settings.
+ * <li>Next, if it is a split app, the user is asked to choose the splits to be installed. Otherwise, the installer
+ * proceeds to the next phase directly.
+ * <li>If display options is enabled, the options are displayed so that the user can tweak the present installer.
+ * Otherwise, the installed proceeds to the next phase.
+ * <li>Installer takes necessary steps to launch a installer service to initiate the installation.
+ * </ol>
+ */
+public class PackageInstallerActivity extends BaseActivity implements InstallerDialogHelper.OnClickButtonsListener {
+    public static final String TAG = PackageInstallerActivity.class.getSimpleName();
+
+    @NonNull
+    public static Intent getLaunchableInstance(@NonNull Context context, @NonNull Uri uri) {
+        Intent intent = new Intent(context, PackageInstallerActivity.class);
+        intent.setData(uri);
+        return intent;
+    }
+
+    @NonNull
+    public static Intent getLaunchableInstance(@NonNull Context context, ApkSource apkSource) {
+        Intent intent = new Intent(context, PackageInstallerActivity.class);
+        intent.putExtra(EXTRA_APK_FILE_LINK, apkSource);
+        return intent;
+    }
+
+    @NonNull
+    public static Intent getLaunchableInstance(@NonNull Context context, @NonNull String packageName) {
+        Intent intent = new Intent(context, PackageInstallerActivity.class);
+        intent.putExtra(EXTRA_INSTALL_EXISTING, true);
+        intent.putExtra(EXTRA_PACKAGE_NAME, packageName);
+        return intent;
+    }
+
+    private static final String EXTRA_APK_FILE_LINK = "link";
+    public static final String EXTRA_INSTALL_EXISTING = "install_existing";
+    public static final String EXTRA_PACKAGE_NAME = "pkg";
     public static final String ACTION_PACKAGE_INSTALLED = BuildConfig.APPLICATION_ID + ".action.PACKAGE_INSTALLED";
 
-    private int sessionId = -1;
-    private String packageName;
+    private int mSessionId = -1;
+    @Nullable
+    private ApkQueueItem mCurrentItem;
+    private String mPackageName;
     /**
      * Whether this activity is currently dealing with an apk
      */
-    private boolean isDealingWithApk = false;
-    private final ActivityResultLauncher<Intent> confirmIntentLauncher = registerForActivityResult(
+    private boolean mIsDealingWithApk = false;
+    @UserIdInt
+    private int mLastUserId;
+    private InstallerDialogHelper mDialogHelper;
+    private PackageInstallerViewModel mModel;
+    @Nullable
+    private PackageInstallerService mService;
+    private InstallerDialogFragment mInstallerDialogFragment;
+    private boolean initiated = false;
+    private final View.OnClickListener mAppInfoClickListener = v -> {
+        assert mCurrentItem != null;
+        try {
+            ApkSource apkSource = mCurrentItem.getApkSource();
+            if (apkSource == null) {
+                apkSource = mModel.getApkSource();
+            }
+            Intent appDetailsIntent = AppDetailsActivity.getIntent(this, apkSource, true);
+            appDetailsIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(appDetailsIntent);
+        } finally {
+            // We cannot trigger cancel here because the cached file will be deleted
+            goToNext();
+        }
+    };
+    private final InstallerOptions mInstallerOptions = new InstallerOptions();
+    private final Queue<ApkQueueItem> mApkQueue = new LinkedList<>();
+    private final ActivityResultLauncher<Intent> mConfirmIntentLauncher = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(), result -> {
                 // User did some interaction and the installer screen is closed now
                 Intent broadcastIntent = new Intent(PackageInstallerCompat.ACTION_INSTALL_INTERACTION_END);
-                broadcastIntent.putExtra(PackageInstaller.EXTRA_PACKAGE_NAME, packageName);
-                broadcastIntent.putExtra(PackageInstaller.EXTRA_SESSION_ID, sessionId);
+                broadcastIntent.putExtra(PackageInstaller.EXTRA_PACKAGE_NAME, mPackageName);
+                broadcastIntent.putExtra(PackageInstaller.EXTRA_SESSION_ID, mSessionId);
                 getApplicationContext().sendBroadcast(broadcastIntent);
-                if (!hasNext() && !isDealingWithApk) {
+                if (!hasNext() && !mIsDealingWithApk) {
                     // No APKs left, this maybe a solo call
                     finish();
                 } // else let the original activity decide what to do
             });
 
-    @SuppressWarnings("FieldCanBeLocal") // Cannot be local
-    @Nullable
-    private List<Uri> apkUris;
-    @Nullable
-    private Iterator<Uri> uriIterator;
-    @Nullable
-    private String mimeType;
-    private int actionName;
-    @UserIdInt
-    private int lastUserId;
-    private FragmentManager fm;
-    private AlertDialog progressDialog;
-    @Nullable
-    private AlertDialog installProgressDialog;
-    private PackageInstallerViewModel model;
-    @Nullable
-    private PackageInstallerService service;
-    private final AccessibilityMultiplexer multiplexer = AccessibilityMultiplexer.getInstance();
-    private final StoragePermission storagePermission = StoragePermission.init(this);
-    private final ActivityResultLauncher<Intent> uninstallIntentLauncher = registerForActivityResult(
-            new ActivityResultContracts.StartActivityForResult(),
-            result -> {
-                try {
-                    // No need for user handle since it is only applicable for the current user (no-root)
-                    getPackageManager().getPackageInfo(model.getPackageName(), 0);
-                    // The package is still installed meaning that the app uninstall wasn't successful
-                    getInstallationFinishedDialog(model.getPackageName(), STATUS_FAILURE_CONFLICT, null, null).show();
-                } catch (PackageManager.NameNotFoundException e) {
-                    install();
-                }
-            });
-    private final ServiceConnection serviceConnection = new ServiceConnection() {
+    private final AccessibilityMultiplexer mMultiplexer = AccessibilityMultiplexer.getInstance();
+    private final StoragePermission mStoragePermission = StoragePermission.init(this);
+    private final ServiceConnection mServiceConnection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
-            PackageInstallerActivity.this.service = ((ForegroundService.Binder) service).getService();
+            mService = ((ForegroundService.Binder) service).getService();
         }
 
         @Override
         public void onServiceDisconnected(ComponentName name) {
-            service = null;
+            mService = null;
         }
     };
 
     @Override
-    protected boolean getTransparentBackground() {
+    public boolean getTransparentBackground() {
         return true;
     }
 
@@ -153,121 +190,143 @@ public class PackageInstallerActivity extends BaseActivity implements WhatsNewDi
             triggerCancel();
             return;
         }
-        Log.d("PIA", "On create, intent: " + intent);
+        Log.d(TAG, "On create, intent: %s", intent);
         if (ACTION_PACKAGE_INSTALLED.equals(intent.getAction())) {
             onNewIntent(intent);
             return;
         }
-        model = new ViewModelProvider(this).get(PackageInstallerViewModel.class);
+        mModel = new ViewModelProvider(this).get(PackageInstallerViewModel.class);
         if (!bindService(
-                new Intent(this, PackageInstallerService.class),
-                serviceConnection,
-                BIND_AUTO_CREATE)) {
+                new Intent(this, PackageInstallerService.class), mServiceConnection, BIND_AUTO_CREATE)) {
             throw new RuntimeException("Unable to bind PackageInstallerService");
         }
-        progressDialog = getParsingProgressDialog();
-        fm = getSupportFragmentManager();
-        progressDialog.show();
-        mimeType = intent.getType();
-        apkUris = IntentCompat.getDataUris(intent);
-        if (apkUris != null) uriIterator = apkUris.listIterator();
-        int apkFileKey = intent.getIntExtra(EXTRA_APK_FILE_KEY, -1);
-        if (apkFileKey != -1) {
-            model.getPackageInfo(apkFileKey);
-            // If URIs are supplied, they will also be read
-        } else {
-            // Only URIs may be supplied
-            goToNext();
+        synchronized (mApkQueue) {
+            mApkQueue.addAll(ApkQueueItem.fromIntent(intent));
         }
-        model.packageInfoLiveData().observe(this, newPackageInfo -> {
-            progressDialog.dismiss();
+        ApkSource apkSource = IntentCompat.getParcelableExtra(intent, EXTRA_APK_FILE_LINK, ApkSource.class);
+        if (apkSource != null) {
+            synchronized (mApkQueue) {
+                mApkQueue.add(ApkQueueItem.fromApkSource(apkSource));
+            }
+        }
+        mModel.packageInfoLiveData().observe(this, newPackageInfo -> {
             if (newPackageInfo == null) {
-                new MaterialAlertDialogBuilder(this)
-                        .setTitle(R.string._undefined)
-                        .setIcon(R.drawable.ic_get_app)
-                        .setMessage(R.string.failed_to_fetch_package_info)
-                        .setCancelable(false)
-                        .setNegativeButton(R.string.close, (dialog, which) -> {
-                            dialog.dismiss();
-                            goToNext();
-                        })
-                        .create();
-                triggerCancel();
+                mDialogHelper.showParseFailedDialog(v -> triggerCancel());
                 return;
             }
-            if (model.getInstalledPackageInfo() == null) {
-                // App not installed or data not cleared
-                actionName = R.string.install;
-                if (model.getApkFile().isSplit() || !Ops.isPrivileged()) {
-                    install();
-                } else {
-                    new MaterialAlertDialogBuilder(this)
-                            .setCancelable(false)
-                            .setCustomTitle(getDialogTitle(this, model.getAppLabel(), model.getAppIcon(),
-                                    getVersionInfoWithTrackers(newPackageInfo)))
-                            .setMessage(R.string.install_app_message)
-                            .setPositiveButton(R.string.install, (dialog, which) -> install())
-                            .setNegativeButton(R.string.cancel, (dialog, which) -> triggerCancel())
-                            .show();
-                }
+            // TODO: Resolve dependencies
+            mDialogHelper.onParseSuccess(mModel.getAppLabel(), getVersionInfoWithTrackers(newPackageInfo),
+                    mModel.getAppIcon(), v -> displayInstallerOptions((dialog1, which, options) -> {
+                        if (options != null) {
+                            mInstallerOptions.copy(options);
+                        }
+                    }));
+            displayChangesOrInstallationPrompt();
+        });
+        mModel.packageUninstalledLiveData().observe(this, success -> {
+            if (success) {
+                install();
             } else {
-                // App is installed or the app is uninstalled without clearing data or the app is uninstalled,
-                // but it's a system app
-                long installedVersionCode = PackageInfoCompat.getLongVersionCode(model.getInstalledPackageInfo());
-                long thisVersionCode = PackageInfoCompat.getLongVersionCode(newPackageInfo);
-                if (installedVersionCode < thisVersionCode) {
-                    // Needs update
-                    actionName = R.string.update;
-                    displayWhatsNewDialog();
-                } else if (installedVersionCode == thisVersionCode) {
-                    // Issue reinstall
-                    actionName = R.string.reinstall;
-                    displayWhatsNewDialog();
-                } else {
-                    // Downgrade
-                    actionName = R.string.downgrade;
-                    displayWhatsNewDialog();
-                }
+                showInstallationFinishedDialog(mModel.getPackageName(), getString(R.string.failed_to_uninstall_app),
+                        null, false);
             }
         });
+        // Init fragment
+        mInstallerDialogFragment = new InstallerDialogFragment();
+        mInstallerDialogFragment.setCancelable(false);
+        mInstallerDialogFragment.setFragmentStartedCallback(this::init);
+        mInstallerDialogFragment.showNow(getSupportFragmentManager(), InstallerDialogFragment.TAG);
     }
 
     @Override
     protected void onDestroy() {
-        if (service != null) {
-            unbindService(serviceConnection);
+        if (mService != null) {
+            unbindService(mServiceConnection);
         }
         unsetInstallFinishedListener();
+        // Delete remaining cached file
+        if (mCurrentItem != null && (mCurrentItem.getApkSource() instanceof CachedApkSource)) {
+            ((CachedApkSource) mCurrentItem.getApkSource()).cleanup();
+        }
         super.onDestroy();
     }
 
-    @UiThread
-    private void displayWhatsNewDialog() {
-        if (!AppPref.getBoolean(AppPref.PrefKey.PREF_INSTALLER_DISPLAY_CHANGES_BOOL)) {
-            if (!Ops.isPrivileged()) {
-                triggerInstall();
-                return;
-            }
-            new MaterialAlertDialogBuilder(this)
-                    .setCancelable(false)
-                    .setCustomTitle(getDialogTitle(this, model.getAppLabel(), model.getAppIcon(),
-                            getVersionInfoWithTrackers(model.getNewPackageInfo())))
-                    .setMessage(R.string.install_app_message)
-                    .setPositiveButton(actionName, (dialog, which) -> triggerInstall())
-                    .setNegativeButton(R.string.cancel, (dialog, which) -> triggerCancel())
-                    .show();
+    private void init(@NonNull InstallerDialogFragment fragment, @NonNull AlertDialog dialog) {
+        // Make sure that it's only initiated once
+        if (initiated) {
             return;
         }
-        Bundle args = new Bundle();
-        args.putParcelable(WhatsNewDialogFragment.ARG_NEW_PKG_INFO, model.getNewPackageInfo());
-        args.putParcelable(WhatsNewDialogFragment.ARG_OLD_PKG_INFO, model.getInstalledPackageInfo());
-        args.putString(WhatsNewDialogFragment.ARG_INSTALL_NAME, getString(actionName));
-        args.putString(WhatsNewDialogFragment.ARG_VERSION_INFO, getVersionInfoWithTrackers(model.getNewPackageInfo()));
-        WhatsNewDialogFragment dialogFragment = new WhatsNewDialogFragment();
-        dialogFragment.setCancelable(false);
-        dialogFragment.setArguments(args);
-        dialogFragment.setOnTriggerInstall(this);
-        dialogFragment.show(getSupportFragmentManager(), WhatsNewDialogFragment.TAG);
+        initiated = true;
+        mDialogHelper = new InstallerDialogHelper(fragment, dialog);
+        mDialogHelper.initProgress(v -> triggerCancel());
+        goToNext();
+    }
+
+    @UiThread
+    private void displayChangesOrInstallationPrompt() {
+        // This dialog either calls triggerInstall() or triggerCancel()
+        boolean displayChanges;
+        PackageInfo installedPackageInfo = mModel.getInstalledPackageInfo();
+        int actionRes;
+        if (installedPackageInfo == null) {
+            // App not installed or data not cleared
+            displayChanges = false;
+            actionRes = R.string.install;
+        } else {
+            // App is installed or the app is uninstalled without clearing data, or the app is uninstalled,
+            // but it's a system app
+            long installedVersionCode = PackageInfoCompat.getLongVersionCode(installedPackageInfo);
+            long thisVersionCode = PackageInfoCompat.getLongVersionCode(mModel.getNewPackageInfo());
+            displayChanges = Prefs.Installer.displayChanges();
+            if (installedVersionCode < thisVersionCode) {
+                // Needs update
+                actionRes = R.string.update;
+            } else if (installedVersionCode == thisVersionCode) {
+                // Issue reinstall
+                actionRes = R.string.reinstall;
+            } else {
+                // Downgrade
+                actionRes = R.string.downgrade;
+            }
+        }
+        if (displayChanges) {
+            WhatsNewFragment dialogFragment = WhatsNewFragment.getInstance(mModel.getNewPackageInfo(),
+                    mModel.getInstalledPackageInfo());
+            mDialogHelper.showWhatsNewDialog(actionRes, dialogFragment, new InstallerDialogHelper.OnClickButtonsListener() {
+                @Override
+                public void triggerInstall() {
+                    displayInstallationPrompt(actionRes, true);
+                }
+
+                @Override
+                public void triggerCancel() {
+                    PackageInstallerActivity.this.triggerCancel();
+                }
+            }, mAppInfoClickListener);
+            return;
+        }
+        displayInstallationPrompt(actionRes, false);
+    }
+
+    private void displayInstallationPrompt(int actionRes, boolean splitOnly) {
+        if (mModel.getApkFile().isSplit()) {
+            SplitApkChooser fragment = SplitApkChooser.getNewInstance(getVersionInfoWithTrackers(
+                    mModel.getNewPackageInfo()), getString(actionRes));
+            mDialogHelper.showApkChooserDialog(actionRes, fragment, this, mAppInfoClickListener);
+            return;
+        }
+        if (!splitOnly) {
+            // In unprivileged mode, a dialog is generated by the system. But we need to display it nonetheless in order
+            // to provide additional features.
+            mDialogHelper.showInstallConfirmationDialog(actionRes, this, mAppInfoClickListener);
+        } else triggerInstall();
+    }
+
+    private void displayInstallerOptions(InstallerOptionsFragment.OnClickListener clickListener) {
+        PackageInfo packageInfo = mModel.getNewPackageInfo();
+        InstallerOptionsFragment dialog = InstallerOptionsFragment.getInstance(packageInfo.packageName,
+                ApplicationInfoCompat.isTestOnly(packageInfo.applicationInfo), mInstallerOptions, clickListener);
+        dialog.show(getSupportFragmentManager(), InstallerOptionsFragment.TAG);
     }
 
     @Override
@@ -278,91 +337,36 @@ public class PackageInstallerActivity extends BaseActivity implements WhatsNewDi
 
     @UiThread
     private void install() {
-        if (model.getApkFile().hasObb() && !Ops.isPrivileged()) {
+        if (mModel.getApkFile().hasObb() && !SelfPermissions.checkSelfOrRemotePermission(Manifest.permission.INSTALL_PACKAGES)) {
             // Need to request permissions if not given
-            storagePermission.request(granted -> {
-                if (granted) launchInstaller();
+            mStoragePermission.request(granted -> {
+                if (granted) launchInstallerService();
             });
-        } else launchInstaller();
+        } else launchInstallerService();
     }
 
     @UiThread
-    private void launchInstaller() {
-        if (model.getApkFile().isSplit()) {
-            SplitApkChooser.getNewInstance(
-                    model.getApkFileKey(),
-                    model.getNewPackageInfo().applicationInfo,
-                    getVersionInfoWithTrackers(model.getNewPackageInfo()),
-                    getString(actionName),
-                    new SplitApkChooser.OnTriggerInstallInterface() {
-                        @Override
-                        public void triggerInstall() {
-                            launchInstallService();
-                        }
-
-                        @Override
-                        public void triggerCancel() {
-                            PackageInstallerActivity.this.triggerCancel();
-                        }
-                    }
-            ).show(fm, SplitApkChooser.TAG);
-        } else {
-            launchInstallService();
-        }
-    }
-
-    private void launchInstallService() {
-        // Select user
-        if (Ops.isPrivileged() && AppPref.getBoolean(AppPref.PrefKey.PREF_INSTALLER_DISPLAY_USERS_BOOL)) {
-            List<UserInfo> users = model.getUsers();
-            if (users != null && users.size() > 1) {
-                String[] userNames = new String[users.size() + 1];
-                int[] userHandles = new int[users.size() + 1];
-                userNames[0] = getString(R.string.backup_all_users);
-                userHandles[0] = UserHandleHidden.USER_ALL;
-                int i = 1;
-                for (UserInfo info : users) {
-                    userNames[i] = info.name == null ? String.valueOf(info.id) : info.name;
-                    userHandles[i] = info.id;
-                    ++i;
-                }
-                AtomicInteger userHandle = new AtomicInteger(UserHandleHidden.USER_ALL);
-                new MaterialAlertDialogBuilder(this)
-                        .setCancelable(false)
-                        .setTitle(R.string.select_user)
-                        .setSingleChoiceItems(userNames, 0, (dialog, which) ->
-                                userHandle.set(userHandles[which]))
-                        .setPositiveButton(R.string.ok, (dialog, which) -> doLaunchInstallerService(userHandle.get()))
-                        .setNegativeButton(R.string.cancel, (dialog, which) -> triggerCancel())
-                        .show();
-                return;
-            }
-        }
-        doLaunchInstallerService(UserHandleHidden.myUserId());
-    }
-
-    private void doLaunchInstallerService(@UserIdInt int userId) {
-        lastUserId = userId == UserHandleHidden.USER_ALL ? UserHandleHidden.myUserId() : userId;
+    private void launchInstallerService() {
+        assert mCurrentItem != null;
+        int userId = mInstallerOptions.getUserId();
+        mCurrentItem.setInstallerOptions(mInstallerOptions);
+        mCurrentItem.setSelectedSplits(mModel.getSelectedSplitsForInstallation());
+        mLastUserId = userId == UserHandleHidden.USER_ALL ? UserHandleHidden.myUserId() : userId;
         boolean canDisplayNotification = Utils.canDisplayNotification(this);
-        boolean alwaysOnBackground = canDisplayNotification &&
-                AppPref.getBoolean(AppPref.PrefKey.PREF_INSTALLER_ALWAYS_ON_BACKGROUND_BOOL);
+        boolean alwaysOnBackground = canDisplayNotification && Prefs.Installer.installInBackground();
         Intent intent = new Intent(this, PackageInstallerService.class);
-        intent.putExtra(PackageInstallerService.EXTRA_APK_FILE_KEY, model.getApkFileKey());
-        intent.putExtra(PackageInstallerService.EXTRA_APP_LABEL, model.getAppLabel());
-        intent.putExtra(PackageInstallerService.EXTRA_USER_ID, userId);
-        // We have to get an ApkFile instance in advance because of the queue management i.e. if this activity is closed
-        // before the ApkFile in the queue is accessed, it will throw an IllegalArgumentException as the ApkFile under
-        // the key is unavailable by the time it calls it.
-        ApkFile.getInAdvance(model.getApkFileKey());
-        if (!Ops.isPrivileged()) {
-            // For no-root, use accessibility service if enabled
-            multiplexer.enableInstall(true);
+        intent.putExtra(PackageInstallerService.EXTRA_QUEUE_ITEM, mCurrentItem);
+        if (!SelfPermissions.checkSelfOrRemotePermission(Manifest.permission.INSTALL_PACKAGES)) {
+            // For unprivileged mode, use accessibility service if enabled
+            mMultiplexer.enableInstall(true);
         }
         ContextCompat.startForegroundService(this, intent);
-        if (!alwaysOnBackground && service != null) {
+        if (!alwaysOnBackground && mService != null) {
             setInstallFinishedListener();
-            installProgressDialog = getInstallationProgressDialog(canDisplayNotification);
-            installProgressDialog.show();
+            mDialogHelper.showInstallProgressDialog(canDisplayNotification ? v -> {
+                unsetInstallFinishedListener();
+                goToNext();
+            } : null);
         } else {
             unsetInstallFinishedListener();
             // For some reason, the service is empty
@@ -374,69 +378,76 @@ public class PackageInstallerActivity extends BaseActivity implements WhatsNewDi
     @Override
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
-        Log.d("PIA", "New intent called: " + intent.toString());
+        Log.d(TAG, "New intent called: %s", intent);
         // Check for action first
         if (ACTION_PACKAGE_INSTALLED.equals(intent.getAction())) {
-            sessionId = intent.getIntExtra(PackageInstaller.EXTRA_SESSION_ID, -1);
-            packageName = intent.getStringExtra(PackageInstaller.EXTRA_PACKAGE_NAME);
-            Intent confirmIntent = intent.getParcelableExtra(Intent.EXTRA_INTENT);
+            mSessionId = intent.getIntExtra(PackageInstaller.EXTRA_SESSION_ID, -1);
+            mPackageName = intent.getStringExtra(PackageInstaller.EXTRA_PACKAGE_NAME);
+            Intent confirmIntent = IntentCompat.getParcelableExtra(intent, Intent.EXTRA_INTENT, Intent.class);
             try {
-                if (packageName == null || confirmIntent == null) throw new Exception("Empty confirmation intent.");
-                Log.d("PIA", "Requesting user confirmation for package " + packageName);
-                confirmIntentLauncher.launch(confirmIntent);
+                if (mPackageName == null || confirmIntent == null) throw new Exception("Empty confirmation intent.");
+                Log.d(TAG, "Requesting user confirmation for package %s", mPackageName);
+                mConfirmIntentLauncher.launch(confirmIntent);
             } catch (Exception e) {
                 e.printStackTrace();
-                PackageInstallerCompat.sendCompletedBroadcast(packageName, PackageInstallerCompat.STATUS_FAILURE_INCOMPATIBLE_ROM, sessionId);
-                if (!hasNext() && !isDealingWithApk) {
+                PackageInstallerCompat.sendCompletedBroadcast(this, mPackageName, PackageInstallerCompat.STATUS_FAILURE_INCOMPATIBLE_ROM, mSessionId);
+                if (!hasNext() && !mIsDealingWithApk) {
                     // No APKs left, this maybe a solo call
                     finish();
                 } // else let the original activity decide what to do
             }
+            return;
         }
+        // New APK files added
+        synchronized (mApkQueue) {
+            mApkQueue.addAll(ApkQueueItem.fromIntent(intent));
+        }
+        UIUtils.displayShortToast(R.string.added_to_queue);
     }
 
     @UiThread
     @Override
     public void triggerInstall() {
-        long installedVersionCode = PackageInfoCompat.getLongVersionCode(model.getInstalledPackageInfo());
-        long thisVersionCode = PackageInfoCompat.getLongVersionCode(model.getNewPackageInfo());
-        if (installedVersionCode > thisVersionCode && !Ops.isPrivileged()) {
+        // Calls install(), reinstall() (which in terms called install()) and triggerCancel()
+        if (mModel.getInstalledPackageInfo() == null) {
+            // App not installed
+            install();
+            return;
+        }
+        InstallerDialogHelper.OnClickButtonsListener reinstallListener = new InstallerDialogHelper.OnClickButtonsListener() {
+            @Override
+            public void triggerInstall() {
+                // Uninstall and then install again
+                reinstall();
+            }
+
+            @Override
+            public void triggerCancel() {
+                PackageInstallerActivity.this.triggerCancel();
+            }
+        };
+        long installedVersionCode = PackageInfoCompat.getLongVersionCode(mModel.getInstalledPackageInfo());
+        long thisVersionCode = PackageInfoCompat.getLongVersionCode(mModel.getNewPackageInfo());
+        if (installedVersionCode > thisVersionCode && !SelfPermissions.checkSelfOrRemotePermission(Manifest.permission.INSTALL_PACKAGES)) {
             // Need to uninstall and install again
             SpannableStringBuilder builder = new SpannableStringBuilder()
                     .append(getString(R.string.do_you_want_to_uninstall_and_install)).append(" ")
                     .append(UIUtils.getItalicString(getString(R.string.app_data_will_be_lost)))
                     .append("\n\n");
-
-            new MaterialAlertDialogBuilder(PackageInstallerActivity.this)
-                    .setCustomTitle(getDialogTitle(PackageInstallerActivity.this, model.getAppLabel(),
-                            model.getAppIcon(), getVersionInfoWithTrackers(model.getNewPackageInfo())))
-                    .setMessage(builder)
-                    .setPositiveButton(R.string.yes, (dialog, which) -> {
-                        // Uninstall and then install again
-                        reinstall();
-                    })
-                    .setNegativeButton(R.string.no, (dialog, which) -> triggerCancel())
-                    .setCancelable(false)
-                    .show();
+            mDialogHelper.showDowngradeReinstallWarning(builder, reinstallListener, mAppInfoClickListener);
             return;
         }
-        if (!model.isSignatureDifferent()) {
+        if (!mModel.isSignatureDifferent()) {
             // Signature is either matched or the app isn't installed
             install();
             return;
         }
         // Signature is different
-        ApplicationInfo info = model.getInstalledPackageInfo().applicationInfo;  // Installed package info is never null here.
-        if ((info.flags & ApplicationInfo.FLAG_SYSTEM) != 0) {
+        ApplicationInfo info = mModel.getInstalledPackageInfo().applicationInfo;  // Installed package info is never null here.
+        if (ApplicationInfoCompat.isSystemApp(info)) {
             // Cannot reinstall a system app with a different signature
-            getInstallationFinishedDialog(model.getPackageName(),
-                    getString(R.string.app_signing_signature_mismatch_for_system_apps), null, false).show();
-            return;
-        }
-        if (info.publicSourceDir == null || !new File(info.publicSourceDir).exists()) {
-            // Cannot reinstall an uninstalled app
-            getInstallationFinishedDialog(model.getPackageName(),
-                    getString(R.string.app_signing_signature_mismatch_for_data_only_app), null, false).show();
+            showInstallationFinishedDialog(mModel.getPackageName(),
+                    getString(R.string.app_signing_signature_mismatch_for_system_apps), null, false);
             return;
         }
         // Offer user to uninstall and then install the app again
@@ -447,66 +458,50 @@ public class PackageInstallerActivity extends BaseActivity implements WhatsNewDi
         int start = builder.length();
         builder.append(getText(R.string.app_signing_install_without_data_loss));
         builder.setSpan(new RelativeSizeSpan(0.8f), start, builder.length(), Spanned.SPAN_INCLUSIVE_EXCLUSIVE);
-
-        new MaterialAlertDialogBuilder(PackageInstallerActivity.this)
-                .setCustomTitle(getDialogTitle(PackageInstallerActivity.this, model.getAppLabel(),
-                        model.getAppIcon(), getVersionInfoWithTrackers(model.getNewPackageInfo())))
-                .setMessage(builder)
-                .setPositiveButton(R.string.yes, (dialog, which) -> {
-                    // Uninstall and then install again
-                    reinstall();
-                })
-                .setNegativeButton(R.string.no, (dialog, which) -> triggerCancel())
-                .setNeutralButton(R.string.only_install, (dialog, which) -> install())
-                .setCancelable(false)
-                .show();
+        mDialogHelper.showSignatureMismatchReinstallWarning(builder, reinstallListener, v -> install());
     }
 
     @Override
     public void triggerCancel() {
+        // Run cleanup
+        if (mCurrentItem != null && mCurrentItem.getApkSource() instanceof CachedApkSource) {
+            ((CachedApkSource) mCurrentItem.getApkSource()).cleanup();
+        }
         goToNext();
     }
 
     private void reinstall() {
-        if (Ops.isPrivileged()) {
-            // User must be all
-            try {
-                PackageInstallerCompat.uninstall(model.getPackageName(),
-                        UserHandleHidden.USER_ALL, false);
-                install();
-            } catch (Exception e) {
-                getInstallationFinishedDialog(model.getPackageName(), getString(R.string.failed_to_uninstall_app),
-                        e.getMessage(), false).show();
-            }
-        } else {
-            multiplexer.enableUninstall(true);
-            // Uninstall using service, not guaranteed to work
-            // since it only uninstalls for the current user
-            Intent intent = new Intent(Intent.ACTION_DELETE);
-            intent.setData(Uri.parse("package:" + model.getPackageName()));
-            uninstallIntentLauncher.launch(intent);
+        if (!SelfPermissions.checkSelfOrRemotePermission(Manifest.permission.DELETE_PACKAGES)) {
+            mMultiplexer.enableUninstall(true);
         }
+        mModel.uninstallPackage();
     }
 
     /**
      * Closes the current APK and start the next
      */
     private void goToNext() {
-        multiplexer.enableInstall(false);
-        multiplexer.enableUninstall(false);
+        mCurrentItem = null;
+        mMultiplexer.enableInstall(false);
+        mMultiplexer.enableUninstall(false);
         if (hasNext()) {
-            isDealingWithApk = true;
-            progressDialog.show();
-            //noinspection ConstantConditions Checked earlier
-            model.getPackageInfo(uriIterator.next(), mimeType);
+            mIsDealingWithApk = true;
+            mDialogHelper.initProgress(v -> goToNext());
+            synchronized (mApkQueue) {
+                mCurrentItem = Objects.requireNonNull(mApkQueue.poll());
+                mModel.getPackageInfo(mCurrentItem);
+            }
         } else {
-            isDealingWithApk = false;
+            mIsDealingWithApk = false;
+            mDialogHelper.dismiss();
             finish();
         }
     }
 
     private boolean hasNext() {
-        return uriIterator != null && uriIterator.hasNext();
+        synchronized (mApkQueue) {
+            return !mApkQueue.isEmpty();
+        }
     }
 
     @NonNull
@@ -514,7 +509,7 @@ public class PackageInstallerActivity extends BaseActivity implements WhatsNewDi
         Resources res = getApplication().getResources();
         long newVersionCode = PackageInfoCompat.getLongVersionCode(newPackageInfo);
         String newVersionName = newPackageInfo.versionName;
-        int trackers = model.getTrackerCount();
+        int trackers = mModel.getTrackerCount();
         StringBuilder sb = new StringBuilder(res.getString(R.string.version_name_with_code, newVersionName, newVersionCode));
         if (trackers > 0) {
             sb.append(", ").append(res.getQuantityString(R.plurals.no_of_trackers, trackers, trackers));
@@ -522,97 +517,37 @@ public class PackageInstallerActivity extends BaseActivity implements WhatsNewDi
         return sb.toString();
     }
 
-    @NonNull
-    public AlertDialog getInstallationProgressDialog(boolean enableBackgroundService) {
-        View view = getLayoutInflater().inflate(R.layout.dialog_progress2, null);
-        TextView tv = view.findViewById(android.R.id.text1);
-        tv.setText(R.string.install_in_progress);
-        MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(this)
-                .setCustomTitle(getDialogTitle(this, model.getAppLabel(), model.getAppIcon(),
-                        getVersionInfoWithTrackers(model.getNewPackageInfo())))
-                .setCancelable(false)
-                .setView(view);
-        if (enableBackgroundService) {
-            builder.setPositiveButton(R.string.background, (dialog, which) -> {
-                unsetInstallFinishedListener();
-                dialog.dismiss();
-                goToNext();
-            });
-        }
-        return builder.create();
-    }
-
-    @NonNull
-    public AlertDialog getInstallationFinishedDialog(String packageName, int result, @Nullable String blockingPackage,
-                                                     @Nullable String statusMessage) {
-        return getInstallationFinishedDialog(packageName, getStringFromStatus(result, blockingPackage), statusMessage,
+    public void showInstallationFinishedDialog(String packageName, int result, @Nullable String blockingPackage,
+                                               @Nullable String statusMessage) {
+        showInstallationFinishedDialog(packageName, getStringFromStatus(result, blockingPackage), statusMessage,
                 result == STATUS_SUCCESS);
     }
 
-    @NonNull
-    public AlertDialog getInstallationFinishedDialog(String packageName, CharSequence message,
-                                                     @Nullable String statusMessage, boolean displayOpenAndAppInfo) {
-        View view = getLayoutInflater().inflate(R.layout.dialog_scrollable_text_view, null);
-        view.findViewById(android.R.id.checkbox).setVisibility(View.GONE);
-        TextView tv = view.findViewById(android.R.id.content);
+    public void showInstallationFinishedDialog(String packageName, CharSequence message,
+                                               @Nullable String statusMessage, boolean displayOpenAndAppInfo) {
         SpannableStringBuilder ssb = new SpannableStringBuilder(message);
         if (statusMessage != null) {
             ssb.append("\n\n").append(UIUtils.getItalicString(statusMessage));
         }
-        tv.setText(ssb);
-        AtomicReference<AlertDialog> dialogAtomicReference = new AtomicReference<>();
-        DialogTitleBuilder title = new DialogTitleBuilder(this)
-                .setTitle(model.getAppLabel())
-                .setSubtitle(getVersionInfoWithTrackers(model.getNewPackageInfo()))
-                .setStartIcon(model.getAppIcon());
-        if (displayOpenAndAppInfo) {
-            title.setEndIcon(R.drawable.ic_information, v -> {
-                Intent appDetailsIntent = AppDetailsActivity.getIntent(this, packageName, lastUserId, true);
-                appDetailsIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                startActivity(appDetailsIntent);
-                if (!hasNext() && dialogAtomicReference.get() != null) {
-                    dialogAtomicReference.get().dismiss();
-                    goToNext();
-                }
-            });
-        }
-        MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(this)
-                .setCustomTitle(title.build())
-                .setView(view)
-                .setCancelable(false)
-                .setNegativeButton(hasNext() ? R.string.next : R.string.close, (dialog, which) -> {
-                    dialog.dismiss();
-                    goToNext();
-                });
-        if (displayOpenAndAppInfo) {
-            Intent intent = getPackageManager().getLaunchIntentForPackage(packageName);
-            if (intent != null) {
-                builder.setPositiveButton(R.string.open, (dialog, which) -> {
-                    dialog.dismiss();
-                    startActivity(intent);
-                    goToNext();
-                });
-            }
-        }
-        dialogAtomicReference.set(builder.create());
-        return dialogAtomicReference.get();
-    }
-
-    @NonNull
-    public AlertDialog getParsingProgressDialog() {
-        View view = getLayoutInflater().inflate(R.layout.dialog_progress2, null);
-        TextView tv = view.findViewById(android.R.id.text1);
-        tv.setText(R.string.staging_apk_files);
-        return new MaterialAlertDialogBuilder(this)
-                .setTitle(R.string._undefined)
-                .setIcon(R.drawable.ic_get_app)
-                .setCancelable(false)
-                .setNegativeButton(R.string.cancel, (dialog, which) -> {
-                    dialog.dismiss();
-                    goToNext();
-                })
-                .setView(view)
-                .create();
+        Intent intent = getPackageManager().getLaunchIntentForPackage(packageName);
+        mDialogHelper.showInstallFinishedDialog(ssb, hasNext() ? R.string.next : R.string.close, v -> goToNext(),
+                displayOpenAndAppInfo && intent != null ? v -> {
+                    try {
+                        startActivity(intent);
+                    } catch (Throwable th) {
+                        UIUtils.displayLongToast(th.getMessage());
+                    } finally {
+                        goToNext();
+                    }
+                } : null, displayOpenAndAppInfo ? v -> {
+                    try {
+                        Intent appDetailsIntent = AppDetailsActivity.getIntent(this, packageName, mLastUserId, true);
+                        appDetailsIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                        startActivity(appDetailsIntent);
+                    } finally {
+                        goToNext();
+                    }
+                } : null);
     }
 
     @NonNull
@@ -654,20 +589,17 @@ public class PackageInstallerActivity extends BaseActivity implements WhatsNewDi
     }
 
     public void setInstallFinishedListener() {
-        if (service != null) {
-            service.setOnInstallFinished((packageName, status, blockingPackage, statusMessage) -> {
+        if (mService != null) {
+            mService.setOnInstallFinished((packageName, status, blockingPackage, statusMessage) -> {
                 if (isFinishing()) return;
-                if (installProgressDialog != null) {
-                    installProgressDialog.hide();
-                }
-                getInstallationFinishedDialog(packageName, status, blockingPackage, statusMessage).show();
+                showInstallationFinishedDialog(packageName, status, blockingPackage, statusMessage);
             });
         }
     }
 
     public void unsetInstallFinishedListener() {
-        if (service != null) {
-            service.setOnInstallFinished(null);
+        if (mService != null) {
+            mService.setOnInstallFinished(null);
         }
     }
 }

@@ -6,6 +6,10 @@ import android.os.Parcel;
 import android.os.Parcelable;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.core.os.ParcelCompat;
+
+import java.util.Objects;
 
 public class ProcessEntry implements Parcelable {
     public int pid;
@@ -24,6 +28,7 @@ public class ProcessEntry implements Parcelable {
     public int cpu;
     public int threadCount;
     public int tty;
+    @Nullable
     public String seLinuxPolicy;
     public String name;
     public ProcessUsers users;
@@ -55,7 +60,7 @@ public class ProcessEntry implements Parcelable {
         tty = in.readInt();
         seLinuxPolicy = in.readString();
         name = in.readString();
-        users = in.readParcelable(ProcessUsers.class.getClassLoader());
+        users = Objects.requireNonNull(ParcelCompat.readParcelable(in, ProcessUsers.class.getClassLoader(), ProcessUsers.class));
         cpuTimeConsumed = in.readLong();
         cCpuTimeConsumed = in.readLong();
         elapsedTime = in.readLong();

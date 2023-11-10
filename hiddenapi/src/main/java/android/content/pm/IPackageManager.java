@@ -38,7 +38,7 @@ public interface IPackageManager extends IInterface {
     @Deprecated
     PackageInfo getPackageInfo(String packageName, int flags, int userId) throws RemoteException;
 
-    @RequiresApi(Build.VERSION_CODES.T)
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     PackageInfo getPackageInfo(String packageName, long flags, int userId) throws RemoteException;
 
     /**
@@ -48,7 +48,7 @@ public interface IPackageManager extends IInterface {
     @RequiresApi(Build.VERSION_CODES.O)
     PackageInfo getPackageInfoVersioned(VersionedPackage versionedPackage, int flags, int userId) throws RemoteException;
 
-    @RequiresApi(Build.VERSION_CODES.T)
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     PackageInfo getPackageInfoVersioned(VersionedPackage versionedPackage, long flags, int userId) throws RemoteException;
 
     /**
@@ -64,7 +64,7 @@ public interface IPackageManager extends IInterface {
     @RequiresApi(Build.VERSION_CODES.N)
     int getPackageUid(String packageName, int flags, int userId) throws RemoteException;
 
-    @RequiresApi(Build.VERSION_CODES.T)
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     int getPackageUid(String packageName, long flags, int userId) throws RemoteException;
 
     /**
@@ -87,7 +87,7 @@ public interface IPackageManager extends IInterface {
     @RequiresApi(Build.VERSION_CODES.N)
     int[] getPackageGids(String packageName, int flags, int userId) throws RemoteException;
 
-    @RequiresApi(Build.VERSION_CODES.T)
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     int[] getPackageGids(String packageName, long flags, int userId) throws RemoteException;
 
     String[] currentToCanonicalPackageNames(String[] names) throws RemoteException;
@@ -131,7 +131,7 @@ public interface IPackageManager extends IInterface {
     @Deprecated
     ApplicationInfo getApplicationInfo(String packageName, int flags, int userId) throws RemoteException;
 
-    @RequiresApi(Build.VERSION_CODES.T)
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     ApplicationInfo getApplicationInfo(String packageName, long flags, int userId) throws RemoteException;
 
     /**
@@ -140,7 +140,7 @@ public interface IPackageManager extends IInterface {
     @Deprecated
     ActivityInfo getActivityInfo(ComponentName className, int flags, int userId) throws RemoteException;
 
-    @RequiresApi(Build.VERSION_CODES.T)
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     ActivityInfo getActivityInfo(ComponentName className, long flags, int userId) throws RemoteException;
 
     boolean activitySupportsIntent(ComponentName className, Intent intent,
@@ -152,7 +152,7 @@ public interface IPackageManager extends IInterface {
     @Deprecated
     ActivityInfo getReceiverInfo(ComponentName className, int flags, int userId) throws RemoteException;
 
-    @RequiresApi(Build.VERSION_CODES.T)
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     ActivityInfo getReceiverInfo(ComponentName className, long flags, int userId) throws RemoteException;
 
     /**
@@ -161,7 +161,7 @@ public interface IPackageManager extends IInterface {
     @Deprecated
     ServiceInfo getServiceInfo(ComponentName className, int flags, int userId) throws RemoteException;
 
-    @RequiresApi(Build.VERSION_CODES.T)
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     ServiceInfo getServiceInfo(ComponentName className, long flags, int userId) throws RemoteException;
 
     /**
@@ -170,7 +170,7 @@ public interface IPackageManager extends IInterface {
     @Deprecated
     ProviderInfo getProviderInfo(ComponentName className, int flags, int userId) throws RemoteException;
 
-    @RequiresApi(Build.VERSION_CODES.T)
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     ProviderInfo getProviderInfo(ComponentName className, long flags, int userId) throws RemoteException;
 
     /**
@@ -320,7 +320,7 @@ public interface IPackageManager extends IInterface {
     @Deprecated
     ResolveInfo resolveIntent(Intent intent, String resolvedType, int flags, int userId) throws RemoteException;
 
-    @RequiresApi(Build.VERSION_CODES.T)
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     ResolveInfo resolveIntent(Intent intent, String resolvedType, long flags, int userId) throws RemoteException;
 
     @RequiresApi(Build.VERSION_CODES.O)
@@ -355,7 +355,7 @@ public interface IPackageManager extends IInterface {
     @Deprecated
     ResolveInfo resolveService(Intent intent, String resolvedType, int flags, int userId) throws RemoteException;
 
-    @RequiresApi(Build.VERSION_CODES.T)
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     ResolveInfo resolveService(Intent intent, String resolvedType, long flags, int userId) throws RemoteException;
 
     /**
@@ -381,7 +381,7 @@ public interface IPackageManager extends IInterface {
     @Deprecated
     ParceledListSlice<PackageInfo> getInstalledPackages(int flags, int userId) throws RemoteException;
 
-    @RequiresApi(Build.VERSION_CODES.T)
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     ParceledListSlice<PackageInfo> getInstalledPackages(long flags, int userId) throws RemoteException;
 
     /**
@@ -390,7 +390,7 @@ public interface IPackageManager extends IInterface {
     @Deprecated
     ParceledListSlice<PackageInfo> getPackagesHoldingPermissions(String[] permissions, int flags, int userId) throws RemoteException;
 
-    @RequiresApi(Build.VERSION_CODES.T)
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     ParceledListSlice<PackageInfo> getPackagesHoldingPermissions(String[] permissions, long flags, int userId) throws RemoteException;
 
     /**
@@ -399,7 +399,7 @@ public interface IPackageManager extends IInterface {
     @Deprecated
     ParceledListSlice<ApplicationInfo> getInstalledApplications(int flags, int userId) throws RemoteException;
 
-    @RequiresApi(Build.VERSION_CODES.T)
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     ParceledListSlice<ApplicationInfo> getInstalledApplications(long flags, int userId) throws RemoteException;
 
     /**
@@ -414,7 +414,7 @@ public interface IPackageManager extends IInterface {
     @Deprecated
     ProviderInfo resolveContentProvider(String name, int flags, int userId) throws RemoteException;
 
-    @RequiresApi(Build.VERSION_CODES.T)
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     ProviderInfo resolveContentProvider(String name, long flags, int userId) throws RemoteException;
 
     /**
@@ -479,8 +479,15 @@ public interface IPackageManager extends IInterface {
 
     String getInstallerPackageName(String packageName) throws RemoteException;
 
+    /**
+     * @deprecated Removed in API 34 (Android U)
+     */
+    @Deprecated
     @RequiresApi(Build.VERSION_CODES.R)
     InstallSourceInfo getInstallSourceInfo(String packageName) throws RemoteException;
+
+    @RequiresApi(34)
+    InstallSourceInfo getInstallSourceInfo(String packageName, int userId) throws RemoteException;
 
     /**
      * @deprecated Removed in API 23 (Android M)
@@ -639,8 +646,17 @@ public interface IPackageManager extends IInterface {
 
     /**
      * As per {@link android.content.pm.PackageManager#setComponentEnabledSetting}.
+     *
+     * @deprecated Replaced by {@link #setComponentEnabledSetting(ComponentName, int, int, int, String)} in Android 14 (SDK 34)
      */
+    @Deprecated
     void setComponentEnabledSetting(ComponentName componentName, int newState, int flags, int userId) throws RemoteException;
+
+    /**
+     * As per {@link android.content.pm.PackageManager#setComponentEnabledSetting}.
+     */
+    @RequiresApi(34)
+    void setComponentEnabledSetting(ComponentName componentName, int newState, int flags, int userId, String callingPackage) throws RemoteException;
 
     /**
      * As per {@link android.content.pm.PackageManager#getComponentEnabledSetting}.
@@ -910,7 +926,10 @@ public interface IPackageManager extends IInterface {
      * Ask the package manager to perform a dex-opt for the given reason. The package
      * manager will map the reason to a compiler filter according to the current system
      * configuration.
+     *
+     * @deprecated Removed in API 27 (Android O MR1)
      */
+    @Deprecated
     @RequiresApi(Build.VERSION_CODES.N)
     boolean performDexOpt(String packageName, boolean checkProfiles, int compileReason, boolean force) throws RemoteException;
 
@@ -919,10 +938,23 @@ public interface IPackageManager extends IInterface {
      * <p>
      * Note: exposed only for the shell command to allow moving packages explicitly to a
      * definite state.
+     *
+     * @deprecated Replaced by {@link #performDexOptMode(String, boolean, String, boolean, boolean, String)} in API 27 (Android O MR1)
      */
+    @Deprecated
     @RequiresApi(Build.VERSION_CODES.N)
     boolean performDexOptMode(String packageName, boolean checkProfiles,
                               String targetCompilerFilter, boolean force) throws RemoteException;
+
+    /**
+     * Ask the package manager to perform a dex-opt with the given compiler filter.
+     * <p>
+     * Note: exposed only for the shell command to allow moving packages explicitly to a
+     * definite state.
+     */
+    @RequiresApi(Build.VERSION_CODES.O_MR1)
+    boolean performDexOptMode(String packageName, boolean checkProfiles,
+                              String targetCompilerFilter, boolean force, boolean bootComplete, String splitName) throws RemoteException;
 
     /**
      * Ask the package manager to perform a dex-opt with the given compiler filter on the
@@ -936,8 +968,11 @@ public interface IPackageManager extends IInterface {
 
     /**
      * Ask the package manager to compile layouts in the given package.
+     *
+     * @deprecated Removed in API 31 (Android 12)
      */
     @RequiresApi(Build.VERSION_CODES.Q)
+    @Deprecated
     boolean compileLayouts(String packageName) throws RemoteException;
 
     /**
@@ -1269,7 +1304,7 @@ public interface IPackageManager extends IInterface {
     @RequiresApi(Build.VERSION_CODES.O)
     ParceledListSlice getSharedLibraries(String packageName, int flags, int userId) throws RemoteException;
 
-    @RequiresApi(Build.VERSION_CODES.T)
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     ParceledListSlice getSharedLibraries(String packageName, long flags, int userId) throws RemoteException;
 
     /**
@@ -1278,7 +1313,8 @@ public interface IPackageManager extends IInterface {
     @Deprecated
     @RequiresApi(Build.VERSION_CODES.Q)
     ParceledListSlice getDeclaredSharedLibraries(String packageName, int flags, int userId) throws RemoteException;
-    @RequiresApi(Build.VERSION_CODES.T)
+
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     ParceledListSlice getDeclaredSharedLibraries(String packageName, long flags, int userId) throws RemoteException;
 
     @RequiresApi(Build.VERSION_CODES.O)

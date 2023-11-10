@@ -10,6 +10,7 @@ import android.view.View;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.UiThread;
+import androidx.recyclerview.widget.LinearLayoutManager;
 
 import io.github.muntashirakon.ui.R;
 import io.github.muntashirakon.util.UiUtils;
@@ -39,7 +40,7 @@ public class RecyclerView extends androidx.recyclerview.widget.RecyclerView {
     }
 
     public RecyclerView(@NonNull Context context, @Nullable AttributeSet attrs) {
-        this(context, attrs, R.attr.recyclerViewStyle);
+        this(context, attrs, androidx.recyclerview.R.attr.recyclerViewStyle);
     }
 
     public RecyclerView(@NonNull Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
@@ -83,5 +84,13 @@ public class RecyclerView extends androidx.recyclerview.widget.RecyclerView {
     public void setEmptyView(View emptyView) {
         mEmptyView = emptyView;
         checkIfEmpty();
+    }
+
+    public void setSelection(int position) {
+        LayoutManager layoutManager = getLayoutManager();
+        if (layoutManager instanceof LinearLayoutManager) {
+            LinearLayoutManager linearLayoutManager = (LinearLayoutManager) layoutManager;
+            linearLayoutManager.scrollToPositionWithOffset(position, 0);
+        }
     }
 }

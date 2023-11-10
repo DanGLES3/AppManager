@@ -2,17 +2,18 @@
 
 package io.github.muntashirakon.AppManager.runner;
 
+import android.text.TextUtils;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.WorkerThread;
-
-import com.android.internal.util.TextUtils;
 
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import io.github.muntashirakon.AppManager.ipc.LocalServices;
 import io.github.muntashirakon.AppManager.logs.Log;
 import io.github.muntashirakon.AppManager.settings.Ops;
 
@@ -20,14 +21,14 @@ public abstract class Runner {
     public static final String TAG = Runner.class.getSimpleName();
 
     public static class Result {
-        private final List<String> stdout;
-        private final List<String> stderr;
-        private final int exitCode;
+        private final List<String> mStdout;
+        private final List<String> mStderr;
+        private final int mExitCode;
 
         Result(@NonNull List<String> stdout, @NonNull List<String> stderr, int exitCode) {
-            this.stdout = stdout;
-            this.stderr = stderr;
-            this.exitCode = exitCode;
+            mStdout = stdout;
+            mStderr = stderr;
+            mExitCode = exitCode;
             // Print stderr
             if (stderr.size() > 0) {
                 Log.e(TAG, TextUtils.join("\n", stderr));
@@ -43,46 +44,46 @@ public abstract class Runner {
         }
 
         public boolean isSuccessful() {
-            return exitCode == 0;
+            return mExitCode == 0;
         }
 
         public int getExitCode() {
-            return exitCode;
+            return mExitCode;
         }
 
         @NonNull
         public List<String> getOutputAsList() {
-            return stdout;
+            return mStdout;
         }
 
         @NonNull
         public List<String> getOutputAsList(int firstIndex) {
-            if (firstIndex >= stdout.size()) {
+            if (firstIndex >= mStdout.size()) {
                 return Collections.emptyList();
             }
-            return stdout.subList(firstIndex, stdout.size());
+            return mStdout.subList(firstIndex, mStdout.size());
         }
 
         @NonNull
         public String getOutput() {
-            return TextUtils.join("\n", stdout);
+            return TextUtils.join("\n", mStdout);
         }
 
         public List<String> getStderr() {
-            return stderr;
+            return mStderr;
         }
     }
 
-    private static NormalShell rootShell;
-    private static AdbShell adbShell;
-    private static NormalShell noRootShell;
+    private static NormalShell sRootShell;
+    private static PrivilegedShell sPrivilegedShell;
+    private static NormalShell sNoRootShell;
 
     @NonNull
-    public static Runner getInstance() {
+    private static Runner getInstance() {
         if (Ops.isRoot()) {
             return getRootInstance();
-        } else if (Ops.isAdb()) {
-            return getAdbInstance();
+        } else if (LocalServices.alive()) {
+            return getPrivilegedInstance();
         } else {
             return getNoRootInstance();
         }
@@ -90,28 +91,28 @@ public abstract class Runner {
 
     @NonNull
     static Runner getRootInstance() {
-        if (rootShell == null) {
-            rootShell = new NormalShell(true);
+        if (sRootShell == null) {
+            sRootShell = new NormalShell(true);
             Log.d(TAG, "RootShell");
         }
-        return rootShell;
+        return sRootShell;
     }
 
     @NonNull
-    static Runner getAdbInstance() {
-        if (adbShell == null) {
-            adbShell = new AdbShell();
-            Log.d(TAG, "AdbShell");
+    private static Runner getPrivilegedInstance() {
+        if (sPrivilegedShell == null) {
+            sPrivilegedShell = new PrivilegedShell();
+            Log.d(TAG, "PrivilegedShell");
         }
-        return adbShell;
+        return sPrivilegedShell;
     }
 
-    static Runner getNoRootInstance() {
-        if (noRootShell == null) {
-            noRootShell = new NormalShell(false);
+    private static Runner getNoRootInstance() {
+        if (sNoRootShell == null) {
+            sNoRootShell = new NormalShell(false);
             Log.d(TAG, "NoRootShell");
         }
-        return noRootShell;
+        return sNoRootShell;
     }
 
     @NonNull

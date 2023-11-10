@@ -19,6 +19,7 @@ import androidx.annotation.IntDef;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
+import androidx.annotation.RequiresPermission;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -264,26 +265,42 @@ public final class PermissionCompat {
     }
 
     @SuppressWarnings("deprecation")
+    @RequiresPermission(anyOf = {
+            ManifestCompat.permission.GET_RUNTIME_PERMISSIONS,
+            ManifestCompat.permission.GRANT_RUNTIME_PERMISSIONS,
+            ManifestCompat.permission.REVOKE_RUNTIME_PERMISSIONS,
+    })
     @PermissionFlags
     public static int getPermissionFlags(@NonNull String permissionName,
                                          @NonNull String packageName,
-                                         @UserIdInt int userId) throws RemoteException {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            IPermissionManager permissionManager = getPermissionManager();
-            return permissionManager.getPermissionFlags(permissionName, packageName, userId);
-        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            return PackageManagerCompat.getPackageManager().getPermissionFlags(permissionName, packageName, userId);
-        } else return FLAG_PERMISSION_NONE;
+                                         @UserIdInt int userId) throws SecurityException {
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                IPermissionManager permissionManager = getPermissionManager();
+                return permissionManager.getPermissionFlags(permissionName, packageName, userId);
+            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                return PackageManagerCompat.getPackageManager().getPermissionFlags(permissionName, packageName, userId);
+            }
+        } catch (RemoteException e) {
+            e.printStackTrace();
+        }
+        return FLAG_PERMISSION_NONE;
     }
 
     /**
-     * Replace a set of flags with another or {@code 0}
+     * Replace a set of flags with another or {@code 0}. Requires {@link ManifestCompat.permission#ADJUST_RUNTIME_PERMISSIONS_POLICY}
+     * when checkAdjustPolicyFlagPermission is {@code true} and flagMask has {@link #FLAG_PERMISSION_POLICY_FIXED}.
      *
      * @param flagMask   The flags to be replaced
      * @param flagValues The new flags to set (is a subset of flagMask)
      * @see <a href="https://cs.android.com/android/platform/superproject/+/master:cts/tests/tests/permission/src/android/permission/cts/PermissionFlagsTest.java">PermissionFlagsTest.java</a>
      */
     @SuppressWarnings("deprecation")
+    @RequiresPermission(anyOf = {
+            ManifestCompat.permission.GET_RUNTIME_PERMISSIONS,
+            ManifestCompat.permission.GRANT_RUNTIME_PERMISSIONS,
+            ManifestCompat.permission.REVOKE_RUNTIME_PERMISSIONS,
+    })
     public static void updatePermissionFlags(@NonNull String permissionName,
                                              @NonNull String packageName,
                                              @PermissionFlags int flagMask,
@@ -303,7 +320,11 @@ public final class PermissionCompat {
         }
     }
 
+    /**
+     * Grant a permission. May also require {@link ManifestCompat.permission#ADJUST_RUNTIME_PERMISSIONS_POLICY}.
+     */
     @SuppressWarnings("deprecation")
+    @RequiresPermission(ManifestCompat.permission.GRANT_RUNTIME_PERMISSIONS)
     public static void grantPermission(@NonNull String packageName,
                                        @NonNull String permissionName,
                                        @UserIdInt int userId)
@@ -319,13 +340,21 @@ public final class PermissionCompat {
         }
     }
 
+    /**
+     * Revoke a permission. May also require {@link ManifestCompat.permission#ADJUST_RUNTIME_PERMISSIONS_POLICY}.
+     */
+    @RequiresPermission(ManifestCompat.permission.REVOKE_RUNTIME_PERMISSIONS)
     public static void revokePermission(@NonNull String packageName,
                                         @NonNull String permissionName,
                                         @UserIdInt int userId) throws RemoteException {
         revokePermission(packageName, permissionName, userId, null);
     }
 
+    /**
+     * Revoke a permission. May also require {@link ManifestCompat.permission#ADJUST_RUNTIME_PERMISSIONS_POLICY}.
+     */
     @SuppressWarnings("deprecation")
+    @RequiresPermission(ManifestCompat.permission.REVOKE_RUNTIME_PERMISSIONS)
     public static void revokePermission(@NonNull String packageName,
                                         @NonNull String permissionName,
                                         @UserIdInt int userId,

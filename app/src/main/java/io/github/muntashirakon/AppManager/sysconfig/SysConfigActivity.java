@@ -2,6 +2,8 @@
 
 package io.github.muntashirakon.AppManager.sysconfig;
 
+import static io.github.muntashirakon.AppManager.utils.UIUtils.getStyledKeyValue;
+
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ApplicationInfo;
@@ -12,15 +14,12 @@ import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
-import android.widget.SpinnerAdapter;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.appcompat.widget.AppCompatSpinner;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
@@ -31,74 +30,62 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 import io.github.muntashirakon.AppManager.BaseActivity;
 import io.github.muntashirakon.AppManager.R;
 import io.github.muntashirakon.AppManager.details.AppDetailsActivity;
-import io.github.muntashirakon.AppManager.imagecache.ImageLoader;
+import io.github.muntashirakon.AppManager.self.imagecache.ImageLoader;
 import io.github.muntashirakon.AppManager.utils.LangUtils;
 import io.github.muntashirakon.AppManager.utils.appearance.ColorCodes;
+import io.github.muntashirakon.adapters.SelectedArrayAdapter;
+import io.github.muntashirakon.widget.MaterialSpinner;
 import io.github.muntashirakon.widget.RecyclerView;
 
-import static io.github.muntashirakon.AppManager.utils.UIUtils.getStyledKeyValue;
-
 public class SysConfigActivity extends BaseActivity {
-    private SysConfigRecyclerAdapter adapter;
-    private LinearProgressIndicator progressIndicator;
+    private SysConfigRecyclerAdapter mAdapter;
+    private LinearProgressIndicator mProgressIndicator;
     @NonNull
     @SysConfigType
-    private String type = SysConfigType.TYPE_GROUP;
+    private String mType = SysConfigType.TYPE_GROUP;
     private SysConfigViewModel mViewModel;
-
-    private final ImageLoader imageLoader = new ImageLoader();
 
     @Override
     protected void onAuthenticated(@Nullable Bundle savedInstanceState) {
         setContentView(R.layout.activity_sys_config);
         setSupportActionBar(findViewById(R.id.toolbar));
         mViewModel = new ViewModelProvider(this).get(SysConfigViewModel.class);
-        AppCompatSpinner spinner = findViewById(R.id.spinner);
+        MaterialSpinner spinner = findViewById(R.id.spinner);
         // Make spinner the first item to focus on
         spinner.requestFocus();
         RecyclerView recyclerView = findViewById(R.id.recycler_view);
         recyclerView.setEmptyView(findViewById(android.R.id.empty));
-        progressIndicator = findViewById(R.id.progress_linear);
-        progressIndicator.setVisibilityAfterHide(View.GONE);
+        mProgressIndicator = findViewById(R.id.progress_linear);
+        mProgressIndicator.setVisibilityAfterHide(View.GONE);
 
         String[] sysConfigTypes = getResources().getStringArray(R.array.sys_config_names);
-        SpinnerAdapter intervalSpinnerAdapter = new ArrayAdapter<>(this,
-                R.layout.item_checked_text_view, android.R.id.text1, sysConfigTypes);
+        ArrayAdapter<String> intervalSpinnerAdapter = new SelectedArrayAdapter<>(this,
+                io.github.muntashirakon.ui.R.layout.auto_complete_dropdown_item_small, android.R.id.text1, sysConfigTypes);
         spinner.setAdapter(intervalSpinnerAdapter);
-        spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                progressIndicator.show();
-                type = sysConfigTypes[position];
-                mViewModel.loadSysConfigInfo(type);
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-            }
+        spinner.setOnItemClickListener((parent, view, position, id) -> {
+            mProgressIndicator.show();
+            mType = sysConfigTypes[position];
+            mViewModel.loadSysConfigInfo(mType);
         });
 
-        adapter = new SysConfigRecyclerAdapter(this);
+        mAdapter = new SysConfigRecyclerAdapter(this);
         recyclerView.setHasFixedSize(true);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
-        recyclerView.setAdapter(adapter);
+        recyclerView.setAdapter(mAdapter);
         // Observe data
         mViewModel.getSysConfigInfoListLiveData().observe(this, sysConfigInfoList -> {
-            adapter.setList(sysConfigInfoList);
-            progressIndicator.hide();
+            Optional.ofNullable(getSupportActionBar())
+                    .ifPresent(actionBar -> actionBar.setSubtitle(mType));
+            mAdapter.setList(sysConfigInfoList);
+            mProgressIndicator.hide();
         });
 
-        mViewModel.loadSysConfigInfo(type);
-    }
-
-    @Override
-    protected void onDestroy() {
-        imageLoader.close();
-        super.onDestroy();
+        mViewModel.loadSysConfigInfo(mType);
     }
 
     @Override
@@ -111,15 +98,15 @@ public class SysConfigActivity extends BaseActivity {
     }
 
     public static class SysConfigRecyclerAdapter extends RecyclerView.Adapter<SysConfigRecyclerAdapter.ViewHolder> {
-        private final List<SysConfigInfo> list = new ArrayList<>();
-        private final SysConfigActivity activity;
-        private final PackageManager pm;
+        private final List<SysConfigInfo> mList = new ArrayList<>();
+        private final SysConfigActivity mActivity;
+        private final PackageManager mPm;
         private final int mCardColor0;
         private final int mCardColor1;
 
         SysConfigRecyclerAdapter(SysConfigActivity activity) {
-            this.activity = activity;
-            pm = activity.getPackageManager();
+            mActivity = activity;
+            mPm = activity.getPackageManager();
             mCardColor0 = ColorCodes.getListItemColor0(activity);
             mCardColor1 = ColorCodes.getListItemColor1(activity);
         }
@@ -132,8 +119,8 @@ public class SysConfigActivity extends BaseActivity {
         }
 
         public void setList(Collection<SysConfigInfo> list) {
-            this.list.clear();
-            this.list.addAll(list);
+            mList.clear();
+            mList.addAll(list);
             notifyDataSetChanged();
         }
 
@@ -143,24 +130,26 @@ public class SysConfigActivity extends BaseActivity {
 
             holder.itemView.setCardBackgroundColor(position % 2 == 0 ? mCardColor1 : mCardColor0);
 
-            SysConfigInfo info = list.get(position);
+            SysConfigInfo info = mList.get(position);
             if (info.isPackage) {
                 holder.icon.setVisibility(View.VISIBLE);
                 try {
-                    ApplicationInfo applicationInfo = pm.getApplicationInfo(info.name, 0);
-                    holder.title.setText(applicationInfo.loadLabel(pm));
+                    ApplicationInfo applicationInfo = mPm.getApplicationInfo(info.name, 0);
+                    holder.title.setText(applicationInfo.loadLabel(mPm));
                     holder.packageName.setVisibility(View.VISIBLE);
                     holder.packageName.setText(info.name);
                     // Load icon
-                    activity.imageLoader.displayImage(applicationInfo.packageName, applicationInfo, holder.icon);
+                    holder.icon.setTag(applicationInfo.packageName);
+                    ImageLoader.getInstance().displayImage(applicationInfo.packageName, applicationInfo, holder.icon);
                 } catch (PackageManager.NameNotFoundException e) {
                     holder.title.setText(info.name);
                     holder.packageName.setVisibility(View.GONE);
-                    activity.imageLoader.displayImage(info.name, null, holder.icon);
+                    holder.icon.setTag(info.name);
+                    ImageLoader.getInstance().displayImage(info.name, null, holder.icon);
                 }
                 holder.icon.setOnClickListener(v -> {
-                    Intent appDetailsIntent = AppDetailsActivity.getIntent(activity, info.name,0);
-                    activity.startActivity(appDetailsIntent);
+                    Intent appDetailsIntent = AppDetailsActivity.getIntent(mActivity, info.name, 0);
+                    mActivity.startActivity(appDetailsIntent);
                 });
             } else {
                 holder.icon.setVisibility(View.GONE);
@@ -172,7 +161,7 @@ public class SysConfigActivity extends BaseActivity {
 
         @Override
         public int getItemCount() {
-            return list.size();
+            return mList.size();
         }
 
         private void setSubtitle(@NonNull ViewHolder holder, @NonNull SysConfigInfo info) {

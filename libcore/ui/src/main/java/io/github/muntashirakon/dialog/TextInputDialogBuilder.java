@@ -39,14 +39,14 @@ public class TextInputDialogBuilder {
 
     @SuppressLint("InflateParams")
     public TextInputDialogBuilder(@NonNull Context context, @Nullable CharSequence inputTextLabel) {
-        this.mContext = context;
+        mContext = context;
         View view = View.inflate(context, R.layout.dialog_text_input, null);
-        this.mTextInputLayout = view.findViewById(android.R.id.text1);
-        this.mTextInputLayout.setHint(inputTextLabel);
-        this.mEditText = view.findViewById(android.R.id.input);
-        this.mCheckBox = view.findViewById(android.R.id.checkbox);
-        this.mCheckBox.setVisibility(View.GONE);
-        this.mBuilder = new MaterialAlertDialogBuilder(context).setView(view);
+        mTextInputLayout = view.findViewById(android.R.id.text1);
+        mTextInputLayout.setHint(inputTextLabel);
+        mEditText = view.findViewById(android.R.id.input);
+        mCheckBox = view.findViewById(android.R.id.checkbox);
+        mCheckBox.setVisibility(View.GONE);
+        mBuilder = new MaterialAlertDialogBuilder(context).setView(view);
     }
 
     @SuppressLint("InflateParams")
@@ -105,52 +105,54 @@ public class TextInputDialogBuilder {
         return this;
     }
 
-    public TextInputDialogBuilder setPositiveButton(@StringRes int textId, OnClickListener listener) {
+    public TextInputDialogBuilder setPositiveButton(@StringRes int textId, @Nullable OnClickListener listener) {
         mBuilder.setPositiveButton(textId, (dialog, which) -> {
             if (listener != null) listener.onClick(dialog, which, mEditText.getText(), mCheckBox.isChecked());
         });
         return this;
     }
 
-    public TextInputDialogBuilder setPositiveButton(@NonNull CharSequence text, OnClickListener listener) {
+    public TextInputDialogBuilder setPositiveButton(@NonNull CharSequence text, @Nullable OnClickListener listener) {
         mBuilder.setPositiveButton(text, (dialog, which) -> {
             if (listener != null) listener.onClick(dialog, which, mEditText.getText(), mCheckBox.isChecked());
         });
         return this;
     }
 
-    public TextInputDialogBuilder setNegativeButton(@StringRes int textId, OnClickListener listener) {
+    public TextInputDialogBuilder setNegativeButton(@StringRes int textId, @Nullable OnClickListener listener) {
         mBuilder.setNegativeButton(textId, (dialog, which) -> {
             if (listener != null) listener.onClick(dialog, which, mEditText.getText(), mCheckBox.isChecked());
         });
         return this;
     }
 
-    public TextInputDialogBuilder setNegativeButton(@NonNull CharSequence text, OnClickListener listener) {
+    public TextInputDialogBuilder setNegativeButton(@NonNull CharSequence text, @Nullable OnClickListener listener) {
         mBuilder.setNegativeButton(text, (dialog, which) -> {
             if (listener != null) listener.onClick(dialog, which, mEditText.getText(), mCheckBox.isChecked());
         });
         return this;
     }
 
-    public TextInputDialogBuilder setNeutralButton(@StringRes int textId, OnClickListener listener) {
+    public TextInputDialogBuilder setNeutralButton(@StringRes int textId, @Nullable OnClickListener listener) {
         mBuilder.setNeutralButton(textId, (dialog, which) -> {
             if (listener != null) listener.onClick(dialog, which, mEditText.getText(), mCheckBox.isChecked());
         });
         return this;
     }
 
-    public TextInputDialogBuilder setNeutralButton(@NonNull CharSequence text, OnClickListener listener) {
+    public TextInputDialogBuilder setNeutralButton(@NonNull CharSequence text, @Nullable OnClickListener listener) {
         mBuilder.setNeutralButton(text, (dialog, which) -> {
             if (listener != null) listener.onClick(dialog, which, mEditText.getText(), mCheckBox.isChecked());
         });
         return this;
     }
 
+    @Nullable
     public Editable getInputText() {
         return mEditText.getText();
     }
 
+    @NonNull
     public AlertDialog create() {
         return mBuilder.create();
     }

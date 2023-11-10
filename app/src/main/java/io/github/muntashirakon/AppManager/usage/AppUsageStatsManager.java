@@ -2,26 +2,31 @@
 
 package io.github.muntashirakon.AppManager.usage;
 
+import static android.net.NetworkCapabilities.TRANSPORT_CELLULAR;
+import static android.net.NetworkCapabilities.TRANSPORT_WIFI;
+import static io.github.muntashirakon.AppManager.compat.PackageManagerCompat.MATCH_UNINSTALLED_PACKAGES;
+
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.annotation.UserIdInt;
-import android.app.usage.NetworkStats;
-import android.app.usage.NetworkStatsManager;
 import android.app.usage.UsageEvents;
 import android.content.Context;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageManager;
+import android.net.NetworkCapabilities;
+import android.net.NetworkStats;
 import android.os.Build;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.os.RemoteException;
+import android.os.UserHandleHidden;
 import android.telephony.SubscriptionInfo;
-import android.telephony.SubscriptionManager;
-import android.telephony.TelephonyManager;
-import android.telephony.TelephonyManagerHidden;
 
 import androidx.annotation.IntDef;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
+import androidx.annotation.RequiresPermission;
 import androidx.collection.SparseArrayCompat;
 import androidx.core.util.Pair;
 
@@ -32,21 +37,24 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
-import dev.rikka.tools.refine.Refine;
-import io.github.muntashirakon.AppManager.AppManager;
+import io.github.muntashirakon.AppManager.compat.ManifestCompat;
+import io.github.muntashirakon.AppManager.compat.NetworkStatsCompat;
+import io.github.muntashirakon.AppManager.compat.NetworkStatsManagerCompat;
 import io.github.muntashirakon.AppManager.compat.PackageManagerCompat;
+import io.github.muntashirakon.AppManager.compat.SubscriptionManagerCompat;
 import io.github.muntashirakon.AppManager.compat.UsageStatsManagerCompat;
+import io.github.muntashirakon.AppManager.logs.Log;
+import io.github.muntashirakon.AppManager.self.SelfPermissions;
+import io.github.muntashirakon.AppManager.utils.ContextUtils;
+import io.github.muntashirakon.AppManager.utils.ExUtils;
 import io.github.muntashirakon.AppManager.utils.NonNullUtils;
-import io.github.muntashirakon.AppManager.utils.PackageUtils;
-import io.github.muntashirakon.AppManager.utils.PermissionUtils;
-
-import static android.net.NetworkCapabilities.TRANSPORT_CELLULAR;
-import static android.net.NetworkCapabilities.TRANSPORT_WIFI;
-import static io.github.muntashirakon.AppManager.utils.PackageUtils.flagMatchUninstalled;
+import io.github.muntashirakon.proc.ProcFs;
+import io.github.muntashirakon.proc.ProcUidNetStat;
 
 public class AppUsageStatsManager {
+    public static final String TAG = AppUsageStatsManager.class.getSimpleName();
+
     @Retention(RetentionPolicy.SOURCE)
     @IntDef(value = {
             TRANSPORT_CELLULAR,
@@ -114,30 +122,72 @@ public class AppUsageStatsManager {
         }
     }
 
+    public static boolean requireReadPhoneStatePermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && Build.VERSION.SDK_INT < Build.VERSION_CODES.P) {
+            return !SelfPermissions.checkSelfOrRemotePermission(Manifest.permission.READ_PHONE_STATE);
+        }
+        return false;
+    }
+
     @SuppressLint("StaticFieldLeak")
     private static AppUsageStatsManager appUsageStatsManager;
 
-    public static AppUsageStatsManager getInstance(@NonNull Context context) {
+    public static AppUsageStatsManager getInstance() {
         if (appUsageStatsManager == null)
-            appUsageStatsManager = new AppUsageStatsManager(context.getApplicationContext());
+            appUsageStatsManager = new AppUsageStatsManager();
         return appUsageStatsManager;
     }
 
     @NonNull
-    private final Context context;
+    private final Context mContext;
 
     @SuppressLint("WrongConstant")
-    private AppUsageStatsManager(@NonNull Context context) {
-        this.context = context;
+    private AppUsageStatsManager() {
+        mContext = ContextUtils.getContext();
     }
 
+    /**
+     * Calculate screen time based on the assumption that no application can be run in the middle of
+     * a running application. This is a valid assumption since <code>Activity#onPause()</code> is
+     * called whenever an app goes to background and <code>Activity#onResume</code> is called
+     * whenever an app appears in foreground.
+     *
+     * @param usageInterval Usage interval
+     * @return A list of package usage
+     * @throws SecurityException If usage stats permission is not available for the user
+     * @throws RemoteException   If usage stats cannot be retrieved due to transaction error
+     */
+    @RequiresPermission("android.permission.PACKAGE_USAGE_STATS")
+    @NonNull
+    public List<PackageUsageInfo> getUsageStats(@UsageUtils.IntervalType int usageInterval, @UserIdInt int userId)
+            throws RemoteException, SecurityException {
+        List<PackageUsageInfo> packageUsageInfoList = new ArrayList<>();
+        int _try = 5; // try to get usage stats at most 5 times
+        RemoteException re;
+        do {
+            try {
+                packageUsageInfoList.addAll(getUsageStatsInternal(usageInterval, userId));
+                re = null;
+            } catch (RemoteException e) {
+                re = e;
+            }
+        } while (0 != --_try && packageUsageInfoList.isEmpty());
+        if (re != null) {
+            throw re;
+        }
+        return packageUsageInfoList;
+    }
+
+    @RequiresPermission("android.permission.PACKAGE_USAGE_STATS")
+    @NonNull
     public PackageUsageInfo getUsageStatsForPackage(@NonNull String packageName,
                                                     @UsageUtils.IntervalType int usageInterval,
                                                     @UserIdInt int userId)
-            throws RemoteException {
+            throws RemoteException, PackageManager.NameNotFoundException {
         UsageUtils.TimeInterval range = UsageUtils.getTimeInterval(usageInterval);
-        PackageUsageInfo packageUsageInfo = new PackageUsageInfo(context, packageName, userId,
-                PackageManagerCompat.getApplicationInfo(packageName, flagMatchUninstalled, userId));
+        ApplicationInfo applicationInfo = PackageManagerCompat.getApplicationInfo(packageName, MATCH_UNINSTALLED_PACKAGES
+                | PackageManagerCompat.MATCH_STATIC_SHARED_AND_SDK_LIBRARIES, userId);
+        PackageUsageInfo packageUsageInfo = new PackageUsageInfo(mContext, packageName, userId, applicationInfo);
         UsageEvents events = UsageStatsManagerCompat.queryEvents(range.getStartTime(), range.getEndTime(), userId);
         if (events == null) return packageUsageInfo;
         UsageEvents.Event event = new UsageEvents.Event();
@@ -174,7 +224,9 @@ public class AppUsageStatsManager {
      * @param usageInterval Usage interval
      * @return A list of package usage
      */
-    public List<PackageUsageInfo> getUsageStats(@UsageUtils.IntervalType int usageInterval, @UserIdInt int userId)
+    @NonNull
+    private List<PackageUsageInfo> getUsageStatsInternal(@UsageUtils.IntervalType int usageInterval,
+                                                         @UserIdInt int userId)
             throws RemoteException {
         List<PackageUsageInfo> screenTimeList = new ArrayList<>();
         Map<String, Long> screenTimes = new HashMap<>();
@@ -183,7 +235,9 @@ public class AppUsageStatsManager {
         // Get events
         UsageUtils.TimeInterval interval = UsageUtils.getTimeInterval(usageInterval);
         UsageEvents events = UsageStatsManagerCompat.queryEvents(interval.getStartTime(), interval.getEndTime(), userId);
-        if (events == null) return Collections.emptyList();
+        if (events == null) {
+            return Collections.emptyList();
+        }
         UsageEvents.Event event = new UsageEvents.Event();
         long startTime;
         long endTime;
@@ -224,43 +278,34 @@ public class AppUsageStatsManager {
         }
         SparseArrayCompat<DataUsage> mobileData = new SparseArrayCompat<>();
         SparseArrayCompat<DataUsage> wifiData = new SparseArrayCompat<>();
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            // FIXME: 18/9/21 Get data usage for other users
-            NetworkStatsManager nsm = (NetworkStatsManager) context.getSystemService(Context.NETWORK_STATS_SERVICE);
-            try {
-                mobileData.putAll(getMobileData(nsm, usageInterval));
-            } catch (Exception ignore) {
-            }
-            try {
-                wifiData.putAll(getWifiData(nsm, usageInterval));
-            } catch (Exception ignore) {
-            }
-        }
+        mobileData.putAll(getMobileData(interval));
+        wifiData.putAll(getWifiData(interval));
         for (String packageName : screenTimes.keySet()) {
             // Skip uninstalled packages?
-            PackageUsageInfo packageUsageInfo = new PackageUsageInfo(context, packageName, userId,
-                    PackageManagerCompat.getApplicationInfo(packageName, flagMatchUninstalled, userId));
+            ApplicationInfo applicationInfo = ExUtils.exceptionAsNull(() -> PackageManagerCompat
+                    .getApplicationInfo(packageName, MATCH_UNINSTALLED_PACKAGES
+                            | PackageManagerCompat.MATCH_STATIC_SHARED_AND_SDK_LIBRARIES, userId));
+            PackageUsageInfo packageUsageInfo = new PackageUsageInfo(mContext, packageName, userId, applicationInfo);
             packageUsageInfo.timesOpened = NonNullUtils.defeatNullable(accessCount.get(packageName));
             packageUsageInfo.lastUsageTime = NonNullUtils.defeatNullable(lastUse.get(packageName));
             packageUsageInfo.screenTime = NonNullUtils.defeatNullable(screenTimes.get(packageName));
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                int uid = PackageUtils.getAppUid(packageUsageInfo.applicationInfo);
-                if (mobileData.containsKey(uid)) {
-                    packageUsageInfo.mobileData = mobileData.get(uid);
-                } else packageUsageInfo.mobileData = DataUsage.EMPTY;
-                if (wifiData.containsKey(uid)) {
-                    packageUsageInfo.wifiData = wifiData.get(uid);
-                } else packageUsageInfo.wifiData = DataUsage.EMPTY;
-            }
+            int uid = applicationInfo != null ? applicationInfo.uid : 0;
+            if (mobileData.containsKey(uid)) {
+                packageUsageInfo.mobileData = mobileData.get(uid);
+            } else packageUsageInfo.mobileData = DataUsage.EMPTY;
+            if (wifiData.containsKey(uid)) {
+                packageUsageInfo.wifiData = wifiData.get(uid);
+            } else packageUsageInfo.wifiData = DataUsage.EMPTY;
             screenTimeList.add(packageUsageInfo);
         }
         return screenTimeList;
     }
 
+    @RequiresPermission("android.permission.PACKAGE_USAGE_STATS")
     public static long getLastActivityTime(String packageName, @NonNull UsageUtils.TimeInterval interval) {
         try {
-            UsageEvents events = UsageStatsManagerCompat.getUsageStatsManager().queryEvents(interval.getStartTime(),
-                    interval.getEndTime(), AppManager.getContext().getPackageName());
+            UsageEvents events = UsageStatsManagerCompat.queryEvents(interval.getStartTime(), interval.getEndTime(),
+                    UserHandleHidden.myUserId());
             if (events == null) return 0L;
             UsageEvents.Event event = new UsageEvents.Event();
             while (events.hasNextEvent()) {
@@ -274,76 +319,81 @@ public class AppUsageStatsManager {
         return 0L;
     }
 
-    @RequiresApi(Build.VERSION_CODES.M)
     @NonNull
-    private SparseArrayCompat<DataUsage> getMobileData(@NonNull NetworkStatsManager nsm,
-                                                       @UsageUtils.IntervalType int intervalType) {
-        return getDataUsageForNetwork(nsm, TRANSPORT_CELLULAR, intervalType);
+    private SparseArrayCompat<DataUsage> getMobileData(@NonNull UsageUtils.TimeInterval interval) {
+        return getDataUsageForNetwork(TRANSPORT_CELLULAR, interval);
     }
 
 
-    @RequiresApi(Build.VERSION_CODES.M)
     @NonNull
-    private SparseArrayCompat<DataUsage> getWifiData(@NonNull NetworkStatsManager nsm,
-                                                     @UsageUtils.IntervalType int intervalType) {
-        return getDataUsageForNetwork(nsm, TRANSPORT_WIFI, intervalType);
+    private SparseArrayCompat<DataUsage> getWifiData(@NonNull UsageUtils.TimeInterval interval) {
+        return getDataUsageForNetwork(TRANSPORT_WIFI, interval);
     }
 
-    @RequiresApi(Build.VERSION_CODES.M)
     @NonNull
-    private SparseArrayCompat<DataUsage> getDataUsageForNetwork(@NonNull NetworkStatsManager nsm,
-                                                                @Transport int networkType,
-                                                                @UsageUtils.IntervalType int intervalType) {
+    private SparseArrayCompat<DataUsage> getDataUsageForNetwork(@Transport int networkType,
+                                                                @NonNull UsageUtils.TimeInterval interval) {
         SparseArrayCompat<DataUsage> dataUsageSparseArray = new SparseArrayCompat<>();
-        UsageUtils.TimeInterval range = UsageUtils.getTimeInterval(intervalType);
-        List<String> subscriberIds = getSubscriberIds(context, networkType);
-        NetworkStats.Bucket bucket = new NetworkStats.Bucket();
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+            @SuppressWarnings("deprecation")
+            List<ProcUidNetStat> netStats = ProcFs.getInstance().getAllUidNetStat();
+            for (ProcUidNetStat netStat : netStats) {
+                dataUsageSparseArray.put(netStat.uid, new DataUsage(netStat.txBytes, netStat.rxBytes));
+            }
+            return dataUsageSparseArray;
+        }
+        List<String> subscriberIds = getSubscriberIds(mContext, networkType);
         for (String subscriberId : subscriberIds) {
-            try (NetworkStats networkStats = nsm.querySummary(networkType, subscriberId, range.getStartTime(), range.getEndTime())) {
-                if (networkStats == null) continue;
-                while (networkStats.hasNextBucket()) {
-                    networkStats.getNextBucket(bucket);
-                    DataUsage dataUsage = dataUsageSparseArray.get(bucket.getUid());
-                    if (dataUsage != null) {
-                        dataUsage = new DataUsage(bucket.getTxBytes() + dataUsage.getTx(),
-                                bucket.getRxBytes() + dataUsage.getRx());
-                    } else {
-                        dataUsage = new DataUsage(bucket.getTxBytes(), bucket.getRxBytes());
+            try (NetworkStatsCompat networkStats = NetworkStatsManagerCompat.querySummary(networkType, subscriberId,
+                    interval.getStartTime(), interval.getEndTime())) {
+                while (networkStats.hasNextEntry()) {
+                    NetworkStats.Entry entry = networkStats.getNextEntry(true);
+                    if (entry == null) {
+                        continue;
                     }
-                    dataUsageSparseArray.put(bucket.getUid(), dataUsage);
+                    DataUsage dataUsage = dataUsageSparseArray.get(entry.uid);
+                    if (dataUsage != null) {
+                        dataUsage = new DataUsage(entry.txBytes + dataUsage.getTx(), entry.rxBytes + dataUsage.getRx());
+                    } else {
+                        dataUsage = new DataUsage(entry.txBytes, entry.rxBytes);
+                    }
+                    dataUsageSparseArray.put(entry.uid, dataUsage);
                 }
-            } catch (RemoteException ignore) {
+            } catch (RemoteException | SecurityException | IllegalStateException e) {
+                e.printStackTrace();
             }
         }
 
         return dataUsageSparseArray;
     }
 
-    @RequiresApi(Build.VERSION_CODES.M)
+    @RequiresPermission("android.permission.PACKAGE_USAGE_STATS")
     @NonNull
     public static DataUsage getDataUsageForPackage(@NonNull Context context, int uid,
                                                    @UsageUtils.IntervalType int intervalType) {
-        NetworkStatsManager nsm = (NetworkStatsManager) context.getSystemService(Context.NETWORK_STATS_SERVICE);
-        if (nsm == null) return DataUsage.EMPTY;
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+            @SuppressWarnings("deprecation")
+            ProcUidNetStat netStat = ProcFs.getInstance().getUidNetStat(uid);
+            return netStat != null ? new DataUsage(netStat.txBytes, netStat.rxBytes) : DataUsage.EMPTY;
+        }
         UsageUtils.TimeInterval range = UsageUtils.getTimeInterval(intervalType);
         List<String> subscriberIds;
-        NetworkStats.Bucket bucket = new NetworkStats.Bucket();
         long totalTx = 0;
         long totalRx = 0;
         for (int networkId = 0; networkId < 2; ++networkId) {
             subscriberIds = getSubscriberIds(context, networkId);
             for (String subscriberId : subscriberIds) {
-                try (NetworkStats networkStats = nsm.querySummary(networkId, subscriberId, range.getStartTime(),
-                        range.getEndTime())) {
-                    if (networkStats == null) continue;
-                    while (networkStats.hasNextBucket()) {
-                        networkStats.getNextBucket(bucket);
-                        if (bucket.getUid() == uid) {
-                            totalTx += bucket.getTxBytes();
-                            totalRx += bucket.getRxBytes();
+                try (NetworkStatsCompat networkStats = NetworkStatsManagerCompat.querySummary(networkId, subscriberId,
+                        range.getStartTime(), range.getEndTime())) {
+                    while (networkStats.hasNextEntry()) {
+                        NetworkStats.Entry entry = networkStats.getNextEntry(true);
+                        if (entry != null && entry.uid == uid) {
+                            totalTx += entry.txBytes;
+                            totalRx += entry.rxBytes;
                         }
                     }
-                } catch (RemoteException | IllegalStateException ignore) {
+                } catch (RemoteException | SecurityException | IllegalStateException e) {
+                    e.printStackTrace();
                 }
             }
         }
@@ -351,50 +401,48 @@ public class AppUsageStatsManager {
     }
 
     /**
-     * @return A list of subscriber IDs if networkType is {@link android.net.NetworkCapabilities#TRANSPORT_CELLULAR}, or
+     * @return A list of subscriber IDs if networkType is {@link NetworkCapabilities#TRANSPORT_CELLULAR}, or
      * a singleton array with {@code null} being the only element.
-     * @deprecated Requires {@code android.Manifest.permission.READ_PRIVILEGED_PHONE_STATE} from Android 10 (API 29)
      */
     @SuppressLint({"HardwareIds", "MissingPermission"})
-    @RequiresApi(Build.VERSION_CODES.LOLLIPOP_MR1)
-    @Deprecated
+    @RequiresApi(Build.VERSION_CODES.M) // LOLLIPOP_MR1, but we don't need it for API < 23
     @NonNull
     private static List<String> getSubscriberIds(@NonNull Context context, @Transport int networkType) {
-        if (networkType != TRANSPORT_CELLULAR || !PermissionUtils.hasPermission(context,
-                Manifest.permission.READ_PHONE_STATE)) {
+        if (networkType != TRANSPORT_CELLULAR) {
+            // Unsupported API
             return Collections.singletonList(null);
         }
-        // FIXME: 24/4/21 Consider using Binder to fetch subscriber info
-        try {
-            SubscriptionManager sm = (SubscriptionManager) context.getSystemService(Context
-                    .TELEPHONY_SUBSCRIPTION_SERVICE);
-            TelephonyManager tm = (TelephonyManager) Objects.requireNonNull(context.getSystemService(Context
-                    .TELEPHONY_SERVICE));
-
-            List<SubscriptionInfo> subscriptionInfoList = sm.getActiveSubscriptionInfoList();
-            if (subscriptionInfoList == null) {
-                // No telephony services
-                return Collections.singletonList(null);
-            }
-            List<String> subscriberIds = new ArrayList<>();
-            for (SubscriptionInfo info : subscriptionInfoList) {
-                int subscriptionId = info.getSubscriptionId();
-                try {
-                    String subscriberId = Refine.<TelephonyManagerHidden>unsafeCast(tm).getSubscriberId(subscriptionId);
-                    subscriberIds.add(subscriberId);
-                } catch (Exception e) {
-                    try {
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                            subscriberIds.add(tm.createForSubscriptionId(subscriptionId).getSubscriberId());
-                        }
-                    } catch (Exception e2) {
-                        subscriberIds.add(tm.getSubscriberId());
-                    }
-                }
-            }
-            return subscriberIds.size() == 0 ? Collections.singletonList(null) : subscriberIds;
-        } catch (SecurityException e) {
+        PackageManager pm = context.getPackageManager();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
+                && !pm.hasSystemFeature(PackageManager.FEATURE_TELEPHONY_SUBSCRIPTION)) {
+            Log.i(TAG, "No such feature: %s", PackageManager.FEATURE_TELEPHONY_SUBSCRIPTION);
+            return Collections.emptyList();
+        } else if (!pm.hasSystemFeature(PackageManager.FEATURE_TELEPHONY)) {
+            Log.i(TAG, "No such feature: %s", PackageManager.FEATURE_TELEPHONY);
+            return Collections.emptyList();
+        }
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q && !SelfPermissions.checkSelfOrRemotePermission(Manifest.permission.READ_PHONE_STATE)) {
+            Log.w(TAG, "Missing required permission: %s", Manifest.permission.READ_PHONE_STATE);
+            return Collections.emptyList();
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && !SelfPermissions.checkSelfOrRemotePermission(ManifestCompat.permission.READ_PRIVILEGED_PHONE_STATE)) {
+            Log.w(TAG, "Missing required permission: %s", ManifestCompat.permission.READ_PRIVILEGED_PHONE_STATE);
             return Collections.singletonList(null);
         }
+        List<SubscriptionInfo> subscriptionInfoList = SubscriptionManagerCompat.getActiveSubscriptionInfoList();
+        if (subscriptionInfoList == null) {
+            Log.i(TAG, "No subscriptions found.");
+            return Collections.singletonList(null);
+        }
+        List<String> subscriberIds = new ArrayList<>();
+        for (SubscriptionInfo info : subscriptionInfoList) {
+            int subscriptionId = info.getSubscriptionId();
+            try {
+                String subscriberId = SubscriptionManagerCompat.getSubscriberIdForSubscriber(subscriptionId);
+                subscriberIds.add(subscriberId);
+            } catch (SecurityException ignore) {
+            }
+        }
+        return subscriberIds.isEmpty() ? Collections.singletonList(null) : subscriberIds;
     }
 }

@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- SPDX-License-Identifier: GPL-3.0-or-later --><resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" xmlns:tools="http://schemas.android.com/tools">
     <string name="_lang_tag" translatable="false">id</string>
-    <string name="uninstall">Hapus Pemasangan</string>
+    <string name="uninstall">Copot pemasangan</string>
     <string name="permissions">Memerlukan Izin</string>
     <string name="require_no_permission">Tidak memerlukan izin</string>
-    <string name="activities">Aktifitas</string>
+    <string name="activities">Aktivitas</string>
     <string name="launch">Luncurkan</string>
     <string name="refresh">Muat ulang</string>
     <string name="no_activities">Tidak ada aktifitas</string>
@@ -13,7 +13,6 @@
     <string name="starting_activity">Aktifitas baru dimulai: <xliff:g id="activity_name" example=".main.MainActivity">%1$s</xliff:g></string>
     <string name="error_verbose_pin_shortcut">Peluncur saat ini tidak mendukung Pinshortcut. Tidak dapat membuat pintasan.</string>
     <string name="error_creating_shortcut">Kesalahan dalam membuat pintasan</string>
-    <string name="instructions">Intruksi</string>
     <string name="main_activity">Aktifitas utama</string>
     <string name="user_id">ID pengguna</string>
     <string name="installer_app">Pemasang Aplikasi</string>
@@ -59,12 +58,12 @@
     <string name="orientation">Orientasi</string>
     <string name="no_service">Tidak ada layanan</string>
     <string name="service">Layanan</string>
-    <string name="authority">Wewenang</string>
-    <string name="sort_by_last_update">Terakhir di perbaharui</string>
+    <string name="authority">Otoritas</string>
+    <string name="sort_by_last_update">Pembaruan terakhir</string>
     <string name="launch_mode">Mode peluncuran</string>
     <string name="no_providers">Tidak ada penyedia</string>
     <string name="providers">Penyedia</string>
-    <string name="no_receivers">Tidak Ada Penerima</string>
+    <string name="no_receivers">Tidak ada penerima</string>
     <string name="os_version">Versi OS</string>
     <string name="copied_to_clipboard">Disalin ke papanklip.</string>
     <string name="pref_enable_disable_features_msg">Hidupkan atau matikan fitur di App Manager.</string>
@@ -108,8 +107,6 @@
     <string name="storage_and_cache">Penyimpanan dan Cache</string>
     <string name="failed_to_stop">Tidak dapat menghentikan <xliff:g id="app_name" example="App Manager">%1$s</xliff:g>.</string>
     <string name="force_stop">Paksa-berhenti</string>
-    <string name="failed_to_enable">Tidak dapat mengaktifkan <xliff:g id="app_name" example="App Manager">%1$s</xliff:g>.</string>
-    <string name="failed_to_disable">Tidak dapat menon-aktifkan <xliff:g id="app_name" example="App Manager">%1$s</xliff:g>.</string>
     <string name="enable">Aktifkan</string>
     <string name="disable">Non-aktifkan</string>
     <string name="stopped">Dihentikan</string>
@@ -218,12 +215,9 @@
     <string name="third_party">Pustakaan dan Ikon Pihak-Ketiga</string>
     <string name="license">Lisensi</string>
     <string name="icon_picker">Pengambil Ikon</string>
-    <string name="error_invalid_icon_format">Format ikon tidak valid</string>
-    <string name="error_invalid_icon_resource">Sumber ikon tidak valid</string>
     <string name="class_name">Nama Class</string>
     <string name="package_name">Nama Package</string>
     <string name="shortcut_name">Nama Pintasan</string>
-    <string name="edit_shortcut">Sunting Pintasan</string>
     <string name="create_shortcut">Buat Pintasan</string>
     <string name="empty_package_name">Nama package kosong</string>
     <string name="sdk_flags">Bendera</string>
@@ -236,7 +230,7 @@
     <string name="group">Grup</string>
     <string name="shared_libs">Libs berbagi</string>
     <string name="path_permissions">Perizinan path</string>
-    <string name="grant_uri_permission">Perbolehkan perizinan UI</string>
+    <string name="grant_uri_permission">Berikan izin URI</string>
     <string name="flags">Tanda</string>
     <string name="soft_input">Mode masukan lunak</string>
     <string name="task_affinity">Afinitas Tugas</string>
@@ -251,7 +245,6 @@
     <string name="disable_background_run">Nonaktifkan Berjalan di Latar Belakang</string>
     <string name="kill_process">Hentikan</string>
     <string name="running_apps">Aplikasi Berjalan</string>
-    <string name="store">Toko</string>
     <string name="apk_updater">Pengupdate APK</string>
     <plurals name="failed_to_import_files">
         <item quantity="other">Tak dapat memulihkan file %1$d.</item>
@@ -271,7 +264,6 @@
     </plurals>
     <string name="external_data_dir">Penyimpanan Data Eksternal</string>
     <string name="sort_by_blocked_components">Dihalang Pertama</string>
-    <string name="sort_by_disabled_app">Dinonaktifkan Pertama</string>
     <string name="exodus_link">Link εxodus</string>
     <string name="usage_yesterday">Kemarin</string>
     <string name="pref_global_blocking_enabled">Pemblokiran komponen secara instan</string>
@@ -285,9 +277,6 @@
     </plurals>
     <plurals name="alert_failed_to_uninstall">
         <item quantity="other">Tak dapat menghapus aplikasi %1$d</item>
-    </plurals>
-    <plurals name="alert_failed_to_disable">
-        <item quantity="other">Tidak bisa menonaktifkan aplikasi %1$d</item>
     </plurals>
     <plurals name="alert_failed_to_clear_data">
         <item quantity="other">Tidak dapat membersihkan data dari aplikasi %1$d</item>
@@ -345,9 +334,6 @@
     </plurals>
     <plurals name="classes">
         <item quantity="other">kelas %1$d</item>
-    </plurals>
-    <plurals name="alert_failed_to_enable">
-        <item quantity="other">Tidak dapat mengaktifkan %1$d aplikasi</item>
     </plurals>
     <plurals name="alert_failed_to_set_app_ops">
         <item quantity="other">Tidak dapat mengatur operasi aplikasi untuk %1$d aplikasi</item>
@@ -551,7 +537,6 @@
     <string name="profile_clear_data_msg">Bersihkan data dari aplikasi</string>
     <string name="profile_clear_cache_msg">Bersihkan cache aplikasi dari berbagai aplikasi</string>
     <string name="profile_force_stop_msg">Paksa-berhenti aplikasi</string>
-    <string name="profile_disable_msg">Nonaktifkan/aktifkan aplikasi berdasarkan status</string>
     <string name="allow_routine_ops_msg">Izinkan profil digunakan dalam operasi rutin</string>
     <string name="profile_state">Status Profil</string>
     <string name="allow_routine_ops">Izinkan oprs rutin</string>
@@ -565,8 +550,6 @@
     <string name="pref_encryption_msg">Enkripsi untuk cadangan.</string>
     <string name="encryption">Enkripsi</string>
     <string name="select_user">Pilih Pengguna</string>
-    <string name="pref_show_users_in_installer_msg">Tampilkan daftar pengguna untuk memilih sebelum menginstal aplikasi eksternal. Membutuhkan root atau ADB.</string>
-    <string name="pref_show_users_in_installer">Tampilkan pengguna di Installer</string>
     <string name="failed_to_duplicate_profile">Tidak dapat menduplikasi profil</string>
     <string name="duplicate">Duplikat</string>
     <string name="new_profile">Profil baru</string>
@@ -634,7 +617,6 @@
     <string name="apply_now">Terapkan sekarang…</string>
     <string name="keystore">Keystore</string>
     <string name="no_profiles">Tanpa Profil</string>
-    <string name="presets">Preset</string>
     <string name="profiles">Profil</string>
     <string name="open_pgp_provider">Penyedia OpenPGP</string>
     <string name="systemless_app">Aplikasi tanpa Sistem</string>
@@ -756,7 +738,6 @@
     <string name="components">Komponen</string>
     <string name="trackers">Pelacak</string>
     <string name="installed_version">Versi yang diinstal</string>
-    <string name="filter_disabled_apps">Aplikasi Dinonaktifkan</string>
     <string name="select_all">Pilih Semua</string>
     <string name="filter_apps_with_rules">Aplikasi dengan aturan</string>
     <string name="filter_system_apps">Aplikasi Sistem</string>
@@ -779,7 +760,6 @@
     <string name="clear_app_cache_description">Kosongkan cache dari semua aplikasi</string>
     <string name="clear_app_cache">Kosongkan Cache App</string>
     <string name="clear_data_from_uninstalled_apps">Kosongkan data dari aplikasi yang dicopot</string>
-    <string name="block_components_description">Memblokir semua komponen yang diidentifikasi oleh tanda tangan yang diberikan</string>
     <string name="block_unblock_trackers_description">Blokir atau buka blokir iklan dan komponen pelacakan di semua aplikasi yang dipasang</string>
     <string name="clear_cache">Kosongkan Cache</string>
     <string name="pref_import_existing_msg">Tambahkan komponen yang dinonaktifkan oleh aplikasi lain ke App Manager. Hati-hati saat menggunakan alat ini karena ada banyak false-positif. Pilih hanya aplikasi yang Anda pasti.</string>
@@ -844,10 +824,7 @@
     <string name="generate_key">Hasilkan</string>
     <string name="input_key">Kunci input (dalam heksadesimal)</string>
     <string name="input_keystore_alias_pass_msg">Ketuk disini untuk menyediakan kata sandi untuk %1$s</string>
-    <string name="source_code_links">GitHub: https://github.com/MuntashirAkon/AppManager
-\nGitLab: https://gitlab.com/muntashir/AppManager
-\nRiseup: https://0xacab.org/muntashir/AppManager
-\nCodeberg: https://codeberg.org/muntashir/AppManager</string>
+    <string name="source_code_links"><a href="https://github.com/MuntashirAkon/AppManager">GitHub</a> • <a href="https://gitlab.com/muntashir/AppManager">GitLab</a> • <a href="https://0xacab.org/muntashir/AppManager">Riseup</a> • <a href="https://codeberg.org/muntashir/AppManager">Codeberg</a></string>
     <string name="trackers_unblocked_successfully">Pelacak sekarang dibatalkan diblokir</string>
     <string name="trackers_blocked_successfully">Pelacak sekarang diblokir</string>
     <string name="failed_to_unblock_trackers">Tidak dapat batal memblokir pelacak</string>
@@ -948,7 +925,6 @@
     <string name="orientation_right_to_left">Kanan ke kiri</string>
     <string name="orientation_left_to_right">Kiri ke kanan</string>
     <string name="orientation_follow_locale">Ikuti bahasa lokal</string>
-    <string name="pref_layout_orientation">Orientasi layout</string>
     <plurals name="file_deletion_confirmation">
         <item quantity="other">Berkas %d akan dihapus</item>
     </plurals>
@@ -963,7 +939,6 @@
     <string name="netpolicy_reject_cellular_data">Tolak data seluler</string>
     <string name="netpolicy_allow_background_data">Izinkan data di latar belakang saat Penghemat Data aktif</string>
     <string name="netpolicy_reject_background_data">Tolak data di latar belakang</string>
-    <string name="wireless_debugging_not_supported">Debug nirkabel tidak didukung dalam platform ini.</string>
     <string name="wireless_debugging">Debug nirkabel</string>
     <string name="port_number_invalid">Nomor port tidak valid.</string>
     <string name="port_number_empty">Nomor port kosong.</string>
@@ -971,10 +946,8 @@
     <string name="port_number">Port</string>
     <string name="adb_connect">Hbungkan</string>
     <string name="unknown_net_policy">Netpolicy yang tidak dikenal (%1$s - %2$X)</string>
-    <string name="app_signing_signature_mismatch_for_data_only_app">Tidak dapat memasang aplikasi dikarenakan ketidakcocokan tanda tangan. Aplikasi dicopot tanpa membersihkan datanya.</string>
     <string name="failed_to_prevent_background_run">Tidak dapat mencegah %1$s untuk berjalan di latar belakang</string>
-    <string name="community_links">Telegram: https://t.me/AppManagerChannel
-\nTwitter: https://twitter.com/AppManagerNews</string>
+    <string name="community_links"><a href="https://t.me/AppManagerChannel">Saluran Telegram</a> • <a href="https://twitter.com/AppManagerNews">Twitter</a></string>
     <string name="community">Komunitas</string>
     <plurals name="alert_failed_to_import_backups">
         <item quantity="other">Tidak dapat mengimpor %1$d cadangan</item>
@@ -994,7 +967,6 @@
     <string name="files">Dokumen</string>
     <string name="storage">Penyimpanan</string>
     <string name="notice">Pemberitahuan</string>
-    <string name="enable_disable">Aktifkan/nonaktifkan</string>
     <string name="error_with_details">Eror:%s</string>
     <string name="saved_filters">Filter tersimpan</string>
     <string name="notice_saf">Tidak seperti volume, direktori yang dipilih akan digunakan untuk menyimpan seluruh file yang berhubungan dengan App Manager, termasuk APK yang disimpan dan backup. Storage Access Framework (SAF) sangat lambat, untuk itu, anda sebaiknya hanya menggunakan opsi ini ketika yang lain tidak dapat digunakan.</string>
@@ -1156,4 +1128,22 @@
     <string name="changelog_type_new">Baru</string>
     <string name="pref_reload_apps">Muat ulang aplikasi</string>
     <string name="pref_reload_apps_msg">Muat ulang daftar aplikasi yang disimpan di database Manajer Aplikasi jika terjadi perilaku tak terduga.</string>
+    <string name="troubleshooting">Penyelesaian masalah</string>
+    <string name="failed_to_freeze">Tidak dapat membekukan <xliff:g id="app_name" example="App Manager">%1$s</xliff:g>.</string>
+    <string name="failed_to_unfreeze">Tidak dapat mencairkan <xliff:g id="app_name" example="App Manager">%1$s</xliff:g>.</string>
+    <string name="freeze_unfreeze">Bekukan/cairkan</string>
+    <string name="suspend_app">Menangguhkan</string>
+    <string name="hide_app">Sembunyikan</string>
+    <string name="hide_app_description">Metode ini hanya disarankan untuk penggunaan sehari-hari. Sebuah aplikasi tersembunyi muncul seolah-olah itu dihapus. Tetapi aplikasi dapat muncul kembali jika diinstal ulang atau diperbarui.</string>
+    <string name="pref_appearance_description">Tema, orientasi, fitur, dll.</string>
+    <string name="pref_privacy">Privasi</string>
+    <string name="pref_privacy_description">Kunci layar, otorisasi, dll.</string>
+    <string name="user_manual">Panduan pengguna</string>
+    <string name="get_help">Dapatkan bantuan</string>
+    <string name="pref_advanced_pref">Pengguna, format nama APK, eksekusi paralel, dll.</string>
+    <string name="pref_version_changelog">Versi/Changelog</string>
+    <string name="changelog_type_fix">Memperbaiki</string>
+    <string name="sort_by_total_size">Ukuran keseluruhan</string>
+    <string name="am_command"><tt>am</tt> perintah</string>
+    <string name="changelog_type_improve">Memperbaiki</string>
 </resources>

@@ -4,25 +4,28 @@ package io.github.muntashirakon.AppManager.logcat;
 
 import android.content.Context;
 import android.view.LayoutInflater;
+import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Filter;
 import android.widget.Filterable;
-import android.widget.PopupMenu;
 import android.widget.TextView;
 
 import androidx.annotation.ColorInt;
 import androidx.annotation.GuardedBy;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.widget.PopupMenu;
 import androidx.collection.SparseArrayCompat;
 import androidx.core.content.ContextCompat;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 import io.github.muntashirakon.AppManager.BuildConfig;
@@ -30,8 +33,8 @@ import io.github.muntashirakon.AppManager.R;
 import io.github.muntashirakon.AppManager.logcat.struct.LogLine;
 import io.github.muntashirakon.AppManager.logcat.struct.SearchCriteria;
 import io.github.muntashirakon.AppManager.logs.Log;
-import io.github.muntashirakon.AppManager.utils.AppPref;
-import io.github.muntashirakon.AppManager.utils.UIUtils;
+import io.github.muntashirakon.AppManager.settings.Prefs;
+import io.github.muntashirakon.AppManager.utils.Utils;
 import io.github.muntashirakon.AppManager.utils.appearance.ColorCodes;
 import io.github.muntashirakon.widget.MultiSelectionView;
 
@@ -41,58 +44,52 @@ public class LogViewerRecyclerAdapter extends MultiSelectionView.Adapter<LogView
         implements Filterable {
     public static final String TAG = LogViewerRecyclerAdapter.class.getSimpleName();
 
-    public static final int CONTEXT_MENU_FILTER_ID = 0;
-    public static final int CONTEXT_MENU_COPY_ID = 1;
-    public static final int CONTEXT_MENU_SELECT_ID = 2;
-
     private static final SparseArrayCompat<Integer> BACKGROUND_COLORS = new SparseArrayCompat<Integer>(7) {
         {
-            put(android.util.Log.VERBOSE, R.color.the_brown_shirts);
-            put(android.util.Log.DEBUG, R.color.night_blue_shadow);
-            put(android.util.Log.INFO, R.color.blue_popsicle);
-            put(android.util.Log.WARN, R.color.red_orange);
-            put(android.util.Log.ERROR, R.color.pure_red);
-            put(android.util.Log.ASSERT, R.color.pure_red);
-            put(LogLine.LOG_FATAL, R.color.electric_red);
+            put(android.util.Log.VERBOSE, io.github.muntashirakon.ui.R.color.the_brown_shirts);
+            put(android.util.Log.DEBUG, io.github.muntashirakon.ui.R.color.night_blue_shadow);
+            put(android.util.Log.INFO, io.github.muntashirakon.ui.R.color.blue_popsicle);
+            put(android.util.Log.WARN, io.github.muntashirakon.ui.R.color.red_orange);
+            put(android.util.Log.ERROR, io.github.muntashirakon.ui.R.color.pure_red);
+            put(android.util.Log.ASSERT, io.github.muntashirakon.ui.R.color.pure_red);
+            put(LogLine.LOG_FATAL, io.github.muntashirakon.ui.R.color.electric_red);
         }
     };
 
     private static final SparseArrayCompat<Integer> FOREGROUND_COLORS = new SparseArrayCompat<Integer>(7) {
         {
-            put(android.util.Log.VERBOSE, R.color.brian_wrinkle_white);
-            put(android.util.Log.DEBUG, R.color.brian_wrinkle_white);
-            put(android.util.Log.INFO, R.color.brian_wrinkle_white);
-            put(android.util.Log.WARN, R.color.brian_wrinkle_white);
-            put(android.util.Log.ERROR, R.color.brian_wrinkle_white);
-            put(android.util.Log.ASSERT, R.color.brian_wrinkle_white);
-            put(LogLine.LOG_FATAL, R.color.brian_wrinkle_white);
+            put(android.util.Log.VERBOSE, io.github.muntashirakon.ui.R.color.brian_wrinkle_white);
+            put(android.util.Log.DEBUG, io.github.muntashirakon.ui.R.color.brian_wrinkle_white);
+            put(android.util.Log.INFO, io.github.muntashirakon.ui.R.color.brian_wrinkle_white);
+            put(android.util.Log.WARN, io.github.muntashirakon.ui.R.color.brian_wrinkle_white);
+            put(android.util.Log.ERROR, io.github.muntashirakon.ui.R.color.brian_wrinkle_white);
+            put(android.util.Log.ASSERT, io.github.muntashirakon.ui.R.color.brian_wrinkle_white);
+            put(LogLine.LOG_FATAL, io.github.muntashirakon.ui.R.color.brian_wrinkle_white);
         }
     };
 
-    private static int[] tagColors;
+    private static int[] sTagColors;
 
     @ColorInt
     private static int getBackgroundColorForLogLevel(Context context, int logLevel) {
-        Integer result = BACKGROUND_COLORS.get(logLevel);
-        if (result == null) return UIUtils.getPrimaryColor(context);
+        int result = Objects.requireNonNull(BACKGROUND_COLORS.get(logLevel));
         return ContextCompat.getColor(context, result);
     }
 
     @ColorInt
     private static int getForegroundColorForLogLevel(Context context, int logLevel) {
-        Integer result = FOREGROUND_COLORS.get(logLevel);
-        if (result == null) return UIUtils.getAccentColor(context);
+        int result = Objects.requireNonNull(FOREGROUND_COLORS.get(logLevel));
         return ContextCompat.getColor(context, result);
     }
 
     private static synchronized int getOrCreateTagColor(Context context, String tag) {
-        if (tagColors == null) {
-            tagColors = context.getResources().getIntArray(R.array.random_colors);
+        if (sTagColors == null) {
+            sTagColors = context.getResources().getIntArray(R.array.random_colors);
         }
         // Ensure consistency
         int hashCode = (tag == null) ? 0 : tag.hashCode();
-        int smear = Math.abs(hashCode) % tagColors.length;
-        return tagColors[smear];
+        int smear = Math.abs(hashCode) % sTagColors.length;
+        return sTagColors[smear];
     }
 
     /**
@@ -109,15 +106,15 @@ public class LogViewerRecyclerAdapter extends MultiSelectionView.Adapter<LogView
     @GuardedBy("mLock")
     private List<LogLine> mObjects;
 
-    private ViewHolder.OnClickListener mClickListener;
+    private ViewHolder.OnSearchByClickListener mSearchByClickListener;
 
     private ArrayList<LogLine> mOriginalValues;
     private ArrayFilter mFilter;
 
-    private int logLevelLimit = AppPref.getInt(AppPref.PrefKey.PREF_LOG_VIEWER_DEFAULT_LOG_LEVEL_INT);
+    private int mLogLevelLimit = Prefs.LogViewer.getLogLevel();
     private final Set<LogLine> mSelectedLogLines = new LinkedHashSet<>();
     @ColorInt
-    private int highlightColor;
+    private int mHighlightColor;
 
     public LogViewerRecyclerAdapter() {
         mObjects = new ArrayList<>();
@@ -143,7 +140,7 @@ public class LogViewerRecyclerAdapter extends MultiSelectionView.Adapter<LogView
     }
 
     @GuardedBy("mLock")
-    public void readdAll(LogLine object, boolean notify) {
+    public void readAll(LogLine object, boolean notify) {
         synchronized (mLock) {
             if (mOriginalValues != null) {
                 mOriginalValues.add(object);
@@ -278,7 +275,7 @@ public class LogViewerRecyclerAdapter extends MultiSelectionView.Adapter<LogView
 
     @Override
     public int getHighlightColor() {
-        return highlightColor;
+        return mHighlightColor;
     }
 
     @Override
@@ -325,7 +322,7 @@ public class LogViewerRecyclerAdapter extends MultiSelectionView.Adapter<LogView
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        highlightColor = ColorCodes.getListItemSelectionColor(parent.getContext());
+        mHighlightColor = ColorCodes.getListItemSelectionColor(parent.getContext());
         View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_logcat, parent, false);
         return new ViewHolder(v);
     }
@@ -345,7 +342,7 @@ public class LogViewerRecyclerAdapter extends MultiSelectionView.Adapter<LogView
 
         holder.itemView.setBackgroundResource(0);
         View contentView = holder.itemView.findViewById(R.id.log_content);
-        contentView.setBackgroundResource(position % 2 == 0 ? R.drawable.item_semi_transparent : R.drawable.item_transparent);
+        contentView.setBackgroundResource(position % 2 == 0 ? io.github.muntashirakon.ui.R.drawable.item_semi_transparent : io.github.muntashirakon.ui.R.drawable.item_transparent);
 
         //OUTPUT TEXT VIEW
         TextView output = holder.output;
@@ -360,7 +357,7 @@ public class LogViewerRecyclerAdapter extends MultiSelectionView.Adapter<LogView
 
         //EXPANDED INFO
         boolean extraInfoIsVisible = logLine.isExpanded() && logLine.getProcessId() != -1 // -1 marks lines like 'beginning of /dev/log...'
-                && AppPref.getBoolean(AppPref.PrefKey.PREF_LOG_VIEWER_SHOW_PID_TID_TIMESTAMP_BOOL);
+                && Prefs.LogViewer.showPidTidTimestamp();
 
         TextView pidText = holder.pid;
         pidText.setVisibility(extraInfoIsVisible ? View.VISIBLE : View.GONE);
@@ -373,7 +370,9 @@ public class LogViewerRecyclerAdapter extends MultiSelectionView.Adapter<LogView
         }
 
         tag.setTextColor(getOrCreateTagColor(context, logLine.getTagName()));
-        // Allow selection
+        // Single click on the item:
+        // 1. If it is in selection mode, select the item
+        // 2. Otherwise, expand the item
         holder.itemView.setOnClickListener(v -> {
             if (isInSelectionMode()) {
                 toggleSelection(position);
@@ -382,22 +381,42 @@ public class LogViewerRecyclerAdapter extends MultiSelectionView.Adapter<LogView
                 notifyItemChanged(position);
             }
         });
+        // Long click on the item:
+        // 1. If it is in selection mode, select range of item
+        // 2. Open context menu
         holder.itemView.setOnLongClickListener(v -> {
-            PopupMenu menu = new PopupMenu(v.getContext(), v);
-            menu.getMenu().add(0, CONTEXT_MENU_FILTER_ID, 0, R.string.filter_choice);
-            menu.getMenu().add(0, CONTEXT_MENU_COPY_ID, 0, R.string.copy_to_clipboard);
-            menu.getMenu().add(0, CONTEXT_MENU_SELECT_ID, 0, R.string.item_select);
-            menu.setOnMenuItemClickListener(item -> {
-                if (item.getItemId() == CONTEXT_MENU_SELECT_ID) {
-                    toggleSelection(position);
-                    return true;
-                }
-                if (mClickListener != null) {
-                    return mClickListener.onMenuItemClick(item, logLine);
-                }
-                return false;
-            });
-            menu.show();
+            if (isInSelectionMode()) {
+                int lastSelectedItemPosition = getLastSelectedItemPosition();
+                if (lastSelectedItemPosition >= 0) {
+                    // Select from last selection to this selection
+                    selectRange(lastSelectedItemPosition, position);
+                } else toggleSelection(position);
+                return true;
+            }
+            PopupMenu popupMenu = new PopupMenu(v.getContext(), v);
+            popupMenu.setForceShowIcon(true);
+            Menu menu = popupMenu.getMenu();
+            menu.add(R.string.filter_choice)
+                    .setIcon(io.github.muntashirakon.ui.R.drawable.ic_search)
+                    .setOnMenuItemClickListener(menuItem -> {
+                        if (mSearchByClickListener != null) {
+                            return mSearchByClickListener.onSearchByClick(menuItem, logLine);
+                        }
+                        return true;
+                    });
+            menu.add(R.string.copy_to_clipboard)
+                    .setIcon(R.drawable.ic_content_copy)
+                    .setOnMenuItemClickListener(menuItem -> {
+                        Utils.copyToClipboard(context, null, logLine.getOriginalLine());
+                        return true;
+                    });
+            menu.add(R.string.item_select)
+                    .setIcon(R.drawable.ic_check_circle)
+                    .setOnMenuItemClickListener(menuItem -> {
+                        toggleSelection(position);
+                        return true;
+                    });
+            popupMenu.show();
             return true;
         });
         super.onBindViewHolder(holder, position);
@@ -420,11 +439,11 @@ public class LogViewerRecyclerAdapter extends MultiSelectionView.Adapter<LogView
     }
 
     public int getLogLevelLimit() {
-        return logLevelLimit;
+        return mLogLevelLimit;
     }
 
     public void setLogLevelLimit(int logLevelLimit) {
-        this.logLevelLimit = logLevelLimit;
+        mLogLevelLimit = logLevelLimit;
     }
 
     /**
@@ -438,8 +457,27 @@ public class LogViewerRecyclerAdapter extends MultiSelectionView.Adapter<LogView
         return mFilter;
     }
 
-    public void setClickListener(ViewHolder.OnClickListener clickListener) {
-        mClickListener = clickListener;
+    public void setClickListener(ViewHolder.OnSearchByClickListener clickListener) {
+        mSearchByClickListener = clickListener;
+    }
+
+    private int getLastSelectedItemPosition() {
+        // Last selected item is the same as the last added item.
+        Iterator<LogLine> it = mSelectedLogLines.iterator();
+        LogLine lastItem = null;
+        while (it.hasNext()) {
+            lastItem = it.next();
+        }
+        if (lastItem != null) {
+            int i = 0;
+            for (LogLine fmItem : mObjects) {
+                if (fmItem.equals(lastItem)) {
+                    return i;
+                }
+                ++i;
+            }
+        }
+        return -1;
     }
 
     /**
@@ -479,7 +517,7 @@ public class LogViewerRecyclerAdapter extends MultiSelectionView.Adapter<LogView
             }
 
             for (LogLine logLine : logLines) {
-                if (logLine != null && logLine.getLogLevel() >= logLevelLimit) {
+                if (logLine != null && logLine.getLogLevel() >= mLogLevelLimit) {
                     allValues.add(logLine);
                 }
             }
@@ -511,18 +549,18 @@ public class LogViewerRecyclerAdapter extends MultiSelectionView.Adapter<LogView
     }
 
     private static class StopWatch {
-        private long startTime;
-        private String name;
+        private long mStartTime;
+        private String mName;
 
         public StopWatch(String name) {
             if (BuildConfig.DEBUG) {
-                this.name = name;
-                this.startTime = System.currentTimeMillis();
+                mName = name;
+                mStartTime = System.currentTimeMillis();
             }
         }
 
         public void log() {
-            Log.d(TAG, name + " took " + (System.currentTimeMillis() - startTime) + " ms");
+            Log.d(TAG, "%s took %d ms", mName, (System.currentTimeMillis() - mStartTime));
         }
     }
 
@@ -541,8 +579,8 @@ public class LogViewerRecyclerAdapter extends MultiSelectionView.Adapter<LogView
             pid = itemView.findViewById(R.id.pid_text);
         }
 
-        public interface OnClickListener {
-            boolean onMenuItemClick(MenuItem item, LogLine logLine);
+        public interface OnSearchByClickListener {
+            boolean onSearchByClick(MenuItem item, LogLine logLine);
         }
     }
 }

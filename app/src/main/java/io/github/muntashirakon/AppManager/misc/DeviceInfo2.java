@@ -2,16 +2,20 @@
 
 package io.github.muntashirakon.AppManager.misc;
 
+import static io.github.muntashirakon.AppManager.utils.UIUtils.getStyledKeyValue;
+import static io.github.muntashirakon.AppManager.utils.UIUtils.getTitleText;
+
 import android.annotation.SuppressLint;
 import android.app.ActivityManager;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.FeatureInfo;
 import android.content.pm.PackageManager;
-import android.content.pm.UserInfo;
 import android.os.Build;
+import android.os.SELinux;
 import android.os.UserHandleHidden;
 import android.text.SpannableStringBuilder;
+import android.text.TextUtils;
 import android.text.format.DateFormat;
 import android.text.format.Formatter;
 import android.util.DisplayMetrics;
@@ -27,14 +31,12 @@ import androidx.core.os.LocaleListCompat;
 import androidx.core.util.Pair;
 import androidx.fragment.app.FragmentActivity;
 
-import com.android.internal.util.TextUtils;
-
-import java.io.BufferedReader;
 import java.security.Provider;
 import java.security.Security;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
@@ -44,15 +46,12 @@ import io.github.muntashirakon.AppManager.StaticDataset;
 import io.github.muntashirakon.AppManager.compat.PackageManagerCompat;
 import io.github.muntashirakon.AppManager.runner.Runner;
 import io.github.muntashirakon.AppManager.runner.RunnerUtils;
+import io.github.muntashirakon.AppManager.users.UserInfo;
 import io.github.muntashirakon.AppManager.users.Users;
+import io.github.muntashirakon.AppManager.utils.TextUtilsCompat;
 import io.github.muntashirakon.AppManager.utils.Utils;
-import io.github.muntashirakon.io.Path;
-import io.github.muntashirakon.io.PathReader;
-import io.github.muntashirakon.io.Paths;
+import io.github.muntashirakon.proc.ProcFs;
 import io.github.muntashirakon.util.LocalizedString;
-
-import static io.github.muntashirakon.AppManager.utils.UIUtils.getStyledKeyValue;
-import static io.github.muntashirakon.AppManager.utils.UIUtils.getTitleText;
 
 public class DeviceInfo2 implements LocalizedString {
     public final String osVersion = Build.VERSION.RELEASE;
@@ -68,7 +67,7 @@ public class DeviceInfo2 implements LocalizedString {
     public final int minSdk = SystemProperties.getInt("ro.build.version.min_supported_target_sdk", 0);
     // Security
     public boolean hasRoot;
-    public int SELinux;
+    public int selinux;
     public String encryptionStatus;
     public final String patchLevel;
     public final Provider[] securityProviders = Security.getProviders();
@@ -102,16 +101,16 @@ public class DeviceInfo2 implements LocalizedString {
     // Features
     public FeatureInfo[] features;
 
-    private final FragmentActivity activity;
-    private final ActivityManager activityManager;
-    private final PackageManager pm;
-    private final Display display;
+    private final FragmentActivity mActivity;
+    private final ActivityManager mActivityManager;
+    private final PackageManager mPm;
+    private final Display mDisplay;
 
     public DeviceInfo2(@NonNull FragmentActivity activity) {
-        this.activity = activity;
-        activityManager = (ActivityManager) activity.getSystemService(Context.ACTIVITY_SERVICE);
-        pm = activity.getPackageManager();
-        display = getDisplay();
+        this.mActivity = activity;
+        mActivityManager = (ActivityManager) activity.getSystemService(Context.ACTIVITY_SERVICE);
+        mPm = activity.getPackageManager();
+        mDisplay = getDisplay();
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             patchLevel = getSecurityPatch();
         } else patchLevel = null;
@@ -120,36 +119,31 @@ public class DeviceInfo2 implements LocalizedString {
     @WorkerThread
     public void loadInfo() {
         hasRoot = RunnerUtils.isRootAvailable();
-        SELinux = getSelinuxStatus();
+        selinux = getSelinuxStatus();
         encryptionStatus = getEncryptionStatus();
         cpuHardware = getCpuHardware();
         availableProcessors = Runtime.getRuntime().availableProcessors();
-        glEsVersion = Utils.getGlEsVersion(activityManager.getDeviceConfigurationInfo().reqGlEsVersion);
+        glEsVersion = Utils.getGlEsVersion(mActivityManager.getDeviceConfigurationInfo().reqGlEsVersion);
         // TODO(19/12/20): Get vendor name
-        activityManager.getMemoryInfo(memoryInfo);
+        mActivityManager.getMemoryInfo(memoryInfo);
         batteryCapacityMAh = getBatteryCapacity();
         // TODO(19/12/20): Get more battery info
         DisplayMetrics displayMetrics = new DisplayMetrics();
         // Actual size
-        display.getRealMetrics(displayMetrics);
+        mDisplay.getRealMetrics(displayMetrics);
         scalingFactor = displayMetrics.density;
         actualWidthPx = displayMetrics.widthPixels;
         actualHeightPx = displayMetrics.heightPixels;
         // Window size
-        display.getMetrics(displayMetrics);
+        mDisplay.getMetrics(displayMetrics);
         windowWidthPx = displayMetrics.widthPixels;
         windowHeightPx = displayMetrics.heightPixels;
-        refreshRate = display.getRefreshRate();
+        refreshRate = mDisplay.getRefreshRate();
         users = Users.getAllUsers();
-        if (users != null) {
-            for (UserInfo info : users) {
-                userPackages.put(info.id, getPackageStats(info.id));
-            }
-        } else {
-            int myId = UserHandleHidden.myUserId();
-            userPackages.put(myId, getPackageStats(myId));
+        for (UserInfo info : users) {
+            userPackages.put(info.id, getPackageStats(info.id));
         }
-        features = pm.getSystemAvailableFeatures();
+        features = mPm.getSystemAvailableFeatures();
     }
 
     @Override
@@ -175,8 +169,8 @@ public class DeviceInfo2 implements LocalizedString {
         // Security
         builder.append("\n").append(getTitleText(ctx, R.string.security)).append("\n");
         builder.append(getStyledKeyValue(ctx, R.string.root, String.valueOf(hasRoot))).append("\n");
-        if (SELinux != 2) {
-            builder.append(getStyledKeyValue(ctx, R.string.selinux, getString(SELinux == 1 ?
+        if (selinux != 2) {
+            builder.append(getStyledKeyValue(ctx, R.string.selinux, getString(selinux == 1 ?
                     R.string.enforcing : R.string.permissive))).append("\n");
         }
         builder.append(getStyledKeyValue(ctx, R.string.encryption, encryptionStatus)).append("\n");
@@ -188,14 +182,14 @@ public class DeviceInfo2 implements LocalizedString {
             securityProviders.add(provider.getName() + " (v" + provider.getVersion() + ")");
         }
         builder.append(getStyledKeyValue(ctx, R.string.security_providers,
-                TextUtils.joinSpannable(", ", securityProviders))).append("\n");
+                TextUtilsCompat.joinSpannable(", ", securityProviders))).append("\n");
         // CPU info
         builder.append("\n").append(getTitleText(ctx, R.string.cpu)).append("\n");
         if (cpuHardware != null) {
             builder.append(getStyledKeyValue(ctx, R.string.hardware, cpuHardware)).append("\n");
         }
         builder.append(getStyledKeyValue(ctx, R.string.support_architectures,
-                TextUtils.join(", ", supportedAbis))).append("\n")
+                        TextUtils.join(", ", supportedAbis))).append("\n")
                 .append(getStyledKeyValue(ctx, R.string.no_of_cores, String.format(Locale.getDefault(), "%d",
                         availableProcessors))).append("\n");
         // GPU info
@@ -227,7 +221,7 @@ public class DeviceInfo2 implements LocalizedString {
             localeStrings.add(systemLocales.get(i).getDisplayName());
         }
         builder.append("\n").append(getTitleText(ctx, R.string.languages))
-                .append("\n").append(TextUtils.joinSpannable(", ", localeStrings))
+                .append("\n").append(TextUtilsCompat.joinSpannable(", ", localeStrings))
                 .append("\n");
         if (users != null) {
             // Users
@@ -235,10 +229,10 @@ public class DeviceInfo2 implements LocalizedString {
                     .append("\n");
             List<String> userNames = new ArrayList<>();
             for (UserInfo user : users) {
-                userNames.add(user.name);
+                userNames.add(user.name != null ? user.name : String.valueOf(user.id));
             }
             builder.append(String.format(Locale.getDefault(), "%d", users.size())).append(" (")
-                    .append(TextUtils.joinSpannable(", ", userNames))
+                    .append(TextUtilsCompat.joinSpannable(", ", userNames))
                     .append(")\n");
             // App stats per user
             builder.append("\n").append(getTitleText(ctx, R.string.apps)).append("\n");
@@ -246,7 +240,7 @@ public class DeviceInfo2 implements LocalizedString {
                 Pair<Integer, Integer> packageSizes = userPackages.get(user.id);
                 if (packageSizes == null) continue;
                 if (packageSizes.first + packageSizes.second == 0) continue;
-                builder.append(getStyledKeyValue(ctx, R.string.user, user.name + " (" + user.id + ")")).append("\n   ")
+                builder.append(getStyledKeyValue(ctx, R.string.user, user.toLocalizedString(ctx))).append("\n   ")
                         .append(getStyledKeyValue(ctx, R.string.total_size, String.format(Locale.getDefault(), "%d",
                                 packageSizes.first + packageSizes.second))).append(", ")
                         .append(getStyledKeyValue(ctx, R.string.user, String.format(Locale.getDefault(), "%d",
@@ -279,16 +273,17 @@ public class DeviceInfo2 implements LocalizedString {
                 } else featureStrings.add(info.name);
             }
         }
-        builder.append(TextUtils.joinSpannable("\n", featureStrings)).append("\n");
+        Collections.sort(featureStrings, (o1, o2) -> String.CASE_INSENSITIVE_ORDER.compare(o1.toString(), o2.toString()));
+        builder.append(TextUtilsCompat.joinSpannable("\n", featureStrings)).append("\n");
         return builder;
     }
 
     private Display getDisplay() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            return activity.getDisplay();
+            return mActivity.getDisplay();
         } else {
             //noinspection deprecation
-            return activity.getWindowManager().getDefaultDisplay();
+            return mActivity.getWindowManager().getDefaultDisplay();
         }
     }
 
@@ -345,11 +340,18 @@ public class DeviceInfo2 implements LocalizedString {
 
     @WorkerThread
     private int getSelinuxStatus() {
-        Runner.Result result = Runner.runCommand("getenforce");
-        if (result.isSuccessful()) {
-            if (result.getOutput().trim().equals("Enforcing")) return 1;
-            return 0;
+        if (SELinux.isSELinuxEnabled()) {
+            // if (SELinux.isSELinuxEnforced()) {
+            //    return 1;
+            // }
+            Runner.Result result = Runner.runCommand("getenforce");
+            if (result.isSuccessful() && result.getOutput().trim().equals("Permissive")) {
+                return 0;
+            }
+            // SELinux enabled, but cannot access result means it is "Enforcing"
+            return 1;
         }
+        // Disabled
         return 2;
     }
 
@@ -369,21 +371,7 @@ public class DeviceInfo2 implements LocalizedString {
 
     @Nullable
     private String getCpuHardware() {
-        Path cpuInfoPath = Paths.getUnprivileged("/proc/cpuinfo");
-        try (BufferedReader reader = new BufferedReader(new PathReader(cpuInfoPath))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                if (line.trim().startsWith("Hardware")) {
-                    int colonLoc = line.indexOf(':');
-                    if (colonLoc == -1) continue;
-                    colonLoc += 2;
-                    return line.substring(colonLoc).trim();
-                }
-            }
-        } catch (Throwable e) {
-            e.printStackTrace();
-        }
-        return null;
+        return ProcFs.getInstance().getCpuInfoHardware();
     }
 
     @SuppressLint("PrivateApi")
@@ -391,7 +379,7 @@ public class DeviceInfo2 implements LocalizedString {
         double capacity = -1.0;
         try {
             Object powerProfile = Class.forName("com.android.internal.os.PowerProfile")
-                    .getConstructor(Context.class).newInstance(activity.getApplication());
+                    .getConstructor(Context.class).newInstance(mActivity.getApplication());
             //noinspection ConstantConditions
             capacity = (double) Class.forName("com.android.internal.os.PowerProfile")
                     .getMethod("getAveragePower", String.class)
@@ -408,7 +396,7 @@ public class DeviceInfo2 implements LocalizedString {
         int systemApps = 0;
         int userApps = 0;
         try {
-            List<ApplicationInfo> applicationInfoList = PackageManagerCompat.getInstalledApplications(0, userHandle);
+            List<ApplicationInfo> applicationInfoList = PackageManagerCompat.getInstalledApplications(PackageManagerCompat.MATCH_STATIC_SHARED_AND_SDK_LIBRARIES, userHandle);
             for (ApplicationInfo info : applicationInfoList) {
                 if ((info.flags & ApplicationInfo.FLAG_SYSTEM) == 1) {
                     ++systemApps;
@@ -421,6 +409,6 @@ public class DeviceInfo2 implements LocalizedString {
     }
 
     private String getString(@StringRes int strRes) {
-        return activity.getString(strRes);
+        return mActivity.getString(strRes);
     }
 }

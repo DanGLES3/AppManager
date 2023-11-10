@@ -26,10 +26,8 @@
     <string name="about">Про додаток</string>
     <string name="cache_size">Кеш</string>
     <string name="obb_size">Obb</string>
-    <string name="instructions">Інструкції</string>
     <string name="error_creating_shortcut">Помилка створення ярлика</string>
     <string name="create_shortcut">Створити ярлик</string>
-    <string name="edit_shortcut">Редагувати ярлик</string>
     <string name="class_name">Назва класу</string>
     <string name="license">Ліцензія</string>
     <string name="third_party">Сторонні бібліотеки та іконки</string>
@@ -100,7 +98,6 @@
     <string name="apply_now">Застосувати зараз…</string>
     <string name="keystore">Сховище ключів</string>
     <string name="no_profiles">Немає профілів</string>
-    <string name="presets">Пресети</string>
     <string name="profiles">Профілі</string>
     <string name="open_pgp_provider">Постачальник OpenPGP</string>
     <string name="systemless_app">Позасистемний додаток</string>
@@ -237,12 +234,6 @@
         <item quantity="many">Більше одного додатка вже має резервну копію. Ви впевнені\?</item>
         <item quantity="other">Більше одного додатка вже має резервну копію. Ви впевнені\?</item>
     </plurals>
-    <plurals name="alert_failed_to_enable">
-        <item quantity="one">Не вдалося ввімкнути %1$d додаток</item>
-        <item quantity="few">Не вдалося ввімкнути %1$d додатки</item>
-        <item quantity="many">Не вдалося ввімкнути %1$d додатків</item>
-        <item quantity="other">Не вдалося ввімкнути %1$d додатків</item>
-    </plurals>
     <plurals name="alert_failed_to_block_components">
         <item quantity="one">Не вдалося заблокувати компоненти в %1$d додатку</item>
         <item quantity="few">Не вдалося заблокувати компоненти в %1$d додатках</item>
@@ -285,7 +276,6 @@
     <string name="components">Компоненти</string>
     <string name="trackers">Трекери</string>
     <string name="installed_version">Установлена версія</string>
-    <string name="filter_disabled_apps">Вимкнені додатки</string>
     <string name="select_all">Вибрати все</string>
     <string name="filter_apps_with_rules">Додатки з правилами</string>
     <string name="filter_system_apps">Системні додатки</string>
@@ -302,7 +292,6 @@
     <string name="clear_app_cache_description">Очищення кешу всіх додатків</string>
     <string name="clear_app_cache">Очищення кешу додатків</string>
     <string name="clear_data_from_uninstalled_apps_description">Очистити дані видалених додатків, котрі відмічені прапорцем <tt>DONT_DELETE_DATA</tt></string>
-    <string name="block_components_description">Блокувати всі компоненти, визначені заданими підписами</string>
     <string name="block_unblock_trackers_description">Блокування або розблокування реклами і компонентів трекерів в усіх встановлених додатках</string>
     <string name="clear_cache">Очистити кеш</string>
     <string name="pref_import_existing_msg">Додати до App Manager компоненти, вимкнені іншими додатками. Будьте обережні при використанні цього інструменту, оскільки може бути багато помилково-позитивних результатів. Виберіть лише додатки, в котрих ви впевнені.</string>
@@ -380,12 +369,6 @@
         <item quantity="many">Не вдалося видалити %1$d додатків</item>
         <item quantity="other">Не вдалося видалити %1$d додатків</item>
     </plurals>
-    <plurals name="alert_failed_to_disable">
-        <item quantity="one">Не вдалося вимкнути %1$d додаток</item>
-        <item quantity="few">Не вдалося вимкнути %1$d додатки</item>
-        <item quantity="many">Не вдалося вимкнути %1$d додатків</item>
-        <item quantity="other">Не вдалося вимкнути %1$d додатків</item>
-    </plurals>
     <plurals name="alert_failed_to_clear_data">
         <item quantity="one">Не вдалося очистити дані %1$d додатку</item>
         <item quantity="few">Не вдалося очистити дані %1$d додатків</item>
@@ -425,7 +408,6 @@
     <string name="external_multiple_data_dir">Каталог зовнішніх даних <xliff:g id="dir_no" example="1">%1$d</xliff:g></string>
     <string name="external_data_dir">Каталог зовнішніх даних</string>
     <string name="sort_by_blocked_components">Спочатку заблоковані</string>
-    <string name="sort_by_disabled_app">Спочатку вимкнені</string>
     <string name="exodus_link">εxodus посилання</string>
     <string name="usage_yesterday">Вчора</string>
     <string name="app_settings">Налаштування</string>
@@ -437,8 +419,6 @@
     <string name="storage_and_cache">Сховище і кеш</string>
     <string name="failed_to_stop">Не вдалося зупинити <xliff:g id="app_name" example="App Manager">%1$s</xliff:g>.</string>
     <string name="force_stop">Зупинити примусово</string>
-    <string name="failed_to_enable">Не вдалося ввімкнути <xliff:g id="app_name" example="App Manager">%1$s</xliff:g>.</string>
-    <string name="failed_to_disable">Не вдалося вимкнути <xliff:g id="app_name" example="App Manager">%1$s</xliff:g>.</string>
     <string name="enable">Ввімкнути</string>
     <string name="disable">Вимкнути</string>
     <string name="stopped">Зупинено</string>
@@ -478,8 +458,6 @@
     <string name="pref_import_export_blocking_rules_msg">Імпорт/Експорт правил, імпорт зовнішніх правил з Watt або Blocker.</string>
     <string name="failed_to_disable_op">Сталася помилка під час спроби заборонити дозвіл</string>
     <string name="debuggable">Налагоджується</string>
-    <string name="error_invalid_icon_format">Пошкоджений формат іконки</string>
-    <string name="error_invalid_icon_resource">Пошкоджений ресурс іконки</string>
     <string name="installer_app">Встановник додатків</string>
     <string name="sort_by_package_name">Ім’я пакету</string>
     <string name="require_no_permission">Не вимагає дозволів</string>
@@ -491,7 +469,6 @@
     <string name="flags">Прапорці</string>
     <string name="soft_input">Режим \"софт\" введення</string>
     <string name="task_affinity">Спорідненість завдань</string>
-    <string name="store">Aurora Store</string>
     <string name="orientation_user_landscape">Користувацька, горизонтальна</string>
     <string name="orientation_sensor">Датник</string>
     <string name="orientation_sensor_portrait">Вертикальна по датнику</string>
@@ -681,7 +658,6 @@
     <string name="pref_encryption_msg">Шифрування резервних копій.</string>
     <string name="encryption">Шифрування</string>
     <string name="select_user">Виберіть користувача</string>
-    <string name="pref_show_users_in_installer_msg">Відображення списку користувачів, котрих потрібно вибрати перед встановленям зовнішнього додатка. Потрібен ROOT або ADB.</string>
     <string name="pref_show_users_in_installer">Показати користувачів у програмі встановлення</string>
     <string name="failed_to_duplicate_profile">Не вдалося дублювати профіль</string>
     <string name="user_profile_with_id">Профіль: %1$s (%2$d)</string>
@@ -695,7 +671,6 @@
     <string name="profile_clear_data_msg">Очищення даних додатків</string>
     <string name="profile_clear_cache_msg">Очищення кешу додатків</string>
     <string name="profile_force_stop_msg">Примусова зупинка додатків</string>
-    <string name="profile_disable_msg">Вимкненя або увімкнення додатків, залежно від значення стану</string>
     <string name="install_location">Місце встановлення</string>
     <string name="installer">Інсталятор</string>
     <string name="comment">Коментар</string>
@@ -810,10 +785,10 @@
     <string name="disable_background_run_description">Встановленя режиму <i>ignore</i> для app ops: <tt>RUN_IN_BACKGROUND</tt> (з Android7.0) і <tt>RUN_ANY_IN_BACKGROUND</tt> (з Android 9).</string>
     <string name="set_mode_for_app_ops_dots">Установити режим для app ops…</string>
     <plurals name="alert_failed_to_set_app_ops">
-        <item quantity="one">Не вдалося встановити app ops для %1$d додатка</item>
-        <item quantity="few">Не вдалося встановити app ops для %1$d додатків</item>
-        <item quantity="many">Не вдалося встановити app ops для %1$d додатків</item>
-        <item quantity="other">Не вдалося встановити app ops для %1$d додатків</item>
+        <item quantity="one">Не вдалося встановити app ops %1$d додатка</item>
+        <item quantity="few">Не вдалося встановити app ops %1$d додатків</item>
+        <item quantity="many">Не вдалося встановити app ops %1$d додатків</item>
+        <item quantity="other">Не вдалося встановити app ops %1$d додатків</item>
     </plurals>
     <string name="backup_custom_users_description">Виконувати резервне копіювання лише для вказаних користувачів</string>
     <string name="encrypted">Зашифровано</string>
@@ -1023,7 +998,6 @@
     <string name="orientation_right_to_left">Справа наліво</string>
     <string name="orientation_left_to_right">Зліва направо</string>
     <string name="orientation_follow_locale">Згідно системної мови</string>
-    <string name="pref_layout_orientation">Орієнтація макета</string>
     <plurals name="file_deletion_confirmation">
         <item quantity="one">%d файл буде видалено</item>
         <item quantity="few">%d файли буде видалено</item>
@@ -1031,10 +1005,10 @@
         <item quantity="other">%d файлів буде видалено</item>
     </plurals>
     <string name="launch_mode_single_top">Один зверху</string>
-    <string name="source_code_links">GitHub: https://github.com/MuntashirAkon/AppManager
-\nGitLab: https://gitlab.com/muntashir/AppManager
-\nRiseup: https://0xacab.org/muntashir/AppManager
-\nCodeberg: https://codeberg.org/muntashir/AppManager</string>
+    <string name="source_code_links"><a href="https://github.com/MuntashirAkon/AppManager">GitHub</a> •
+        <a href="https://gitlab.com/muntashir/AppManager">GitLab</a> •
+        <a href="https://0xacab.org/muntashir/AppManager">Riseup</a> •
+        <a href="https://codeberg.org/muntashir/AppManager">Codeberg</a></string>
     <string name="apk_updater">APK Updater</string>
     <string name="enforcing">Enforcing</string>
     <string name="uri">URI</string>
@@ -1077,11 +1051,9 @@
     <string name="adb_connect_port_number_description">Номер порту знаходиться в розділі <b>IP-адреса&amp; порт</b> трохи нижче розділу <b>Назва пристрою</b>.</string>
     <string name="port_number">Порт</string>
     <string name="adb_connect">З\'єднання</string>
-    <string name="wireless_debugging_not_supported">Бездротове налагодження не підтримується в цій платформі.</string>
     <string name="wireless_debugging">Бездротове налагодження</string>
     <string name="unknown_net_policy">Невідома мережна політика (%1$s - %2$X)</string>
     <string name="failed_to_prevent_background_run">Не вдалося запобігти роботу в фоновому режимі додатку %1$s</string>
-    <string name="app_signing_signature_mismatch_for_data_only_app">Не вдалося встановити додаток через невідповідність підпису. Додаток було видалено без очищення даних.</string>
     <string name="community">Спільнота</string>
     <plurals name="alert_failed_to_import_backups">
         <item quantity="one">Не вдалося імпортувати %1$d резервну копію</item>
@@ -1105,11 +1077,9 @@
     <string name="storage">Сховище</string>
     <string name="notice_saf">На відміну від томів, обраний каталог буде використовуватися для зберігання всіх файлів, пов\'язаних з App Manager, включаючи збережені APK і резервні копії. Storage Access Framework (SAF) працює дуже повільно, тому ви повинні використовувати цей варіант тільки тоді, коли інші не можуть бути використані.</string>
     <string name="notice">Сповіщення</string>
-    <string name="enable_disable">Увімкнення/вимкнення</string>
     <string name="error_with_details">Помилка: %s</string>
     <string name="saved_filters">Збережені фільтри</string>
-    <string name="community_links">Telegram: https://t.me/AppManagerChannel
-\nTwitter: https://twitter.com/AppManagerNews</string>
+    <string name="community_links"><a href="https://t.me/AppManagerChannel">Telegram канал</a> • <a href="https://twitter.com/AppManagerNews">Twitter</a></string>
     <string name="paired_successfully">Сполучено.</string>
     <string name="port_number_pairing_code_empty">Порожній номер порту або код сполучення.</string>
     <string name="adb_pair">Сполука</string>
@@ -1209,10 +1179,10 @@
     <string name="vt_permalink">Постійне посилання на VirusTotal</string>
     <string name="vt_slowness_warning">Залежно від швидкості Інтернету та навантаження на сервер, це може зайняти деякий час.</string>
     <string name="vt_disclaimer">VirusTotal та його логотипи є торговою маркою Chronicle LLC. Ні App Manager — клієнт API, ні його автори не несуть відповідальності за будь-які дані, які ви можете надіслати до VirusTotal.</string>
-    <string name="uses_play_app_signing_description">Ця програма містить певні маркери, які вказують на те, що вона <i>можливо </i> використовує <a href="https://support.google.com/googleplay/android-developer/answer/9842756">Play App Signing</a>. За цією схемою ключі підпису зберігаються на серверах Google, і Google відповідає за підписання програми. Зауважте, що відповідність інформації підпису — це єдиний спосіб переконатися, що додаток не був змінений кимось іншим, окрім розробника (а в цьому випадку також Google).</string>
+    <string name="uses_play_app_signing_description">Ця програма містить певні маркери, які вказують на те, що вона <i>можливо </i> використовує <a href="https://support.google.com/googleplay/android-developer/answer/9842756">Підпис Play App</a>. За цією схемою ключі підпису зберігаються на серверах Google, і Google відповідає за підписання програми. Зауважте, що відповідність інформації підпису — це єдиний спосіб переконатися, що додаток не був змінений кимось іншим, окрім розробника (а в цьому випадку також Google).</string>
     <string name="failed_to_use_the_current_mode_of_operation">Не вдалося використати поточний режим роботи. Повернення до режиму без-root для цього сеансу.</string>
     <string name="failed_to_enable_magisk_deny_list">Не вдалося ввімкнути Magisk DenyList</string>
-    <string name="uses_play_app_signing">Play App Signing</string>
+    <string name="uses_play_app_signing">Підпис Play App</string>
     <string name="swap">Підкачка</string>
     <string name="magisk_denylist">Magisk DenyList</string>
     <string name="primary_abi">Головний ABI</string>
@@ -1229,7 +1199,7 @@
     <string name="so_type_shared_library">Спільна бібліотека</string>
     <string name="so_type_executable">Виконуваний файл</string>
     <string name="file_modified_are_you_sure">Файл було змінено. Відкинути всі ваші зміни й вийти\?</string>
-    <string name="save_and_exit">Зберегти й вийти</string>
+    <string name="save_and_exit">Зберегти та вийти</string>
     <string name="hidden_api_enf_policy_dark_grey_and_black">Строго (списки обмеження й блокування)</string>
     <string name="auth_manager_title">Менеджер авторизації</string>
     <string name="regenerate_auth_key">Перестворити ключ авторизації</string>
@@ -1284,4 +1254,209 @@
     <string name="am_command"><tt>am</tt> команда</string>
     <string name="pref_sign_apk_no_signing_key">Немає ключа підписання</string>
     <string name="pref_sign_apk_error_signing_key_not_added">Для підписання APK-файлу необхідний прийнятний ключ підпису.</string>
+    <string name="suspend_app">Призупинити</string>
+    <string name="hide_app">Приховати</string>
+    <string name="failed_to_unfreeze">Не вдалося розморозити <xliff:g id="app_name" example="App Manager">%1$s</xliff:g>.</string>
+    <string name="failed_to_freeze">Не вдалося заморозити <xliff:g id="app_name" example="App Manager">%1$s</xliff:g>.</string>
+    <string name="pref_default_freezing_method">Спосіб заморозки за замовчуванням</string>
+    <string name="pref_default_freezing_method_description">Спосіб котрий буде використано за замовчуванням в місцях, де немає можливості вибрати метод заморозки.</string>
+    <plurals name="alert_failed_to_freeze">
+        <item quantity="one">Не вдалося заморозити %1$d додаток</item>
+        <item quantity="few">Не вдалося заморозити %1$d додатки</item>
+        <item quantity="many">Не вдалося заморозити %1$d додатків</item>
+        <item quantity="other">Не вдалося заморозити %1$d додатків</item>
+    </plurals>
+    <plurals name="alert_failed_to_unfreeze">
+        <item quantity="one">Не вдалося розморозити %1$d додаток</item>
+        <item quantity="few">Не вдалося розморозити %1$d додатки</item>
+        <item quantity="many">Не вдалося розморозити %1$d додатків</item>
+        <item quantity="other">Не вдалося розморозити %1$d додатків</item>
+    </plurals>
+    <string name="disable_app_description">Рекомендований спосіб заморозки. Він відключає додаток разом з усіма його компонентами, але всі ярлики будуть втрачені.</string>
+    <string name="pref_appearance_description">Тема, орієнтація, особливості тощо.</string>
+    <string name="freeze_unfreeze">Заморозка/розморозка</string>
+    <string name="profile_freeze_msg">Заморозка або розморозка додатку, в залежності від стану</string>
+    <string name="suspend_app_description">Це найслабший метод заморозки. Призупинений додаток все ще може відображатися в панелі запуску, але він буде виділений сірим кольором і не може бути запущеним.</string>
+    <string name="hide_app_description">Цей метод рекомендується лише для щоденного використання. Прихований додаток виглядає так, ніби його видалено. Але він може з\'явитися знову, після перевстановлення або оновлення.</string>
+    <string name="sort_by_frozen_app">Спочатку заморожені</string>
+    <string name="filter_frozen_apps">Заморожені програми</string>
+    <string name="pref_privacy">Конфіденційність</string>
+    <string name="pref_privacy_description">Блокування екрану, авторизація тощо.</string>
+    <string name="user_manual">Керівництво користувача</string>
+    <string name="get_help">Отримати допомогу</string>
+    <string name="pref_advanced_pref">Користувачі, формат імені APK, паралельне виконання тощо.</string>
+    <string name="pref_version_changelog">Версія/Журнал змін</string>
+    <string name="file_creation_date">Створено</string>
+    <string name="file_modification_date">Змінено</string>
+    <string name="file_accessed_date">Доступ</string>
+    <string name="file_open_with">Відкрити з</string>
+    <string name="file_shortcut_target_file">Цільовий файл</string>
+    <string name="open_as_other">Інше</string>
+    <string name="file_open_with_os_default_dialog">Відкрити з діалоговим вікном ОС за замовчуванням</string>
+    <string name="on_unfreeze_open_application">Відкрити додаток після розморозки</string>
+    <string name="waiting_for_the_phone_to_be_locked">Очікування блокування телефону…</string>
+    <string name="open_as_text">Текст</string>
+    <string name="delete_filename">Видалити %s</string>
+    <string name="file_change_open_with">Змінити відкрити з</string>
+    <string name="file_properties">Властивості</string>
+    <string name="fm_open_with_for_this_file_only">Тільки для цього файлу</string>
+    <string name="file_open_as">Відкрити як…</string>
+    <string name="file_open_with_custom_activity">Власний</string>
+    <string name="open_as_image">Зображення</string>
+    <string name="confirm_file_deletion">Так, видалити</string>
+    <string name="freeze_on_phone_locked">Автоматично заморожувати додаток, коли телефон заблокований</string>
+    <string name="file_cut">Вирізати</string>
+    <string name="fm_always_open_with">Завжди відкривати</string>
+    <string name="open_as_video">Відео</string>
+    <string name="open_as_archive">Архів</string>
+    <string name="open_as_folder">Папка</string>
+    <string name="on_open_application_no_recents">Не показувати запущений додаток в Недавніх</string>
+    <string name="tap_to_freeze_app">Торкніться, щоб заморозити</string>
+    <string name="action_stop_service">Стоп</string>
+    <string name="sort_by_data_usage">Використання даних</string>
+    <string name="grant_overlay_permission_message">Дозволити App Manager показувати плаваюче вікно поверх всіх інших вікон</string>
+    <string name="grant_accessibility_permission_for_tracking_window_contents">Дозволити App Manager використовувати функцію спеціальних можливостей для відстеження вмісту головного вікна.</string>
+    <string name="class_hierarchy">Ієрархія</string>
+    <string name="title_ui_tracker">UI трекер</string>
+    <string name="title_terminal_emulator">Термінал</string>
+    <string name="title_labs_activity">Лабораторія</string>
+    <string name="app_manager_build_expiring_soon_warning">Термін дії цієї версії App Manager дуже скоро закінчиться. Оновіть додаток до останньої версії.</string>
+    <string name="renamed_successfully">Перейменовано</string>
+    <string name="selinux_context">Контекст SELinux</string>
+    <string name="unix_file_permissions">Режим</string>
+    <string name="file_group_id">Група (GID)</string>
+    <string name="file_owner_id">Власник (UID)</string>
+    <string name="calculating_file_size">Розрахунок…</string>
+    <string name="sort_by_filename">Ім’я</string>
+    <string name="sort_by_last_modified">Востаннє змінено</string>
+    <string name="sort_by_file_size">Розмір файлу</string>
+    <string name="sort_by_file_type">Тип файлу</string>
+    <string name="option_display_dot_files">Dot файли</string>
+    <string name="option_display_folders_on_top">Папки зверху</string>
+    <string name="export_app_list">Експорт списку додатків</string>
+    <string name="export_app_list_select_format">Виберіть формат для експорту списку додатків</string>
+    <string name="export_option_xml">XML</string>
+    <string name="export_option_markdown">Markdown</string>
+    <string name="funding_campaign_text">Ми проводимо <b>кампанію фінансування</b> App Manager протягом обмеженого періоду. <a href="https://opencollective.com/app-manager#category-ABOUT">дізнатися більше…</a></string>
+    <string name="adb_incomplete_usb_debugging_title">Незавершене налагодження USB</string>
+    <string name="app_manager_build_expired_message">Для забезпечення безпеки вашого пристрою та даних, версія App Manager, якою ви користуєтеся, знята з експлуатації. Вам потрібно оновити його до останньої версії, щоб продовжити використання, або видалити його, якщо оновлення недоступне.</string>
+    <string name="app_can_write_and_execute_in_same_place">Додаток порушує <a href="https://en.wikipedia.org/wiki/W%5EX">політику W^X</a> і може проводити запис та виконання в тому самому каталозі або в тій самій частині пам\'яті. Це дозволяє виконувати довільні виконувані файли шляхом модифікації виконуваних файлів, вбудованих у програму, або шляхом їх завантаження з Інтернету. Якщо це не передбачена поведінка програми (наприклад, емулятори терміналу), рекомендується знайти новішу версію програми, яка націлена на SDK 29 (Android 10) і пізніших, або знайти альтернативи.</string>
+    <string name="funding_campaign_dialog_message">Ми проводимо <b>кампанію фінансування</b> App Manager протягом обмеженого періоду. Перейдіть на сторінку<a href="https://opencollective.com/app-manager#category-ABOUT"> opencollective.com/app-manager</a>, щоб дізнатися більше про кампанію. Це сповіщення більше не відображатиметься, але ви можете знайти його на сторінці налаштувань протягом усієї кампанії.</string>
+    <string name="app_manager_build_expired">Потрібне оновлення</string>
+    <string name="filter_apps_with_saf">З SAF</string>
+    <string name="filter_apps_with_ssaid">З SSAID</string>
+    <string name="action_continue">Продовжити</string>
+    <string name="confirm_uninstallation">Підтвердити видалення</string>
+    <string name="adb_incomplete_usb_debugging_message">Схоже, налагодження USB налаштовано неправильно. Будь ласка<a href="https://muntashirakon.github.io/AppManager/#subsec:enable-usb-debugging">, ознайомтеся з документацією</a> для додаткових кроків. Якщо ви вже знаєте кроки, натисніть \"Відкрити\", щоб відкрити параметри розробника, або натисніть \"Закрити\", щоб продовжити використовувати режим без root-прав.</string>
+    <string name="filter_apps_with_keystore">З сховищем ключів</string>
+    <string name="install_for_another_user">Встановити для…</string>
+    <string name="grant_required_permission">Надати необхідний дозвіл</string>
+    <string name="optimize_option_clear_profile_data">Очистка даних попереднього профілю</string>
+    <string name="select_a_dex2oat_compiler_filter">Фільтр компілятора <tt>dex2oat</tt></string>
+    <string name="optimize_option_compile_layouts">Компіляція ресурсів макета</string>
+    <string name="optimize_option_check_profiles">Враховувати дані профілю під час оптимізації DEX</string>
+    <string name="optimize_option_force_compilation">Примусова компіляція, навіть якщо вона не потрібна</string>
+    <string name="optimize_option_force_dexopt">Негайне виконання оптимізації DEX</string>
+    <string name="title_perform_runtime_optimization_to_apps">Виконати оптимізацію середовища виконання</string>
+    <string name="action_run">Старт</string>
+    <plurals name="alert_failed_to_optimize_apps">
+        <item quantity="one">Не вдалося оптимізувати %1$d додаток</item>
+        <item quantity="few">Не вдалося оптимізувати %1$d додатки</item>
+        <item quantity="many">Не вдалося оптимізувати %1$d додатків</item>
+        <item quantity="other">Не вдалося оптимізувати %1$d додатків</item>
+    </plurals>
+    <string name="action_optimize_app">Оптимізувати</string>
+    <string name="batch_ops_runtime_optimization">Оптимізація середовища виконання</string>
+    <string name="summary_perform_runtime_optimization_to_apps">Оптимізація DEX і (в Android 10 і пізніших версіях) макетів, щоб підвищити продуктивність роботи додатків.</string>
+    <string name="app_info_tag_open_links">Відкриті посилання</string>
+    <string name="source_stamp_verified_and_identified_to_be_from_source">SourceStamp перевірено та ідентифіковано як джерело з <xliff:g id="source" example="Google Play">%1$s</xliff:g> .</string>
+    <string name="unblock_components_dots">Розблокувати компоненти…</string>
+    <string name="pref_zip_align">Вирівняти APK файли</string>
+    <string name="title_code_editor">Редактор коду</string>
+    <string name="read_only_file">Файл тільки для читання</string>
+    <string name="line_separator">Роздільник рядків</string>
+    <string name="replacement_text">Заміна</string>
+    <string name="action_replace_all">Замінити все</string>
+    <string name="search_option_match_case">З урахуванням регістру</string>
+    <string name="search_option_whole_word">Ціле слово</string>
+    <string name="search_option_regex">регулярний вираз</string>
+    <string name="system_app_put_back">Повернути назад</string>
+    <string name="debloat_list_carrier">Оператор/провайдер</string>
+    <string name="debloat_list_misc">Різне</string>
+    <string name="debloat_list_pending">Розглядається</string>
+    <string name="debloat_removal_caution">З обережністю</string>
+    <plurals name="alert_failed_to_unblock_components">
+        <item quantity="one">Не вдалося розблокувати компоненти %1$d додатку</item>
+        <item quantity="few">Не вдалося розблокувати компоненти %1$d додатків</item>
+        <item quantity="many">Не вдалося розблокувати компоненти %1$d додатків</item>
+        <item quantity="other">Не вдалося розблокувати компоненти %1$d додатків</item>
+    </plurals>
+    <plurals name="search_results">
+        <item quantity="one">%d результат</item>
+        <item quantity="few">%d результатів</item>
+        <item quantity="many">%d результатів</item>
+        <item quantity="other">%d результатів</item>
+    </plurals>
+    <string name="uninstall_app">Видалити %1$s</string>
+    <string name="uninstall_app_again_message">Додаток було видалено без очищення даних і підпису. Ви хочете повністю видалити його\?</string>
+    <string name="debloat_removal_type">Тип</string>
+    <string name="block_unblock_components_dots">Блокування/розблокування компонентів…</string>
+    <string name="block_unblock_components_description">Заблокувати або розблокувати всі компоненти, визначені наданими підписами</string>
+    <string name="pref_layout_direction">Напрямок макета</string>
+    <string name="title_domains_supported_by_the_app">Підтримувані домени</string>
+    <string name="debloat_list_type">Список</string>
+    <string name="debloat_removal_safe">Безпечно</string>
+    <string name="debloat_removal_replace">Заміна</string>
+    <string name="static_shared_library">Статична спільна бібліотека</string>
+    <string name="redo">Повторити</string>
+    <string name="read_only_file_warning">Зміни не можуть бути записані до файлу, можливо, тому що він знаходиться в томі, на який App Manager не має дозволу на запис. Ви хочете зберегти його в іншому місці\?</string>
+    <string name="pref_zip_align_msg">Вирівнювання APK-файлу зменшує використання пам\'яті, оскільки до файлів APK можна звертатися безпосередньо, без копіювання даних до оперативної пам\'яті. Цей крок обовʼязковий, якщо для параметра <tt>extractNativeLibs</tt> встановлено значення <tt>true</tt>.</string>
+    <plurals name="folder_count">
+        <item quantity="one">%d папка</item>
+        <item quantity="few">%d папки</item>
+        <item quantity="many">%d папок</item>
+        <item quantity="other">%d папок</item>
+    </plurals>
+    <plurals name="file_count">
+        <item quantity="one">%d файл</item>
+        <item quantity="few">%d файли</item>
+        <item quantity="many">%d файлів</item>
+        <item quantity="other">%d файлів</item>
+    </plurals>
+    <string name="filter_force_stopped_apps">Зупинені додатки</string>
+    <string name="empty_folder">Порожньо</string>
+    <string name="go_to_path">Перейти до…</string>
+    <string name="copy_this_path">Скопіювати шлях</string>
+    <string name="title_audio_player">Аудіоплеєр</string>
+    <string name="debloater_title">Debloater</string>
+    <string name="warning_working_on_system_mode">Попередження: робота в системному режимі замість режиму ADB.</string>
+    <string name="installing_package">Встановлення %1$s…</string>
+    <string name="backing_up_app">Резервне копіювання %1$s…</string>
+    <string name="restoring_app">Відновлення %1$s…</string>
+    <string name="pref_installer_force_dexopt_description">Виконувати DEX-оптимізацію відразу після встановлення програми, не чекаючи, поки система зробить це, під час простою.</string>
+    <string name="folder">Папка</string>
+    <string name="symbolic_link">Символічне посилання</string>
+    <string name="create_new_symbolic_link">Нове символічне посилання</string>
+    <string name="symbolic_link_not_supported">Ця папка не підтримує створення символічного посилання.</string>
+    <string name="create_new_file">Новий файл</string>
+    <string name="enter_symbolic_link_name">Назва посилання</string>
+    <string name="enter_target_path">Цільовий шлях</string>
+    <string name="copy_these_paths">Скопіювати шляхи</string>
+    <string name="conflict_detected_while_copying">Виявлено конфлікт</string>
+    <string name="copy_keep_both_file">Зберегти обидва</string>
+    <string name="copied_successfully">Скопійовано</string>
+    <string name="moved_successfully">Переміщено</string>
+    <string name="title_change_selinux_context">Зміна контексту SELinux</string>
+    <string name="change_owner_uid">Зміна власника (UID)</string>
+    <string name="change_group_gid">Зміна групи (GID)</string>
+    <string name="change_mode">Змінити режим</string>
+    <string name="apply_recursively">Застосувати до вкладених файлів</string>
+    <string name="create_new_folder">Нова папка</string>
+    <string name="invalid_target_path">Недійсний шлях</string>
+    <string name="failed_to_copy_specified_file">Не вдалося скопіювати \"%1$s\".</string>
+    <string name="title_confirm_deletion">Підтвердити видалення</string>
+    <string name="conflict_detected_while_copying_message">Елемент з назвою \"%1$s\" вже існує у цьому місці. Хочете замінити його\?</string>
+    <string name="failed_to_delete_specified_file_after_copying">Не вдалося видалити \"%1$s\" після копіювання, можливо, через недостатній дозвіл.</string>
+    <string name="pref_send_notifications_to_connected_devices">Надіслати повідомлення на підключені пристрої</string>
+    <string name="pref_send_notification_to_connected_devices_msg">Встановіть, чи надсилати сповіщення на підключені пристрої, наприклад переносні пристрої.</string>
 </resources>

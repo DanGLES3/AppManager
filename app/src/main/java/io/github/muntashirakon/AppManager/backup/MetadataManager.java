@@ -2,6 +2,11 @@
 
 package io.github.muntashirakon.AppManager.backup;
 
+import static io.github.muntashirakon.AppManager.utils.UIUtils.getSecondaryText;
+import static io.github.muntashirakon.AppManager.utils.UIUtils.getSmallerText;
+import static io.github.muntashirakon.AppManager.utils.UIUtils.getTitleText;
+
+import android.annotation.UserIdInt;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
@@ -22,45 +27,37 @@ import org.json.JSONObject;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-import java.util.regex.Pattern;
 
 import aosp.libcore.util.HexEncoding;
-import io.github.muntashirakon.AppManager.AppManager;
 import io.github.muntashirakon.AppManager.BuildConfig;
 import io.github.muntashirakon.AppManager.R;
 import io.github.muntashirakon.AppManager.apk.ApkFile;
+import io.github.muntashirakon.AppManager.apk.ApkSource;
 import io.github.muntashirakon.AppManager.compat.PackageManagerCompat;
-import io.github.muntashirakon.AppManager.logs.Log;
 import io.github.muntashirakon.AppManager.misc.VMRuntime;
 import io.github.muntashirakon.AppManager.rules.compontents.ComponentsBlocker;
-import io.github.muntashirakon.AppManager.utils.AppPref;
+import io.github.muntashirakon.AppManager.settings.Prefs;
 import io.github.muntashirakon.AppManager.utils.ArrayUtils;
+import io.github.muntashirakon.AppManager.utils.ContextUtils;
 import io.github.muntashirakon.AppManager.utils.DateUtils;
 import io.github.muntashirakon.AppManager.utils.DigestUtils;
-import io.github.muntashirakon.AppManager.utils.FileUtils;
 import io.github.muntashirakon.AppManager.utils.JSONUtils;
 import io.github.muntashirakon.AppManager.utils.KeyStoreUtils;
 import io.github.muntashirakon.AppManager.utils.LangUtils;
-import io.github.muntashirakon.AppManager.utils.PackageUtils;
 import io.github.muntashirakon.AppManager.utils.TarUtils;
+import io.github.muntashirakon.compat.ObjectsCompat;
 import io.github.muntashirakon.io.Path;
 import io.github.muntashirakon.io.Paths;
 import io.github.muntashirakon.util.LocalizedString;
-
-import static io.github.muntashirakon.AppManager.utils.UIUtils.getSecondaryText;
-import static io.github.muntashirakon.AppManager.utils.UIUtils.getSmallerText;
-import static io.github.muntashirakon.AppManager.utils.UIUtils.getTitleText;
 
 public final class MetadataManager {
     public static final String TAG = MetadataManager.class.getSimpleName();
 
     public static final String META_FILE = "meta_v2.am.json";
-    public static final String[] TAR_TYPES = new String[]{TarUtils.TAR_GZIP, TarUtils.TAR_BZIP2};
-
-    public static final Pattern UUID_PATTERN = Pattern.compile("[a-f\\d]{8}(-[a-f\\d]{4}){3}-[a-f\\d]{12}");
+    public static final String[] TAR_TYPES = new String[]{TarUtils.TAR_GZIP, TarUtils.TAR_BZIP2, TarUtils.TAR_ZSTD};
+    public static final String[] TAR_TYPES_READABLE = new String[]{"GZip", "BZip2", "Zstandard"};
 
     // For an extended documentation, see https://github.com/MuntashirAkon/AppManager/issues/30
     // All the attributes must be non-null
@@ -87,14 +84,14 @@ public final class MetadataManager {
         public String keyIds;  // key_ids
         /**
          * Metadata version.
-         * <p>
-         * {@code 1} indicates that it was part of an alpha version which is no longer supported.
-         * <p>
-         * {@code 2} was used in the beta versions but it is used to simulate that the permissions are not preserved.
-         * <p>
-         * {@code 3} is the currently used version and it preserves permissions.
+         * <ul>
+         *     <li>{@code 1} - Alpha version, no longer supported</li>
+         *     <li>{@code 2} - Beta version (v2.5.2x), permissions aren't preserved (special action needed)</li>
+         *     <li>{@code 3} - From v2.6.x to v3.0.2 and v3.1.0-alpha01, permissions are preserved, AES GCM MAC size is 32 bits</li>
+         *     <li>{@code 4} - Since v3.0.3 and v3.1.0-alpha02, AES GCM MAC size is 128 bits</li>
+         * </ul>
          */
-        public int version = 3;  // version
+        public int version = 4;  // version
         public String apkName;  // apk_name
         public String instructionSet = VMRuntime.getInstructionSet(Build.SUPPORTED_ABIS[0]);  // instruction_set
         public BackupFlags flags;  // flags
@@ -165,7 +162,7 @@ public final class MetadataManager {
             CharSequence titleText = shortName == null ? context.getText(R.string.base_backup) : shortName;
 
             StringBuilder subtitleText = new StringBuilder()
-                    .append(DateUtils.formatDateTime(backupTime))
+                    .append(DateUtils.formatDateTime(context, backupTime))
                     .append(", ")
                     .append(flags.toLocalisedString(context))
                     .append(", ")
@@ -178,14 +175,13 @@ public final class MetadataManager {
                 subtitleText.append(", ").append(context.getString(R.string.pgp_aes_rsa_encrypted,
                         crypto.toUpperCase(Locale.ROOT)));
             }
-            subtitleText.append(", ").append(context.getString(R.string.gz_bz2_compressed,
-                    tarType.equals(TarUtils.TAR_GZIP) ? "GZip" : "BZip2"));
+            subtitleText.append(", ").append(context.getString(R.string.gz_bz2_compressed, getReadableTarType(tarType)));
             if (keyStore) {
                 subtitleText.append(", ").append(context.getString(R.string.keystore));
             }
             subtitleText.append(", ")
                     .append(context.getString(R.string.size)).append(LangUtils.getSeparatorString()).append(Formatter
-                    .formatFileSize(context, getBackupSize()));
+                            .formatFileSize(context, getBackupSize()));
 
             if (isFrozen()) {
                 subtitleText.append(", ").append(context.getText(R.string.frozen));
@@ -203,57 +199,25 @@ public final class MetadataManager {
 
     @WorkerThread
     @NonNull
-    public static Metadata[] getMetadata(@NonNull Path backupPath) {
-        Path[] realBackupPaths;
-        if (UUID_PATTERN.matcher(backupPath.getName()).matches()) {
-            // UUID-based backups only store one backup per folder
-            realBackupPaths = new Path[]{backupPath};
-        } else {
-            // Other backups can store multiple backups per folder
-            realBackupPaths = backupPath.listFiles(Path::isDirectory);
-        }
-        List<Metadata> metadataList = new ArrayList<>(realBackupPaths.length);
-        for (Path path : realBackupPaths) {
-            try {
-                MetadataManager metadataManager = MetadataManager.getNewInstance();
-                metadataManager.readMetadata(new BackupFiles.BackupFile(path, false));
-                metadataList.add(metadataManager.getMetadata());
-            } catch (IOException e) {
-                Log.e(TAG, e);
-            }
-        }
-        return metadataList.toArray(new Metadata[0]);
+    public static Metadata getMetadata(@NonNull Path backupPath) throws IOException {
+        MetadataManager metadataManager = MetadataManager.getNewInstance();
+        metadataManager.readMetadata(new BackupFiles.BackupFile(backupPath, false));
+        return metadataManager.getMetadata();
     }
 
     @WorkerThread
     @NonNull
-    @Deprecated
-    public static Metadata[] getMetadata(String packageName) throws IOException {
-        Path[] backupFiles = getBackupFiles(packageName);
-        List<Metadata> metadataList = new ArrayList<>(backupFiles.length);
-        for (Path backupFile : backupFiles) {
-            try {
-                MetadataManager metadataManager = MetadataManager.getNewInstance();
-                metadataManager.readMetadata(new BackupFiles.BackupFile(backupFile, false));
-                metadataList.add(metadataManager.getMetadata());
-            } catch (IOException e) {
-                Log.e("MetadataManager", e);
-            }
-        }
-        return metadataList.toArray(new Metadata[0]);
-    }
-
-    @Deprecated
-    @NonNull
-    private static Path[] getBackupFiles(String packageName) throws IOException {
-        return BackupFiles.getPackagePath(packageName, false).listFiles(Path::isDirectory);
+    public static Metadata getMetadata(@NonNull BackupFiles.BackupFile backupFile) throws IOException {
+        MetadataManager metadataManager = MetadataManager.getNewInstance();
+        metadataManager.readMetadata(backupFile);
+        return metadataManager.getMetadata();
     }
 
     private Metadata mMetadata;
     private final Context mContext;
 
     private MetadataManager() {
-        mContext = AppManager.getInstance();
+        mContext = ContextUtils.getContext();
     }
 
     public Metadata getMetadata() {
@@ -266,7 +230,7 @@ public final class MetadataManager {
 
     @WorkerThread
     synchronized public void readMetadata(@NonNull BackupFiles.BackupFile backupFile) throws IOException {
-        String metadata = FileUtils.getFileContent(backupFile.getMetadataFile());
+        String metadata = backupFile.getMetadataFile().getContentAsString();
         if (TextUtils.isEmpty(metadata)) {
             throw new IOException("Empty JSON string for path " + backupFile.getBackupPath());
         }
@@ -356,7 +320,7 @@ public final class MetadataManager {
     }
 
     public Metadata setupMetadata(@NonNull PackageInfo packageInfo,
-                                  int userHandle,
+                                  @UserIdInt int userHandle,
                                   @NonNull BackupFlags requestedFlags) {
         PackageManager pm = mContext.getPackageManager();
         ApplicationInfo applicationInfo = packageInfo.applicationInfo;
@@ -365,25 +329,24 @@ public final class MetadataManager {
         requestedFlags.removeFlag(BackupFlags.BACKUP_CUSTOM_USERS | BackupFlags.BACKUP_MULTIPLE);
         mMetadata.flags = requestedFlags;
         mMetadata.userHandle = userHandle;
-        mMetadata.tarType = (String) AppPref.get(AppPref.PrefKey.PREF_BACKUP_COMPRESSION_METHOD_STR);
+        mMetadata.tarType = Prefs.BackupRestore.getCompressionMethod();
         mMetadata.crypto = CryptoUtils.getMode();
         // Verify tar type
         if (ArrayUtils.indexOf(TAR_TYPES, mMetadata.tarType) == -1) {
             // Unknown tar type, set default
             mMetadata.tarType = TarUtils.TAR_GZIP;
         }
-        mMetadata.keyStore = KeyStoreUtils.hasKeyStore(mContext, applicationInfo.uid);
+        mMetadata.keyStore = KeyStoreUtils.hasKeyStore(applicationInfo.uid);
         mMetadata.label = applicationInfo.loadLabel(pm).toString();
         mMetadata.packageName = packageInfo.packageName;
         mMetadata.versionName = packageInfo.versionName;
         mMetadata.versionCode = PackageInfoCompat.getLongVersionCode(packageInfo);
         mMetadata.apkName = new File(applicationInfo.sourceDir).getName();
-        mMetadata.dataDirs = PackageUtils.getDataDirs(applicationInfo, requestedFlags.backupInternalData(),
+        mMetadata.dataDirs = BackupUtils.getDataDirectories(applicationInfo, requestedFlags.backupInternalData(),
                 requestedFlags.backupExternalData(), requestedFlags.backupMediaObb());
         mMetadata.isSystem = (applicationInfo.flags & ApplicationInfo.FLAG_SYSTEM) != 0;
         mMetadata.isSplitApk = false;
-        try {
-            ApkFile apkFile = ApkFile.getInstance(ApkFile.createInstance(applicationInfo));
+        try (ApkFile apkFile = ApkSource.getApkSource(applicationInfo).resolve()) {
             if (apkFile.isSplit()) {
                 List<ApkFile.Entry> apkEntries = apkFile.getEntries();
                 int splitCount = apkEntries.size() - 1;
@@ -404,14 +367,16 @@ public final class MetadataManager {
             }
         }
         mMetadata.backupTime = 0;
-        try {
-            mMetadata.installer = PackageManagerCompat.getInstallerPackage(packageInfo.packageName);
-        } catch (Throwable e) {
-            e.printStackTrace();
-        }
-        if (mMetadata.installer == null) {
-            mMetadata.installer = BuildConfig.APPLICATION_ID;
-        }
+        mMetadata.installer = ObjectsCompat.requireNonNullElse(PackageManagerCompat.getInstallerPackageName(
+                packageInfo.packageName, userHandle), BuildConfig.APPLICATION_ID);
         return mMetadata;
+    }
+
+    public static String getReadableTarType(@TarUtils.TarType String tarType) {
+        int i = ArrayUtils.indexOf(TAR_TYPES, tarType);
+        if (i == -1) {
+            return "GZip";
+        }
+        return TAR_TYPES_READABLE[i];
     }
 }

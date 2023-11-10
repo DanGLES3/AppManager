@@ -17,7 +17,7 @@
     <string name="loading">লোড হচ্ছে…</string>
     <string name="sort_by_app_label">আ্যপ লেবেল</string>
     <string name="sort_by_package_name">প্যাকেজের নাম</string>
-    <string name="sort_by_domain">প্রথমে ব্যবহারকারীর এপ</string>
+    <string name="sort_by_domain">প্রথমে ব্যবহারকারীর অ্যাপ</string>
     <string name="data_received">প্রাপ্ত ডাটা</string>
     <string name="data_transmitted">প্রেরিত ডাটা</string>
     <string name="data_usage_msg">সর্বশেষ বুট থেকে ডাটা ইউসেজ</string>
@@ -36,7 +36,7 @@
     <string name="source_dir">মূল ডিরেক্টরি</string>
     <string name="data_dir">ডাটা ডিরেক্টরি</string>
     <string name="sdk_min">সর্বনিম্ন</string>
-    <string name="sdk_max">সর্বোচ্চ</string>
+    <string name="sdk_max">সর্বোচ্চ লক্ষ্য</string>
     <string name="sdk_flags">ফ্ল্যাগসমূহ</string>
     <string name="more_info">আরো তথ্য</string>
     <string name="date_installed">ইনস্টলের তারিখ</string>
@@ -44,7 +44,6 @@
     <string name="user_id">ব্যবহারকারীর আইডি</string>
     <string name="main_activity">মূল একটিভিটি</string>
     <string name="empty_package_name">প্যাকেজের নাম খালি</string>
-    <string name="instructions">নির্দেশনা</string>
     <string name="error_verbose_pin_shortcut">বর্তমান লঞ্চার পিনশোর্টকট সমর্থন করে না। শর্টকাট তৈরি করতে ব্যর্থ।</string>
     <string name="shortcut_name">শর্টকাটের নাম</string>
     <string name="package_name">প্যাকেজের নাম</string>
@@ -119,8 +118,6 @@
     <string name="stopped">স্থগিত</string>
     <string name="disable">নিষ্ক্রিয় করুন</string>
     <string name="enable">সক্রিয় করুন</string>
-    <string name="failed_to_disable"><xliff:g id="app_name" example="App Manager">%1$s</xliff:g>টি নিষ্ক্রিয় করতে ব্যর্থ।</string>
-    <string name="failed_to_enable"><xliff:g id="app_name" example="App Manager">%1$s</xliff:g>টি সক্রিয় করতে ব্যর্থ।</string>
     <string name="force_stop">কাটুন</string>
     <string name="failed_to_stop"><xliff:g id="app_name" example="App Manager">%1$s</xliff:g>টি কাটতে ব্যার্থ.</string>
     <string name="storage_and_cache">স্টোরেজ এবং ক্যাশে</string>
@@ -132,7 +129,6 @@
     <string name="app_settings">সেটিংস</string>
     <string name="usage_yesterday">গতকাল</string>
     <string name="exodus_link">\\u03b5xodus লিঙ্ক</string>
-    <string name="sort_by_disabled_app">নিষ্ক্রিয় গুলো প্রথমে</string>
     <string name="sort_by_blocked_components">ব্লকড গুলো প্রথমে</string>
     <string name="external_data_dir">বাহ্যিক ডাটা ডিরেক্টরি</string>
     <string name="external_multiple_data_dir">বাহ্যিক ডাটা ডিরেক্টরি <xliff:g id="dir_no" example="1">%1$d</xliff:g></string>
@@ -148,7 +144,6 @@
     <string name="the_import_was_successful">ইমপোর্টেড</string>
     <string name="the_export_was_successful">এক্সপোর্টেড</string>
     <string name="apk_updater">এপিকে আপডেটর</string>
-    <string name="store">স্টোর</string>
     <string name="running_apps">চলমান এপ্স</string>
     <string name="kill_process">কাটুন</string>
     <string name="pid_and_ppid">প্রসেস আইডি: %1$d, প্যারেন্ট প্রসেস আইডি: %2$d</string>
@@ -160,10 +155,6 @@
     <plurals name="alert_failed_to_clear_data">
         <item quantity="one">%1$dটি অ্যাপ থেকে ডাটা মুছতে ব্যর্থ</item>
         <item quantity="other">%1$dটি অ্যাপ থেকে ডাটা মুছতে ব্যর্থ</item>
-    </plurals>
-    <plurals name="alert_failed_to_disable">
-        <item quantity="one">%1$d অ্যাপটি ডিজ্যাবল করতে ব্যর্থ</item>
-        <item quantity="other">%1$d অ্যাপ গুলো ডিজ্যাবল করতে ব্যর্থ</item>
     </plurals>
     <plurals name="alert_failed_to_uninstall">
         <item quantity="one">%1$d অ্যাপটি আনইনস্টল করতে ব্যর্থ</item>
@@ -227,7 +218,6 @@
     <string name="filter_user_apps">ব্যবহারকারীর এপ</string>
     <string name="filter_system_apps">সিস্টেম এপ্স</string>
     <string name="select_all">সবগুলো নির্বাচন করুন</string>
-    <string name="filter_disabled_apps">নিষ্ক্রিয় অ্যাপস</string>
     <string name="installed_version">ইনস্টলকৃত সংস্করণ</string>
     <string name="trackers">ট্র্যাকারসমূহ</string>
     <string name="features">বৈশিষ্ট্যসমূহ</string>
@@ -282,7 +272,6 @@
     <string name="failed_to_parse_some_numbers">কিছু সংখ্যাকে পার্স করতে ব্যর্থ</string>
     <string name="input_signatures">স্বাক্ষর ইনপুট করুন</string>
     <string name="failed_packages">ব্যর্থ প্যাকেজগুলো</string>
-    <string name="block_components_description">প্রদত্ত স্বাক্ষর(গুলি) দ্বারা চিহ্নিত সকল উপাদান ব্লক করুন</string>
     <string name="external_apk_no_app_op">বহিঃস্থ এপিকের কোন অ্যাপ অপারেশন নেই</string>
     <string name="batch_ops">ব্যাচ অপারেশন</string>
     <string name="installer_error_lidl_rom">আপনার রম রুটহীন ইনস্টলারটির সাথে অসমর্থিত।</string>
@@ -366,8 +355,6 @@
     <string name="sort_by_sha">স্বাক্ষর</string>
     <string name="shared_user_id">শেয়ার্ড ব্যবহারকারীর আইডি</string>
     <string name="sort_by_shared_user_id">শেয়ার্ড ব্যবহারকারীর আইডি</string>
-    <string name="error_invalid_icon_format">অকার্যকর আইকন ফরমেট</string>
-    <string name="error_invalid_icon_resource">অকার্যকর আইকন রিসোর্স</string>
     <string name="error_creating_shortcut">শর্টকাট তৈরি করতে ব্যর্থ</string>
     <string name="app_signing_no_signatures">কোন স্বাক্ষর নেই</string>
     <string name="signatures">স্বাক্ষর</string>
@@ -388,7 +375,6 @@
     <string name="pref_global_blocking_enabled">গ্লোবাল উপাদান ব্লকিং</string>
     <string name="type_boolean">সত্য/মিথ্যা</string>
     <string name="native_library_dir">Native JNI Library ডিরেক্টরি</string>
-    <string name="edit_shortcut">শর্টকাট সম্পাদনা করুন</string>
     <string name="create_shortcut">শর্টকাট তৈরি করুন</string>
     <string name="manifest">ম্যানিফেস্ট</string>
     <string name="soft_input">সফট ইনপুট মোড</string>
@@ -429,4 +415,12 @@
     <string name="rules">বিধি গুলো</string>
     <string name="size">আকার</string>
     <string name="app_signing_signatures">স্বাক্ষর</string>
+    <plurals name="usage_minutes">
+        <item quantity="one">একক</item>
+        <item quantity="other">গুলো</item>
+    </plurals>
+    <string name="type_string">অক্ষর</string>
+    <string name="pref_global_blocking_enabled_msg">এরি মাধ্যমে আপনি যেকোনো অ্যাপের যেকোনো অংশ ব্লক করতে পারবে, তা করতে নির্দিষ্টভাবে অ্যাপটির জন্য ব্লকিং চালু করতে হবে না।</string>
+    <string name="failed_to_uninstall_app">আনইন্সটল ব্যর্থ হয়েছে</string>
+    <string name="sort_by_times_opened">কতবার খোলা হয়েছে</string>
 </resources>

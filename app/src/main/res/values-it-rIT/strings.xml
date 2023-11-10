@@ -32,13 +32,12 @@
     <string name="date_installed">Data installazione</string>
     <string name="date_updated">Data aggiornamento</string>
     <string name="user_id">ID utente</string>
-    <string name="instructions">Istruzioni</string>
     <string name="license">Licenza</string>
     <string name="usage_today">Oggi</string>
     <string name="usage_7_days">Ultimi 7 giorni</string>
     <string name="search">Cerca</string>
     <string name="process_name">Nome processo</string>
-    <string name="requested_large_heap">Grande mucchio</string>
+    <string name="requested_large_heap">Heap grande</string>
     <string name="databases">Database</string>
     <string name="save">Salva</string>
     <string name="disabled_app">Disabilitato</string>
@@ -71,8 +70,6 @@
     <string name="app_ops">Operazioni app</string>
     <string name="total_size">Totale</string>
     <string name="failed_to_stop">Impossibile arrestare <xliff:g id="app_name" example="App Manager">%1$s</xliff:g>.</string>
-    <string name="failed_to_enable">Impossibile abilitare <xliff:g id="app_name" example="App Manager">%1$s</xliff:g>.</string>
-    <string name="failed_to_disable">Impossibile disabilitare <xliff:g id="app_name" example="App Manager">%1$s</xliff:g>.</string>
     <string name="stopped">Fermato</string>
     <string name="uninstall_system_app_message">Questa è un app di sistema. Sei sicuro di volerla disinstallare\?</string>
     <string name="uninstalled_successfully"><xliff:g id="app_name" example="App Manager">%1$s</xliff:g> è stato disinstallato.</string>
@@ -137,8 +134,6 @@
     <string name="found_trackers">Trova tracker:</string>
     <string name="no_shared_libs">Nessuna libreria condivisa</string>
     <string name="third_party">Librerie e icone di terze parti</string>
-    <string name="error_invalid_icon_format">Formato icona non valido</string>
-    <string name="error_invalid_icon_resource">Risorsa icona non valida</string>
     <string name="class_name">Nome classe</string>
     <string name="package_name">Nome pacchetto</string>
     <string name="error_verbose_pin_shortcut">Il launcher corrente non supporta PinShortcut. Impossibile creare una scorciatoia.</string>
@@ -164,7 +159,7 @@
     <string name="sort_by_app_label">Etichetta app</string>
     <string name="loading">Caricamento…</string>
     <string name="error">Errore</string>
-    <string name="shared_libs">Libbre condivise</string>
+    <string name="shared_libs">Librerie condivise</string>
     <string name="declared_permission">Autorizzazioni</string>
     <string name="patterns_allowed">Modelli ammessi</string>
     <string name="write">Scrivi</string>
@@ -173,7 +168,6 @@
     <string name="permissions">Permessi utente</string>
     <string name="clear_data_from_uninstalled_apps">Cancella dati dalle app disinstallate</string>
     <string name="deny_app_ops_description">Imposta una modalità per le operazioni dell\'app identificate dai valori costanti, ad esempio <tt>63</tt> o <tt>RUN_IN_BACKGROUND</tt></string>
-    <string name="block_components_description">Blocca tutti i componenti identificati dalle firme fornite</string>
     <string name="block_components_dots">Blocca componenti…</string>
     <string name="block_unblock_trackers_description">Blocca o sblocca i componenti pubblicitari e di monitoraggio in tutte le app installate</string>
     <string name="clear_cache">Svuota Cache</string>
@@ -234,10 +228,6 @@
         <item quantity="many">Impossibile disinstallare %1$d app</item>
         <item quantity="other">Impossibile disinstallare %1$d app</item>
     </plurals>
-    <plurals name="alert_failed_to_disable">
-        <item quantity="one">Impossibile disattivare l\'app %1$d</item>
-        <item quantity="other">Impossibile disattivare le app %1$d</item>
-    </plurals>
     <plurals name="alert_failed_to_clear_data">
         <item quantity="one">Impossibile cancellare i dati da %1$d app</item>
         <item quantity="many">Impossibile cancellare i dati da %1$d app</item>
@@ -253,7 +243,6 @@
     <string name="disable_background_run">Impedisci operazioni in background</string>
     <string name="kill_process">Forza arresto</string>
     <string name="running_apps">App attive</string>
-    <string name="store">Negozio</string>
     <string name="apk_updater">Aggiornamento APK</string>
     <plurals name="failed_to_import_files">
         <item quantity="one">Impossibile importare %1$d file.</item>
@@ -312,7 +301,7 @@
     <string name="toggle_class_listing">Attiva o disattiva elenco classi</string>
     <string name="class_viewer">Visualizzatore classi</string>
     <string name="credits_message">Agli autori di
-\n- The Android Open Source Project
+\n- Il progetto open source Android
 \n- <a href="https://github.com/zhaobozhen/libraries">Absinthe\'s libraries</a>
 \n- <a href="https://github.com/butzist/ActivityLauncher">Activity Launcher</a>
 \n- <a href="https://bitbucket.org/oF2pks/fdroid-applications-info">Apps_packages Info</a>
@@ -321,6 +310,7 @@
 \n- <a href="https://github.com/gabrielemariotti/changeloglib">ChangeLog Library</a>
 \n- <a href="https://bitbucket.org/oF2pks/fdroid-classyshark3xodus">ClassySharkAndroid</a>
 \n- <a href="https://github.com/billthefarmer/editor">Editor</a>
+\n- <a href="https://github.com/Raival-e/File-Explorer">File Explorer</a>
 \n- <a href="https://github.com/nex3z/FlowLayout">FlowLayout</a>
 \n- <a href="https://github.com/k3b/intent-intercept">Intent Intercept</a>
 \n- <a href="https://github.com/YarikSOffice/lingver">Lingver</a>
@@ -332,8 +322,8 @@
 \n- <a href="https://github.com/open-keychain/open-keychain">Open Keychain</a>
 \n- <a href="https://github.com/Aefyr/SAI">SAI</a>
 \n- <a href="https://github.com/RikkaApps/Shizuku">Shizuku</a>
-\n- <a href="https://github.com/tuyafeng/Watt">Watt</a>
-\nCrediti logo originale: <a href="https://github.com/Atrate">Atrate</a>. </string>
+\n- <a href="https://github.com/eclipse/tm4e">tm4e</a>
+\n- <a href="https://github.com/tuyafeng/Watt">Watt</a> </string>
     <string name="credits">Crediti</string>
     <string name="sdk_flags">Flag</string>
     <string name="sort_by_domain">Prima le app utente</string>
@@ -342,13 +332,12 @@
     <string name="sort_by_target_sdk">SDK di destinazione</string>
     <string name="icon_picker">Selettore icone</string>
     <string name="shortcut_name">Nome scorciatoia</string>
-    <string name="edit_shortcut">Modifica scorciatoia</string>
     <string name="create_shortcut">Crea scorciatoia</string>
     <string name="starting_activity">Attività iniziale: <xliff:g id="activity_name" example=".main.MainActivity">%1$s</xliff:g></string>
     <string name="empty_package_name">Nome pacchetto vuoto</string>
     <string name="main_activity">Attività principale</string>
     <string name="installer_app">App di installazione</string>
-    <string name="about">Informazioni</string>
+    <string name="about">Informazioni su</string>
     <string name="input_features">Input funzionalità</string>
     <string name="no_feature">Nessuna funzionalità</string>
     <string name="uses_feature">Utilizza funzionalità</string>
@@ -464,7 +453,6 @@
     <string name="restore">Ripristino</string>
     <string name="whats_new">Cosa c\'è di nuovo</string>
     <string name="installed_version">Versione installata</string>
-    <string name="filter_disabled_apps">App disabilitate</string>
     <string name="select_all">Seleziona tutto</string>
     <string name="filter_system_apps">App sistema</string>
     <string name="filter_user_apps">App utente</string>
@@ -475,10 +463,7 @@
     <string name="filtered_packages">Pacchetti filtrati</string>
     <string name="no_tracker_found">Nessun tracker trovato</string>
     <string name="clear_app_cache_description">Svuota cache tutte le app</string>
-    <string name="source_code_links">GitHub: https://github.com/MuntashirAkon/AppManager
-\nGitLab: https://gitlab.com/muntashir/AppManager
-\nRiseup: https://0xacab.org/muntashir/AppManager
-\nCodeberg: https://codeberg.org/muntashir/AppManager</string>
+    <string name="source_code_links"><a href="https://github.com/MuntashirAkon/AppManager">GitHub</a> • <a href="https://gitlab.com/muntashir/AppManager">GitLab</a> • <a href="https://0xacab.org/muntashir/AppManager">Riseup</a> • <a href="https://codeberg.org/muntashir/AppManager">Codeberg</a></string>
     <plurals name="no_of_components">
         <item quantity="one">%1$d componente</item>
         <item quantity="many">%1$d componenti</item>
@@ -504,13 +489,10 @@
     <string name="sort_by_blocked_components">Prima i bloccati</string>
     <string name="no_changes">Nessun cambiamento</string>
     <string name="netpolicy_disable_network_access">Disabilita accesso alla rete</string>
-    <string name="wireless_debugging_not_supported">Il debug wireless non è supportato in questa piattaforma.</string>
     <string name="port_number">Porta</string>
-    <string name="app_signing_signature_mismatch_for_data_only_app">Impossibile installare l\'app a causa della mancata corrispondenza della firma. L\'app è stata disinstallata senza cancellare i suoi dati.</string>
     <string name="failed_to_prevent_background_run">Impossibile impedire l\'esecuzione di %1$s in background</string>
     <string name="minimum_version">Versione minima: %d</string>
     <string name="pref_selected_users_msg">Restringi il funzionamento di App Manager solo agli utenti selezionati.</string>
-    <string name="enable_disable">Abilita o disabilita</string>
     <string name="notice">Avviso</string>
     <string name="notice_saf">A differenza dei volumi, la directory selezionata verrà utilizzata per archiviare tutti i file relativi ad App Manager, inclusi APK e backup salvati. Storage Access Framework (SAF) è molto lento, pertanto dovresti usare questa opzione solo quando non è possibile usarne altre.</string>
     <string name="adb_pair">Associa</string>
@@ -519,7 +501,6 @@
     <string name="exit_confirmation">Conferma uscita</string>
     <string name="vt_slowness_warning">A seconda della velocità di Internet e del carico sul server, l\'operazione potrebbe richiedere del tempo.</string>
     <string name="vt_disclaimer">VirusTotal e i suoi loghi sono un marchio di Chronicle LLC. Né App Manager, il client API, né i suoi autori sono responsabili per i dati che potresti inviare a VirusTotal.</string>
-    <string name="sort_by_disabled_app">Prima i disabilitati</string>
     <string name="confirm_installation">Conferma installazione</string>
     <string name="sort_by_backup">Prima con backup</string>
     <string name="checksums">Checksum</string>
@@ -559,7 +540,6 @@
     <string name="am_crashed">App Manager si è appena arrestato in modo anomalo</string>
     <string name="in_progress">In corso</string>
     <string name="input_profile_name">Nome profilo</string>
-    <string name="profile_disable_msg">Disabilita o abilita app in base allo stato</string>
     <string name="security_providers">Fornitori di sicurezza</string>
     <string name="trackers_unblocked_successfully">I tracker sono ora sbloccati</string>
     <string name="no_encryption">Nessuna crittografia</string>
@@ -598,8 +578,6 @@
     <string name="send_crash_report">Invia rapporto di arresto anomalo</string>
     <string name="input_profile_name_description">Il nome del profilo non può contenere spazi.</string>
     <string name="failed_to_duplicate_profile">Impossibile duplicare profilo</string>
-    <string name="pref_show_users_in_installer">Mostra utenti nel programma di installazione</string>
-    <string name="pref_show_users_in_installer_msg">Visualizza un elenco di utenti da selezionare prima di installare un\'app esterna. Richiede root o ADB.</string>
     <string name="pref_encryption_msg">Crittografa backup.</string>
     <string name="none">Nessuno</string>
     <string name="allow_routine_ops">Permetti operazioni di routine</string>
@@ -624,7 +602,6 @@
     <string name="import_keystore">Importa KeyStore</string>
     <string name="failed">Fallito</string>
     <string name="pref_rules_msg">Blocco istantaneo, regole di importazione/esportazione/rimozione, ecc.</string>
-    <string name="pref_layout_orientation">Orientamento layout</string>
     <string name="orientation_follow_locale">Segui localizzazione</string>
     <string name="orientation_left_to_right">Da sinistra a destra</string>
     <string name="orientation_right_to_left">Da destra a sinistra</string>
@@ -666,7 +643,7 @@
     <string name="search_type_suffix">Suffisso</string>
     <string name="toggle_internet">Usa Internet</string>
     <string name="vt_scan_date">Data scansione: %1$s</string>
-    <string name="vt_permalink">Collegamento permanente a VirusTotal</string>
+    <string name="vt_permalink">Link permanente a VirusTotal</string>
     <string name="pref_saved_apk_name_format">Formato nome APK salvato</string>
     <string name="pref_saved_apk_name_format_msg">Il formato da utilizzare per denominare i file APK quando li salvi.</string>
     <string name="auth_manager_title">Gestione autorizzazioni</string>
@@ -742,8 +719,7 @@
         <item quantity="many">Esegui al massimo %1$d operazioni in parallelo</item>
         <item quantity="other">Esegui al massimo %1$d operazioni in parallelo</item>
     </plurals>
-    <string name="community_links">Telegram: https://t.me/AppManagerChannel
-\nTwitter: https://twitter.com/AppManagerNews</string>
+    <string name="community_links"><a href="https://matrix.to/#/#appmanager:matrix.org">Matrix</a> • <a href="https://t.me/AppManagerChannel">Telegram</a> • <a href="https://twitter.com/AppManagerNews">Twitter</a></string>
     <string name="pref_remove_all_rules">Rimuovi tutte le regole</string>
     <string name="installer_error_session_abandon">Impossibile abbandonare la sessione di installazione</string>
     <string name="unencrypted">Non crittografato</string>
@@ -762,7 +738,7 @@
     <string name="installer_error_conflict">Impossibile installare l\'app perché il nome del pacchetto è in uso</string>
     <string name="state_dead">Morto</string>
     <string name="close">Chiudi</string>
-    <string name="state_trace_stop">Fermata traccia</string>
+    <string name="state_trace_stop">Ferma traccia</string>
     <string name="state_zombie">Zombie</string>
     <string name="root">Root</string>
     <string name="backup_all_apps_msg">Esegui il backup di tutte le app installate.</string>
@@ -798,11 +774,6 @@
         <item quantity="one">Schema firma</item>
         <item quantity="many">Schemi firme</item>
         <item quantity="other">Schemi firme</item>
-    </plurals>
-    <plurals name="alert_failed_to_enable">
-        <item quantity="one">Impossibile abilitare %1$d app</item>
-        <item quantity="many">Impossibile abilitare %1$d app</item>
-        <item quantity="other">Impossibile abilitare %1$d app</item>
     </plurals>
     <plurals name="verified_with_warning">
         <item quantity="one">Verificato con %d avviso</item>
@@ -858,7 +829,6 @@
     <string name="process_state_with_extra">Stato: <xliff:g id="process_state" example="Sleeping">%1$s</xliff:g>(<xliff:g id="state_extra" example="High priority">%2$s</xliff:g>)</string>
     <string name="open_pgp_provider">Provider OpenPGP</string>
     <string name="profiles">Profili</string>
-    <string name="presets">Predefiniti</string>
     <string name="apps">Applicazioni</string>
     <string name="filter_apps">Applicazioni</string>
     <string name="dsa_affine_x">Coordinata x affine</string>
@@ -960,7 +930,7 @@
     <string name="failed_to_save_key">Impossibile salvare la chiave.</string>
     <string name="restore_latest">Ripristina gli ultimi backup</string>
     <string name="uninstalled_apps">App disinstallate</string>
-    <string name="filter_apps_with_rules">App con regole</string>
+    <string name="filter_apps_with_rules">Con regole</string>
     <string name="input_app_ops">Inserisci operazioni applicazione</string>
     <string name="installer_error_blocked">Installazione bloccata da <xliff:g id="app_name" example="App Manager">%1$s</xliff:g></string>
     <plurals name="alert_failed_to_backup">
@@ -984,8 +954,8 @@
     <string name="enabled">Abilitato</string>
     <string name="install_location_prefer_external">Preferisci esterni</string>
     <string name="backup_multiple_description">Crea un backup separato denominato <i>named</i> invece del backup di base.</string>
-    <string name="backup_extras_description">Esegui il backup delle autorizzazioni delle app, del risparmio della batteria e delle opzioni di utilizzo dei dati, lo stato di MagiskHide, SSAID, ecc.</string>
-    <string name="backup_rules_description">Esegui il backup delle regole configurate in App Manager.</string>
+    <string name="backup_extras_description">Esegui il backup delle autorizzazioni delle app, del risparmio della batteria e delle opzioni di utilizzo dei dati, lo stato di MagiskHide, SSAID, etc. <font fgcolor="#ff0000">A seconda delle autorizzazioni, non tutti gli extra possono essere ripristinati.</font> </string>
+    <string name="backup_rules_description">Esegui il backup delle regole configurate in App Manager. <font fgcolor="#ff0000">A seconda delle autorizzazioni, non tutte le regole possono essere riapplicate durante il ripristino.</font> </string>
     <string name="unlock_app_manager">Sblocca App Manager</string>
     <string name="screen_lock_msg">Blocca App Manager utilizzando il blocco schermo Android</string>
     <string name="type_component_name">Nome componente</string>
@@ -1238,12 +1208,240 @@
     <string name="pref_reload_apps">Ricarica app</string>
     <string name="pref_reload_apps_msg">Ricarica l\'elenco delle app archiviate nel database di App Manager in caso di comportamenti imprevisti.</string>
     <string name="changelog_type_new">Nuovo</string>
-    <string name="changelog_type_fix">Correggi</string>
-    <string name="changelog_type_improve">Migliora</string>
+    <string name="changelog_type_fix">Corretto</string>
+    <string name="changelog_type_improve">Migliorato</string>
     <string name="unsupported_split_apk">Non supportato</string>
     <string name="view_changelog">Scopri le novità di questa versione</string>
     <string name="sort_by_total_size">Dimensione totale</string>
     <string name="am_command">Comando <tt>am</tt></string>
     <string name="pref_sign_apk_no_signing_key">Nessuna chiave per firmare</string>
     <string name="pref_sign_apk_error_signing_key_not_added">Per firmare un file APK è necessaria una chiave di firma valida.</string>
+    <string name="suspend_app_description">Questo è il metodo di congelamento più debole. Un\'app sospesa potrebbe ancora essere visualizzata nel programma di avvio, ma sarà disattivata e non potrà essere avviata.</string>
+    <string name="pref_advanced_pref">Utenti, formato del nome APK, esecuzione parallela, ecc.</string>
+    <string name="failed_to_unfreeze">Impossibile scongelare <xliff:g id="app_name" example="App Manager">%1$s</xliff:g>.</string>
+    <string name="failed_to_freeze">Impossibile congelare <xliff:g id="app_name" example="App Manager">%1$s</xliff:g>.</string>
+    <string name="pref_default_freezing_method_description">Metodo da utilizzare per impostazione predefinita quando non è disponibile l\'opzione per selezionare un metodo di congelamento.</string>
+    <string name="suspend_app">Sospendi</string>
+    <string name="freeze_unfreeze">Congela/scongela</string>
+    <string name="profile_freeze_msg">Congela o scongela le app in base allo stato</string>
+    <string name="pref_default_freezing_method">Metodo di congelamento predefinito</string>
+    <string name="hide_app">Nascondi</string>
+    <plurals name="alert_failed_to_freeze">
+        <item quantity="one">Impossibile congelare l\'app %1$d</item>
+        <item quantity="many">Impossibile congelare le app %1$d</item>
+        <item quantity="other">Impossibile congelare le app %1$d</item>
+    </plurals>
+    <plurals name="alert_failed_to_unfreeze">
+        <item quantity="one">Impossibile scongelare l\'app %1$d</item>
+        <item quantity="many">Impossibile scongelare le app %1$d</item>
+        <item quantity="other">Impossibile scongelare le app %1$d</item>
+    </plurals>
+    <string name="disable_app_description">Metodo di congelamento consigliato. Disabilita l\'app e insieme a tutti i suoi componenti, ma tutte le scorciatoie andranno perse.</string>
+    <string name="hide_app_description">Questo metodo è consigliato solo per l\'uso quotidiano. Un\'app nascosta appare come se fosse disinstallata. Ma l\'app potrebbe riapparire se viene reinstallata o aggiornata.</string>
+    <string name="filter_frozen_apps">App congelate</string>
+    <string name="sort_by_frozen_app">Prima congelata</string>
+    <string name="pref_appearance_description">Tema, orientamento, caratteristiche, ecc.</string>
+    <string name="pref_privacy">Privacy</string>
+    <string name="user_manual">Manuale utente</string>
+    <string name="get_help">Ottieni aiuto</string>
+    <string name="pref_privacy_description">Blocco schermo, autorizzazione, ecc.</string>
+    <string name="pref_version_changelog">Versione/Registro delle modifiche</string>
+    <string name="file_creation_date">Creato</string>
+    <string name="file_modification_date">Modificato</string>
+    <string name="file_accessed_date">Accesso</string>
+    <string name="file_open_with">Apri con</string>
+    <string name="file_change_open_with">Cambia apri con</string>
+    <string name="file_shortcut_target_file">File target</string>
+    <string name="file_properties">Proprietà</string>
+    <string name="file_cut">Taglia</string>
+    <string name="fm_always_open_with">Apri sempre</string>
+    <string name="fm_open_with_for_this_file_only">Solo per questo file</string>
+    <string name="file_open_as">Apri come…</string>
+    <string name="file_open_with_custom_activity">Personalizzata</string>
+    <string name="file_open_with_os_default_dialog">Apri con la finestra di dialogo predefinita del sistema</string>
+    <string name="open_as_text">Testo</string>
+    <string name="open_as_image">Immagine</string>
+    <string name="open_as_video">Video</string>
+    <string name="open_as_archive">Archivio</string>
+    <string name="open_as_folder">Cartella</string>
+    <string name="open_as_other">Altro</string>
+    <string name="delete_filename">Elimina %s</string>
+    <string name="confirm_file_deletion">Sì, elimina</string>
+    <string name="on_unfreeze_open_application">Apri l\'app dopo averla scongelata</string>
+    <string name="freeze_on_phone_locked">Congela automaticamente l\'app quando il telefono è bloccato</string>
+    <string name="on_open_application_no_recents">Non mostrare l\'app aperta nei Recenti</string>
+    <string name="tap_to_freeze_app">Tocca per congelare</string>
+    <string name="waiting_for_the_phone_to_be_locked">Aspettando che il telefono venga bloccato…</string>
+    <string name="action_stop_service">Stop</string>
+    <string name="app_can_write_and_execute_in_same_place">L\'app viola la <a href="https://en.wikipedia.org/wiki/W%5EX">W^X policy</a> ed è in grado di scrivere ed eseguire nella stessa directory o nella stessa porzione di memoria. Ciò consente l\'esecuzione di eseguibili arbitrari modificando gli eseguibili incorporati nell\'app o scaricandoli da Internet. A meno che questo non sia il comportamento previsto dell\'app (ad es. emulatori di terminale), si consiglia di trovare una versione più recente dell\'app destinata all\'SDK 29 (Android 10) e versioni successive o di trovare alternative.</string>
+    <string name="sort_by_data_usage">Utilizzo dati</string>
+    <string name="filter_apps_with_keystore">Con KeyStore</string>
+    <string name="filter_apps_with_saf">Con SAF</string>
+    <string name="filter_apps_with_ssaid">Con SSAID</string>
+    <string name="action_continue">Continua</string>
+    <string name="install_for_another_user">Installa per…</string>
+    <string name="confirm_uninstallation">Conferma disinstallazione</string>
+    <string name="grant_required_permission">Concedi l\'autorizzazione richiesta</string>
+    <string name="grant_overlay_permission_message">Consenti a App Manager di visualizzare una finestra mobile sopra tutte le altre finestre</string>
+    <string name="grant_accessibility_permission_for_tracking_window_contents">Consenti a App Manager di utilizzare la funzione di accessibilità per tenere traccia dei contenuti della finestra principale.</string>
+    <string name="class_hierarchy">Gerarchia</string>
+    <string name="title_ui_tracker">Tracciamento UI</string>
+    <string name="title_terminal_emulator">Terminale</string>
+    <string name="title_labs_activity">Laboratori</string>
+    <string name="app_manager_build_expired">Aggiornamento richiesto</string>
+    <string name="app_manager_build_expired_message">Per garantire la sicurezza del tuo dispositivo e dei tuoi dati, la versione di App Manager che stai utilizzando è stata ritirata. Devi aggiornarlo all\'ultima versione per continuare a usarlo o disinstallarlo se non è disponibile alcun aggiornamento.</string>
+    <string name="app_manager_build_expiring_soon_warning">Questa versione di App Manager scadrà molto presto. Si prega di aggiornarlo all\'ultima versione.</string>
+    <string name="renamed_successfully">Rinominato</string>
+    <string name="selinux_context">Contesto SELinux</string>
+    <string name="unix_file_permissions">Modalità</string>
+    <string name="file_group_id">Gruppo (GID)</string>
+    <string name="file_owner_id">Proprietario (UID)</string>
+    <string name="calculating_file_size">Calcolo in corso…</string>
+    <string name="sort_by_filename">Nome</string>
+    <string name="sort_by_last_modified">Ultima modifica</string>
+    <string name="sort_by_file_size">Dimensione file</string>
+    <string name="sort_by_file_type">Tipo file</string>
+    <string name="option_display_folders_on_top">Cartelle in alto</string>
+    <string name="export_app_list">Esporta elenco app</string>
+    <string name="export_app_list_select_format">Seleziona il formato per l\'esportazione dell\'elenco delle app</string>
+    <string name="export_option_xml">XML</string>
+    <string name="export_option_markdown">Contrassegno</string>
+    <string name="funding_campaign_dialog_message">Stiamo pubblicando una <b>campagna di finanziamento</b> per App Manager per un periodo limitato. Visita <a href="https://opencollective.com/app-manager#category-ABOUT">opencollective.com/app-manager</a> per saperne di più sulla campagna. Questo avviso non verrà più visualizzato, ma puoi trovarlo nella pagina Impostazioni durante l\'intera campagna.</string>
+    <string name="funding_campaign_text">Stiamo pubblicando una <b>campagna di finanziamento</b> per App Manager per un periodo limitato. <a href="https://opencollective.com/app-manager#category-ABOUT">scopri di più…</a></string>
+    <string name="option_display_dot_files">File di punti</string>
+    <string name="adb_incomplete_usb_debugging_title">Debug USB incompleto</string>
+    <string name="adb_incomplete_usb_debugging_message">Sembra che il debug USB non sia configurato correttamente. Si prega di leggere <a href="https://muntashirakon.github.io/AppManager/#subsec:enable-usb-debugging">la documentazione</a> per ulteriori passaggi. Se conosci già i passaggi, fai clic su \"Apri\" per aprire le opzioni sviluppatore oppure fai clic su \"Chiudi\" per continuare a utilizzare la modalità no-root.</string>
+    <string name="select_a_dex2oat_compiler_filter"><tt>dex2oat</tt> filtro compilatore</string>
+    <string name="optimize_option_clear_profile_data">Cancella dati del profilo precedente</string>
+    <string name="optimize_option_check_profiles">Considera dati del profilo durante l\'ottimizzazione DEX</string>
+    <string name="optimize_option_force_compilation">Forza compilazione anche quando non richiesta</string>
+    <string name="optimize_option_force_dexopt">Esegui immediatamente l\'ottimizzazione DEX</string>
+    <string name="optimize_option_compile_layouts">Compila risorse di layout</string>
+    <string name="title_perform_runtime_optimization_to_apps">Esegui ottimizzazione runtime</string>
+    <string name="action_run">Esegui</string>
+    <string name="summary_perform_runtime_optimization_to_apps">Ottimizza DEX e (in Android 10 e versioni successive) layout per migliorare le prestazioni delle applicazioni.</string>
+    <string name="action_optimize_app">Ottimizza</string>
+    <string name="batch_ops_runtime_optimization">Ottimizzazione runtime</string>
+    <plurals name="alert_failed_to_optimize_apps">
+        <item quantity="one">Impossibile ottimizzare l\'app %1$d</item>
+        <item quantity="many">Impossibile ottimizzare le app %1$d</item>
+        <item quantity="other">Impossibile ottimizzare le app %1$d</item>
+    </plurals>
+    <string name="title_domains_supported_by_the_app">Domini supportati</string>
+    <string name="app_info_tag_open_links">Apri link</string>
+    <string name="source_stamp_verified_and_identified_to_be_from_source">SourceStamp verificato e identificato da <xliff:g id="source" example="Google Play">%1$s</xliff:g>.</string>
+    <string name="block_unblock_components_dots">Blocca/sblocca componenti…</string>
+    <string name="unblock_components_dots">Sblocca componenti…</string>
+    <string name="block_unblock_components_description">Blocca o sblocca tutti i componenti identificati dalle firme fornite</string>
+    <string name="pref_zip_align">Allinea file APK</string>
+    <string name="title_code_editor">Editor codice</string>
+    <string name="redo">Rifai</string>
+    <string name="replacement_text">Sostituzione</string>
+    <string name="read_only_file">File di sola lettura</string>
+    <string name="line_separator">Separatore righe</string>
+    <plurals name="search_results">
+        <item quantity="one">%d risultato</item>
+        <item quantity="many">%d risultati</item>
+        <item quantity="other">%d risultati</item>
+    </plurals>
+    <string name="action_replace_all">Sostituisci tutto</string>
+    <string name="search_option_match_case">Caso di corrispondenza</string>
+    <string name="search_option_whole_word">Parola intera</string>
+    <string name="search_option_regex">Espressione regolare</string>
+    <string name="uninstall_app_again_message">L\'applicazione è stata disinstallata senza cancellare i dati e la firma. Vuoi disinstallarla completamente\?</string>
+    <string name="uninstall_app">Disinstalla %1$s</string>
+    <string name="debloat_list_type">Elenco</string>
+    <string name="debloat_removal_type">Tipo</string>
+    <string name="system_app_put_back">Rimetti a posto</string>
+    <string name="debloater_title">Debloater</string>
+    <string name="debloat_list_aosp">AOSP</string>
+    <string name="debloat_list_oem">OEM</string>
+    <string name="debloat_list_carrier">Operatore/ISP</string>
+    <string name="debloat_list_google">Google</string>
+    <string name="debloat_list_pending">In attesa</string>
+    <string name="debloat_removal_replace">Sostituisci</string>
+    <string name="debloat_removal_caution">Attenzione</string>
+    <string name="static_shared_library">Libreria condivisa statica</string>
+    <plurals name="alert_failed_to_unblock_components">
+        <item quantity="one">Impossibile sbloccare i componenti per %1$d app</item>
+        <item quantity="many">Impossibile sbloccare i componenti per %1$d app</item>
+        <item quantity="other">Impossibile sbloccare i componenti per %1$d app</item>
+    </plurals>
+    <string name="pref_layout_direction">Direzione disposizione</string>
+    <string name="pref_zip_align_msg">L\'allineamento di un file APK ne riduce l\'utilizzo della memoria poiché è possibile accedere direttamente ai file nell\'APK senza copiare i dati nella RAM. Questo passaggio è necessario se <tt>extractNativeLibs</tt> è impostato su <tt>true</tt>.</string>
+    <string name="read_only_file_warning">Le modifiche non possono essere scritte nel file, probabilmente perché si trova in un volume su cui App Manager non ha il permesso di scrivere. Vuoi salvarlo in un posto diverso\?</string>
+    <string name="debloat_list_misc">Miscellanea</string>
+    <string name="debloat_removal_safe">Sicuro</string>
+    <string name="filter_force_stopped_apps">App fermate</string>
+    <plurals name="file_count">
+        <item quantity="one">%d file</item>
+        <item quantity="many">%d file</item>
+        <item quantity="other">%d file</item>
+    </plurals>
+    <string name="empty_folder">Vuoto</string>
+    <plurals name="folder_count">
+        <item quantity="one">%d cartella</item>
+        <item quantity="many">%d cartelle</item>
+        <item quantity="other">%d cartelle</item>
+    </plurals>
+    <string name="go_to_path">Vai a…</string>
+    <string name="copy_this_path">Copia percorso</string>
+    <string name="title_audio_player">Lettore audio</string>
+    <string name="installing_package">Installazione di %1$s…</string>
+    <string name="backing_up_app">Backup di %1$s…</string>
+    <string name="restoring_app">Ripristino di %1$s…</string>
+    <string name="pref_installer_force_dexopt_description">Esegui l\'ottimizzazione DEX subito dopo aver installato l\'app senza attendere che il sistema lo esegua quando il sistema è inattivo.</string>
+    <string name="folder">Cartella</string>
+    <string name="symbolic_link">Collegamento simbolico</string>
+    <string name="create_new_symbolic_link">Nuovo collegamento simbolico</string>
+    <string name="create_new_folder">Nuova cartella</string>
+    <string name="create_new_file">Nuovo file</string>
+    <string name="enter_symbolic_link_name">Nome collegamento</string>
+    <string name="enter_target_path">Percorso di destinazione</string>
+    <string name="invalid_target_path">Percorso non valido</string>
+    <string name="copy_these_paths">Copia percorsi</string>
+    <string name="title_confirm_deletion">Conferma eliminazione</string>
+    <string name="conflict_detected_while_copying">Rilevato conflitto</string>
+    <string name="conflict_detected_while_copying_message">Un elemento chiamato \"%1$s\" esiste già in questa posizione. Vuoi sostituirlo\?</string>
+    <string name="copy_keep_both_file">Mantieni entrambi</string>
+    <string name="copied_successfully">Copiato.</string>
+    <string name="moved_successfully">Spostato</string>
+    <string name="failed_to_delete_specified_file_after_copying">Impossibile eliminare \"%1$s\" dopo averlo copiato, probabilmente a causa di un\'autorizzazione insufficiente.</string>
+    <string name="title_change_selinux_context">Cambia il contesto di SELinux</string>
+    <string name="apply_recursively">Applica ai file inclusi</string>
+    <string name="change_owner_uid">Cambia proprietario (UID)</string>
+    <string name="change_group_gid">Cambia gruppo (GID)</string>
+    <string name="change_mode">Cambia modalità</string>
+    <string name="pref_send_notification_to_connected_devices_msg">Imposta se inviare notifiche ai dispositivi connessi come i dispositivi indossabili.</string>
+    <string name="warning_working_on_system_mode">Avviso: sto operando in modalità sistema invece che in modalità ADB.</string>
+    <string name="symbolic_link_not_supported">Questa cartella non supporta la creazione di un collegamento simbolico.</string>
+    <string name="failed_to_copy_specified_file">Impossibile copiare \"%1$s\".</string>
+    <string name="pref_send_notifications_to_connected_devices">Invia notifiche ai dispositivi connessi</string>
+    <string name="debloat_removal_safe_short_description">Sicuro da rimuovere</string>
+    <string name="debloat_removal_caution_short_description">Presta attenzione</string>
+    <string name="debloat_removal_replace_short_description">Sostituisci con alternativa</string>
+    <string name="title_alternatives_to_bloatware">Alternative</string>
+    <string name="pref_files_msg">Configura file manager.</string>
+    <string name="pref_files_display_in_launcher">Visualizza \"File\" nel cassetto delle app</string>
+    <string name="pref_files_remember_last_path">Ricorda l\'ultimo percorso aperto e la sua posizione</string>
+    <string name="pref_set_home">Imposta principale</string>
+    <string name="xposed_module_info">Informazioni sul modulo Xposed</string>
+    <string name="title_description">Descrizione</string>
+    <string name="tap_to_open_notification_settings">Tocca per nascondere</string>
+    <string name="action_lock_app">Blocca</string>
+    <string name="pref_enable_persistent_session">Esegui App Manager in background</string>
+    <string name="pref_files_remember_last_path_msg">Quando questa opzione è abilitata, aprendo una nuova finestra viene aperta l\'ultima cartella aperta anziché la cartella principale.</string>
+    <string name="installer_options">Opzioni installazione</string>
+    <string name="browse_files">Sfoglia</string>
+    <string name="module_name">Nome modulo</string>
+    <string name="app_manager_is_running">App Manager è in esecuzione</string>
+    <string name="app_manager_is_unlocked">App Manager è sbloccata</string>
+    <string name="pref_enable_persistent_session_msg">L\'esecuzione di App Manager in background riduce il ritardo di inizializzazione. Utile se usi spesso App Manager.</string>
+    <string name="pref_enable_auto_lock">Blocco automatico</string>
+    <string name="pref_enable_auto_lock_msg">Blocca App Manager quando il dispositivo è bloccato.</string>
+    <string name="path_does_not_exist">\"%1$s\" non esiste</string>
+    <string name="path_not_a_folder">\"%1$s\" non è una cartella</string>
+    <string name="scan_report_from_pithus">Rapporto Pithus</string>
+    <string name="action_checking">Controllo…</string>
+    <string name="report_not_available">Non disponibile</string>
 </resources>

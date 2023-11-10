@@ -16,6 +16,7 @@ import androidx.appcompat.widget.LinearLayoutCompat;
 
 import io.github.muntashirakon.AppManager.R;
 
+// TODO: 2/7/23 Replace this with preferences
 public class ListItemCreator {
     private static final int EMPTY = -1;
 
@@ -52,7 +53,7 @@ public class ListItemCreator {
     private View addItemWithIconTitleSubtitle(@NonNull CharSequence title,
                                               @Nullable CharSequence subtitle,
                                               @DrawableRes int resIdIcon) {
-        listItem = mLayoutInflater.inflate(R.layout.m3_preference, mListContainer, false);
+        listItem = mLayoutInflater.inflate(io.github.muntashirakon.ui.R.layout.m3_preference, mListContainer, false);
         listItem.findViewById(R.id.icon_frame).setVisibility(View.GONE);
         // Item title
         itemTitle = listItem.findViewById(android.R.id.title);

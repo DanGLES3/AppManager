@@ -15,14 +15,12 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-import io.github.muntashirakon.AppManager.utils.AppPref;
+import io.github.muntashirakon.AppManager.settings.Prefs;
 import io.github.muntashirakon.io.Path;
 import io.github.muntashirakon.io.PathReader;
 import io.github.muntashirakon.io.PathWriter;
 
 public class BackupFiles {
-    public static final String BASE_BACKUP_NAME = "base";
-
     static final String APK_SAVING_DIRECTORY = "apks";
     static final String TEMPORARY_DIRECTORY = ".tmp";
 
@@ -33,28 +31,34 @@ public class BackupFiles {
     static final String NO_MEDIA = ".nomedia";
 
     @NonNull
-    public static Path getBackupDirectory() {
-        return AppPref.getAppManagerDirectory();
+    public static Path getBaseDirectory() {
+        return Prefs.Storage.getAppManagerDirectory();
     }
 
     @NonNull
-    public static Path getTemporaryDirectory() throws IOException {
-        return getBackupDirectory().findOrCreateDirectory(TEMPORARY_DIRECTORY);
+    public static Path findBackupDirectory(@NonNull String backupName, @Nullable String packageName, @Nullable String backupUuid) throws FileNotFoundException {
+        if (packageName == null && backupUuid == null) {
+            throw new IllegalArgumentException("Neither packageName nor backupUuid is set");
+        }
+        if (backupUuid != null) {
+            return getBaseDirectory().findFile(backupUuid);
+        } else {
+            return getBaseDirectory().findFile(packageName).findFile(backupName);
+        }
     }
 
     @Deprecated
     @NonNull
     public static Path getPackagePath(@NonNull String packageName, boolean create) throws IOException {
         if (create) {
-            return getBackupDirectory().findOrCreateDirectory(packageName);
-        } else return getBackupDirectory().findFile(packageName);
+            return getBaseDirectory().findOrCreateDirectory(packageName);
+        } else return getBaseDirectory().findFile(packageName);
     }
 
     @NonNull
-    private static synchronized Path getTemporaryBackupPath() throws IOException {
-        // FIXME: 9/7/21 Temporary backup path should be in the package path in order to make it easy to rename it in SAF
-        Path tmpDir = getTemporaryDirectory();
-        String tmpFilename = "backup_" + System.currentTimeMillis();
+    private static synchronized Path getTemporaryBackupPath(@NonNull Path originalBackupPath) throws IOException {
+        Path tmpDir = originalBackupPath.requireParent();
+        String tmpFilename = "." + originalBackupPath.getName();
         String newFilename = tmpFilename;
         int i = 0;
         while (tmpDir.hasFile(newFilename)) {
@@ -65,11 +69,11 @@ public class BackupFiles {
 
     @NonNull
     public static Path getApkBackupDirectory() throws IOException {
-        return getBackupDirectory().findOrCreateDirectory(APK_SAVING_DIRECTORY);
+        return getBaseDirectory().findOrCreateDirectory(APK_SAVING_DIRECTORY);
     }
 
     public static void createNoMediaIfNotExists() throws IOException {
-        Path backupDirectory = getBackupDirectory();
+        Path backupDirectory = getBaseDirectory();
         if (!backupDirectory.hasFile(NO_MEDIA)) {
             backupDirectory.createNewFile(NO_MEDIA, null);
         }
@@ -83,12 +87,12 @@ public class BackupFiles {
         private final boolean mIsTemporary;
 
         public BackupFile(@NonNull Path backupPath, boolean hasTemporary) throws IOException {
-            this.mBackupPath = backupPath;
-            this.mIsTemporary = hasTemporary;
-            if (hasTemporary) {
-                backupPath.mkdirs();  // Create backup path if not exists
-                mTempBackupPath = getTemporaryBackupPath();
-            } else mTempBackupPath = this.mBackupPath;
+            mBackupPath = backupPath;
+            mIsTemporary = hasTemporary;
+            if (mIsTemporary) {
+                mBackupPath.mkdirs();  // Create backup path if not exists
+                mTempBackupPath = getTemporaryBackupPath(mBackupPath);
+            } else mTempBackupPath = mBackupPath;
         }
 
         @NonNull
@@ -108,6 +112,11 @@ public class BackupFiles {
             if (mIsTemporary) {
                 return getBackupPath().findOrCreateFile(CHECKSUMS_TXT + CryptoUtils.getExtension(mode), null);
             } else return getBackupPath().findFile(CHECKSUMS_TXT + CryptoUtils.getExtension(mode));
+        }
+
+        @NonNull
+        public Checksum getChecksum(@CryptoUtils.Mode String mode) throws IOException {
+            return new Checksum(getChecksumFile(mode), mIsTemporary ? "w" : "r");
         }
 
         @NonNull
@@ -173,7 +182,7 @@ public class BackupFiles {
 
     @NonNull
     private final String mPackageName;
-    private final int mUserHandle;
+    private final int mUserId;
     @NonNull
     private final String[] mBackupNames;
     @NonNull
@@ -183,20 +192,20 @@ public class BackupFiles {
      * Create and handle {@link BackupFile}.
      *
      * @param packageName Name of the package whose backups has to be managed
-     * @param userHandle  The user handle (aka user ID) to whom the package belong to
+     * @param userId      To whom the package belong
      * @param backupNames Name of the backups. If {@code null}, user handle will be used. If not
      *                    null, the backup names will have the format {@code userHandle_backupName}.
      */
-    public BackupFiles(@NonNull String packageName, int userHandle, @Nullable String[] backupNames) throws IOException {
-        this.mPackageName = packageName;
-        this.mUserHandle = userHandle;
+    public BackupFiles(@NonNull String packageName, int userId, @Nullable String[] backupNames) throws IOException {
+        mPackageName = packageName;
+        mUserId = userId;
         if (backupNames == null) {
-            this.mBackupNames = new String[]{String.valueOf(userHandle)};
+            mBackupNames = new String[]{String.valueOf(userId)};
         } else {
             // Add user handle before the backup name
-            this.mBackupNames = new String[backupNames.length];
+            mBackupNames = new String[backupNames.length];
             for (int i = 0; i < backupNames.length; ++i) {
-                this.mBackupNames[i] = userHandle + "_" + backupNames[i].trim();
+                mBackupNames[i] = userId + "_" + backupNames[i].trim();
             }
         }
         mPackagePath = getPackagePath(packageName, true);
@@ -255,7 +264,7 @@ public class BackupFiles {
         }
 
         public Checksum(@NonNull Path checksumFile, String mode) throws IOException {
-            this.mMode = mode;
+            mMode = mode;
             if ("w".equals(mode)) {
                 mWriter = new PrintWriter(new BufferedWriter(new PathWriter(checksumFile)));
             } else if ("r".equals(mode)) {
@@ -269,7 +278,7 @@ public class BackupFiles {
                         if (lineSplits.length != 2) {
                             throw new RuntimeException("Illegal lines found in the checksum file.");
                         }
-                        this.mChecksums.put(lineSplits[1], lineSplits[0]);
+                        mChecksums.put(lineSplits[1], lineSplits[0]);
                     }
                     reader.close();
                 }
@@ -280,7 +289,7 @@ public class BackupFiles {
             synchronized (mChecksums) {
                 if (!"w".equals(mMode)) throw new IllegalStateException("add is inaccessible in mode " + mMode);
                 mWriter.println(String.format("%s\t%s", checksum, fileName));
-                this.mChecksums.put(fileName, checksum);
+                mChecksums.put(fileName, checksum);
                 mWriter.flush();
             }
         }

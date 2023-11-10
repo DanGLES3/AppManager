@@ -2,16 +2,18 @@
 
 package io.github.muntashirakon.AppManager.main;
 
+import static io.github.muntashirakon.AppManager.compat.PackageManagerCompat.MATCH_UNINSTALLED_PACKAGES;
+import static io.github.muntashirakon.AppManager.utils.UIUtils.displayLongToast;
+
 import android.Manifest;
-import android.annotation.SuppressLint;
 import android.app.usage.UsageStatsManager;
 import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
-import android.content.pm.UserInfo;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Build;
+import android.os.RemoteException;
 import android.os.UserHandleHidden;
 import android.text.Spannable;
 import android.text.SpannableString;
@@ -43,28 +45,34 @@ import java.util.concurrent.TimeUnit;
 
 import io.github.muntashirakon.AppManager.R;
 import io.github.muntashirakon.AppManager.apk.installer.PackageInstallerActivity;
+import io.github.muntashirakon.AppManager.apk.installer.PackageInstallerCompat;
+import io.github.muntashirakon.AppManager.compat.ApplicationInfoCompat;
+import io.github.muntashirakon.AppManager.compat.PackageManagerCompat;
 import io.github.muntashirakon.AppManager.db.entity.Backup;
 import io.github.muntashirakon.AppManager.details.AppDetailsActivity;
-import io.github.muntashirakon.AppManager.imagecache.ImageLoader;
+import io.github.muntashirakon.AppManager.self.SelfPermissions;
+import io.github.muntashirakon.AppManager.self.imagecache.ImageLoader;
 import io.github.muntashirakon.AppManager.settings.FeatureController;
+import io.github.muntashirakon.AppManager.users.UserInfo;
 import io.github.muntashirakon.AppManager.users.Users;
 import io.github.muntashirakon.AppManager.utils.ArrayUtils;
 import io.github.muntashirakon.AppManager.utils.DateUtils;
-import io.github.muntashirakon.AppManager.utils.PackageUtils;
+import io.github.muntashirakon.AppManager.utils.ThreadUtils;
 import io.github.muntashirakon.AppManager.utils.UIUtils;
 import io.github.muntashirakon.AppManager.utils.appearance.ColorCodes;
+import io.github.muntashirakon.dialog.SearchableItemsDialogBuilder;
+import io.github.muntashirakon.io.Paths;
 import io.github.muntashirakon.widget.MultiSelectionView;
 
 public class MainRecyclerAdapter extends MultiSelectionView.Adapter<MainRecyclerAdapter.ViewHolder>
         implements SectionIndexer {
-    static final String sections = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    private static final String sSections = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
     private final MainActivity mActivity;
     private final PackageManager mPackageManager;
     private String mSearchQuery;
     @GuardedBy("mAdapterList")
     private final List<ApplicationItem> mAdapterList = new ArrayList<>();
-    final ImageLoader imageLoader;
 
     private final int mCardColor;
     private final int mDefaultIndicatorColor;
@@ -80,14 +88,13 @@ public class MainRecyclerAdapter extends MultiSelectionView.Adapter<MainRecycler
         super();
         mActivity = activity;
         mPackageManager = activity.getPackageManager();
-        imageLoader = new ImageLoader(mActivity.mModel.executor);
 
         mCardColor = ColorCodes.getListItemColor1(activity);
         mDefaultIndicatorColor = ColorCodes.getListItemDefaultIndicatorColor(activity);
-        mColorGreen = ContextCompat.getColor(mActivity, R.color.stopped);
-        mColorOrange = ContextCompat.getColor(mActivity, R.color.orange);
-        mColorPrimary = ContextCompat.getColor(mActivity, R.color.textColorPrimary);
-        mColorSecondary = ContextCompat.getColor(mActivity, R.color.textColorSecondary);
+        mColorGreen = ContextCompat.getColor(mActivity, io.github.muntashirakon.ui.R.color.stopped);
+        mColorOrange = ContextCompat.getColor(mActivity, io.github.muntashirakon.ui.R.color.orange);
+        mColorPrimary = ContextCompat.getColor(mActivity, io.github.muntashirakon.ui.R.color.textColorPrimary);
+        mColorSecondary = ContextCompat.getColor(mActivity, io.github.muntashirakon.ui.R.color.textColorSecondary);
         mQueryStringHighlight = ColorCodes.getQueryStringHighlightColor(mActivity);
         mHighlightColor = ColorCodes.getListItemSelectionColor(activity);
     }
@@ -95,11 +102,11 @@ public class MainRecyclerAdapter extends MultiSelectionView.Adapter<MainRecycler
     @GuardedBy("mAdapterList")
     @UiThread
     void setDefaultList(List<ApplicationItem> list) {
-        if (mActivity.mModel == null) return;
+        if (mActivity.viewModel == null) return;
         synchronized (mAdapterList) {
             mAdapterList.clear();
             mAdapterList.addAll(list);
-            mSearchQuery = mActivity.mModel.getSearchQuery();
+            mSearchQuery = mActivity.viewModel.getSearchQuery();
             notifyDataSetChanged();
             notifySelectionChange();
         }
@@ -114,19 +121,19 @@ public class MainRecyclerAdapter extends MultiSelectionView.Adapter<MainRecycler
     @Override
     public void cancelSelection() {
         super.cancelSelection();
-        mActivity.mModel.cancelSelection();
+        mActivity.viewModel.cancelSelection();
     }
 
     @Override
     public int getSelectedItemCount() {
-        if (mActivity.mModel == null) return 0;
-        return mActivity.mModel.getSelectedPackages().size();
+        if (mActivity.viewModel == null) return 0;
+        return mActivity.viewModel.getSelectedPackages().size();
     }
 
     @Override
     protected int getTotalItemCount() {
-        if (mActivity.mModel == null) return 0;
-        return mActivity.mModel.getApplicationItemCount();
+        if (mActivity.viewModel == null) return 0;
+        return mActivity.viewModel.getApplicationItemCount();
     }
 
     @GuardedBy("mAdapterList")
@@ -141,7 +148,7 @@ public class MainRecyclerAdapter extends MultiSelectionView.Adapter<MainRecycler
     @Override
     protected void select(int position) {
         synchronized (mAdapterList) {
-            mAdapterList.set(position, mActivity.mModel.select(mAdapterList.get(position)));
+            mAdapterList.set(position, mActivity.viewModel.select(mAdapterList.get(position)));
         }
     }
 
@@ -149,7 +156,7 @@ public class MainRecyclerAdapter extends MultiSelectionView.Adapter<MainRecycler
     @Override
     protected void deselect(int position) {
         synchronized (mAdapterList) {
-            mAdapterList.set(position, mActivity.mModel.deselect(mAdapterList.get(position)));
+            mAdapterList.set(position, mActivity.viewModel.deselect(mAdapterList.get(position)));
         }
     }
 
@@ -193,75 +200,19 @@ public class MainRecyclerAdapter extends MultiSelectionView.Adapter<MainRecycler
         }
         // Add click listeners
         holder.itemView.setOnClickListener(v -> {
-            // Click listener:
-            // 1) If selection mode is on, select/deselect the current item instead of 2 & 3.
-            // 2) If the app is not installed:
-            //    i.  Display a toast message saying that it's not installed if it's a backup-only app
-            //    ii. Offer to install the app if it can be installed
-            // 3) If installed, load the App Details page
+            // If selection mode is on, select/deselect the current item instead of the default behaviour
             if (isInSelectionMode()) {
                 toggleSelection(position);
                 return;
             }
-            if (!item.isInstalled) {
-                try {
-                    @SuppressLint("WrongConstant")
-                    ApplicationInfo info = mPackageManager.getApplicationInfo(item.packageName, PackageUtils.flagMatchUninstalled);
-                    if (info.publicSourceDir != null && new File(info.publicSourceDir).exists()
-                            && FeatureController.isInstallerEnabled()) {
-                        Intent intent = new Intent(mActivity, PackageInstallerActivity.class);
-                        intent.setData(Uri.fromFile(new File(info.publicSourceDir)));
-                        mActivity.startActivity(intent);
-                    }
-                } catch (PackageManager.NameNotFoundException ignore) {
-                }
-                Toast.makeText(mActivity, R.string.app_not_installed, Toast.LENGTH_SHORT).show();
-                return;
-            }
-            if (item.userHandles.length == 0) {
-                Intent intent = AppDetailsActivity.getIntent(mActivity, item.packageName, UserHandleHidden.myUserId());
-                mActivity.startActivity(intent);
-                return;
-            }
-            if (item.userHandles.length == 1) {
-                int[] userHandles = Users.getUsersIds();
-                if (!ArrayUtils.contains(userHandles, item.userHandles[0])) return;
-                Intent intent = AppDetailsActivity.getIntent(mActivity, item.packageName, item.userHandles[0]);
-                mActivity.startActivity(intent);
-                return;
-            }
-            String[] userNames = new String[item.userHandles.length];
-            List<UserInfo> users = Users.getUsers();
-            if (users == null) {
-                if (ArrayUtils.contains(item.userHandles, UserHandleHidden.myUserId())) {
-                    Intent intent = AppDetailsActivity.getIntent(mActivity, item.packageName, UserHandleHidden.myUserId());
-                    mActivity.startActivity(intent);
-                }
-                return;
-            }
-            for (UserInfo info : users) {
-                for (int i = 0; i < item.userHandles.length; ++i) {
-                    if (info.id == item.userHandles[i]) {
-                        userNames[i] = info.name == null ? String.valueOf(info.id) : info.name;
-                    }
-                }
-            }
-            new MaterialAlertDialogBuilder(mActivity)
-                    .setTitle(R.string.select_user)
-                    .setItems(userNames, (dialog, which) -> {
-                        Intent intent = AppDetailsActivity.getIntent(mActivity, item.packageName, item.userHandles[which]);
-                        mActivity.startActivity(intent);
-                        dialog.dismiss();
-                    })
-                    .setNegativeButton(R.string.cancel, null)
-                    .show();
+            handleClick(item);
         });
         holder.itemView.setOnLongClickListener(v -> {
             // Long click listener: Select/deselect an app.
             // 1) Turn selection mode on if this is the first item in the selection list
             // 2) Select between last selection position and this position (inclusive) if selection mode is on
             synchronized (mAdapterList) {
-                ApplicationItem lastSelectedItem = mActivity.mModel.getLastSelectedPackage();
+                ApplicationItem lastSelectedItem = mActivity.viewModel.getLastSelectedPackage();
                 int lastSelectedItemPosition = lastSelectedItem == null ? -1 : mAdapterList.indexOf(lastSelectedItem);
                 if (lastSelectedItemPosition >= 0) {
                     // Select from last selection to this selection
@@ -287,7 +238,7 @@ public class MainRecyclerAdapter extends MultiSelectionView.Adapter<MainRecycler
         // Set version name
         holder.version.setText(item.versionName);
         // Set date and (if available,) days between first install and last update
-        String lastUpdateDate = DateUtils.formatDate(item.lastUpdateTime);
+        String lastUpdateDate = DateUtils.formatDate(mActivity, item.lastUpdateTime);
         if (item.firstInstallTime == item.lastUpdateTime) {
             holder.date.setText(lastUpdateDate);
         } else {
@@ -305,10 +256,16 @@ public class MainRecyclerAdapter extends MultiSelectionView.Adapter<MainRecycler
         } else holder.date.setTextColor(mColorSecondary);
         if (item.isInstalled) {
             // Set kernel user ID
-            holder.sharedId.setText(String.format(Locale.getDefault(), "%d", item.uid));
+            String sharedId;
+            if (item.userIds.length > 1) {
+                int appId = UserHandleHidden.getAppId(item.uid);
+                sharedId = item.userIds.length + "+" + appId;
+            } else sharedId = String.valueOf(item.uid);
+            holder.sharedId.setText(sharedId);
             // Set kernel user ID text color to orange if the package is shared
-            if (item.sharedUserId != null) holder.sharedId.setTextColor(mColorOrange);
-            else holder.sharedId.setTextColor(mColorSecondary);
+            if (item.sharedUserId != null) {
+                holder.sharedId.setTextColor(mColorOrange);
+            } else holder.sharedId.setTextColor(mColorSecondary);
         } else holder.sharedId.setText("");
         if (item.sha != null) {
             // Set issuer
@@ -328,7 +285,8 @@ public class MainRecyclerAdapter extends MultiSelectionView.Adapter<MainRecycler
             holder.sha.setVisibility(View.GONE);
         }
         // Load app icon
-        imageLoader.displayImage(item.packageName, item, holder.icon);
+        holder.icon.setTag(item.packageName);
+        ImageLoader.getInstance().displayImage(item.packageName, item, holder.icon);
         // Set app label
         if (!TextUtils.isEmpty(mSearchQuery) && item.label.toLowerCase(Locale.ROOT).contains(mSearchQuery)) {
             // Highlight searched query
@@ -385,7 +343,7 @@ public class MainRecyclerAdapter extends MultiSelectionView.Adapter<MainRecycler
         }
         // Set SDK
         if (item.isInstalled) {
-            holder.size.setText(String.format(Locale.getDefault(), "SDK %d", item.sdk));
+            holder.size.setText(String.format(Locale.ROOT, "SDK %d", item.sdk));
         } else holder.size.setText("-");
         // Set SDK color to orange if the app is using cleartext (e.g. HTTP) traffic
         if ((item.flags & ApplicationInfo.FLAG_USES_CLEARTEXT_TRAFFIC) != 0) {
@@ -460,7 +418,7 @@ public class MainRecyclerAdapter extends MultiSelectionView.Adapter<MainRecycler
             for (int i = 0; i < getItemCount(); i++) {
                 String item = mAdapterList.get(i).label;
                 if (item.length() > 0) {
-                    if (item.charAt(0) == sections.charAt(section))
+                    if (item.charAt(0) == sSections.charAt(section))
                         return i;
                 }
             }
@@ -475,11 +433,106 @@ public class MainRecyclerAdapter extends MultiSelectionView.Adapter<MainRecycler
 
     @Override
     public Object[] getSections() {
-        String[] sectionsArr = new String[sections.length()];
-        for (int i = 0; i < sections.length(); i++)
-            sectionsArr[i] = "" + sections.charAt(i);
+        String[] sectionsArr = new String[sSections.length()];
+        for (int i = 0; i < sSections.length(); i++)
+            sectionsArr[i] = String.valueOf(sSections.charAt(i));
 
         return sectionsArr;
+    }
+
+    private void handleClick(@NonNull ApplicationItem item) {
+        if (!item.isInstalled || item.userIds.length == 0) {
+            // The app should not be installed. But make sure this is really true. (For current user only)
+            ApplicationInfo info;
+            try {
+                info = PackageManagerCompat.getApplicationInfo(item.packageName, MATCH_UNINSTALLED_PACKAGES
+                                | PackageManagerCompat.MATCH_STATIC_SHARED_AND_SDK_LIBRARIES,
+                        UserHandleHidden.myUserId());
+            } catch (RemoteException | PackageManager.NameNotFoundException e) {
+                Toast.makeText(mActivity, R.string.app_not_installed, Toast.LENGTH_SHORT).show();
+                return;
+            }
+            // 1. Check if the app was really uninstalled.
+            if (ApplicationInfoCompat.isInstalled(info)) {
+                // The app is already installed, and we were wrong to assume that it was installed.
+                // Update data before opening it.
+                item.isInstalled = true;
+                item.userIds = new int[]{UserHandleHidden.myUserId()};
+                Intent intent = AppDetailsActivity.getIntent(mActivity, item.packageName, UserHandleHidden.myUserId());
+                mActivity.startActivity(intent);
+                return;
+            }
+            // 2. If the app can be installed, offer it to install again.
+            if (FeatureController.isInstallerEnabled()) {
+                if (ApplicationInfoCompat.isSystemApp(info) && SelfPermissions.canInstallExistingPackages()) {
+                    // Install existing app instead of installing as an update
+                    mActivity.startActivity(PackageInstallerActivity.getLaunchableInstance(mActivity, item.packageName));
+                    return;
+                }
+                // Otherwise, try with APK files
+                // FIXME: 1/4/23 Include splits
+                if (Paths.exists(info.publicSourceDir)) {
+                    mActivity.startActivity(PackageInstallerActivity.getLaunchableInstance(mActivity,
+                            Uri.fromFile(new File(info.publicSourceDir))));
+                    return;
+                }
+            }
+            // 3. The app might be uninstalled without clearing data
+            if (ApplicationInfoCompat.isSystemApp(info)) {
+                // The app is a system app, there's no point in asking to uninstall it again
+                Toast.makeText(mActivity, R.string.app_not_installed, Toast.LENGTH_SHORT).show();
+                return;
+            }
+            new MaterialAlertDialogBuilder(mActivity)
+                    .setTitle(mActivity.getString(R.string.uninstall_app, item.label))
+                    .setMessage(R.string.uninstall_app_again_message)
+                    .setNegativeButton(R.string.no, null)
+                    .setPositiveButton(R.string.yes, (dialog, which) -> ThreadUtils.postOnBackgroundThread(() -> {
+                        PackageInstallerCompat installer = PackageInstallerCompat.getNewInstance();
+                        installer.setAppLabel(item.label);
+                        boolean uninstalled = installer.uninstall(item.packageName, UserHandleHidden.myUserId(), false);
+                        ThreadUtils.postOnMainThread(() -> {
+                            if (uninstalled) {
+                                displayLongToast(R.string.uninstalled_successfully, item.label);
+                            } else {
+                                displayLongToast(R.string.failed_to_uninstall, item.label);
+                            }
+                        });
+                    }))
+                    .show();
+            return;
+        }
+        // The app is installed
+        if (item.userIds.length == 1) {
+            int[] userHandles = Users.getUsersIds();
+            if (ArrayUtils.contains(userHandles, item.userIds[0])) {
+                Intent intent = AppDetailsActivity.getIntent(mActivity, item.packageName, item.userIds[0]);
+                mActivity.startActivity(intent);
+                return;
+            }
+            // Outside our jurisdiction
+            Toast.makeText(mActivity, R.string.app_not_installed, Toast.LENGTH_SHORT).show();
+            return;
+        }
+        // More than a user, ask the user to select one
+        CharSequence[] userNames = new String[item.userIds.length];
+        List<UserInfo> users = Users.getUsers();
+        for (UserInfo info : users) {
+            for (int i = 0; i < item.userIds.length; ++i) {
+                if (info.id == item.userIds[i]) {
+                    userNames[i] = info.toLocalizedString(mActivity);
+                }
+            }
+        }
+        new SearchableItemsDialogBuilder<>(mActivity, userNames)
+                .setTitle(R.string.select_user)
+                .setOnItemClickListener((dialog, which, item1) -> {
+                    Intent intent = AppDetailsActivity.getIntent(mActivity, item.packageName, item.userIds[which]);
+                    mActivity.startActivity(intent);
+                    dialog.dismiss();
+                })
+                .setNegativeButton(R.string.cancel, null)
+                .show();
     }
 
     static class ViewHolder extends MultiSelectionView.ViewHolder {

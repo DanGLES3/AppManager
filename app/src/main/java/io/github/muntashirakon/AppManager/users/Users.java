@@ -4,57 +4,91 @@ package io.github.muntashirakon.AppManager.users;
 
 import android.annotation.UserIdInt;
 import android.content.Context;
-import android.content.pm.UserInfo;
 import android.os.Build;
 import android.os.IUserManager;
+import android.os.Process;
 import android.os.RemoteException;
+import android.os.UserHandle;
 import android.os.UserHandleHidden;
 
+import androidx.annotation.IntRange;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.annotation.WorkerThread;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import io.github.muntashirakon.AppManager.compat.ManifestCompat;
+import io.github.muntashirakon.AppManager.ipc.LocalServices;
 import io.github.muntashirakon.AppManager.ipc.ProxyBinder;
 import io.github.muntashirakon.AppManager.logs.Log;
-import io.github.muntashirakon.AppManager.utils.AppPref;
+import io.github.muntashirakon.AppManager.self.SelfPermissions;
+import io.github.muntashirakon.AppManager.settings.Prefs;
 import io.github.muntashirakon.AppManager.utils.ArrayUtils;
+import io.github.muntashirakon.AppManager.utils.ExUtils;
 
 public final class Users {
     public static final String TAG = "Users";
 
-    public static List<UserInfo> userInfoList;
+    private static final List<UserInfo> sUserInfoList = new ArrayList<>();
+    private static boolean sUnprivilegedMode = false;
 
-    @WorkerThread
-    @Nullable
+    @NonNull
     public static List<UserInfo> getAllUsers() {
-        if (userInfoList == null) {
-            try {
-                IUserManager userManager = IUserManager.Stub.asInterface(ProxyBinder.getService(Context.USER_SERVICE));
+        if (sUserInfoList.isEmpty() || sUnprivilegedMode) {
+            IUserManager userManager = IUserManager.Stub.asInterface(ProxyBinder.getService(Context.USER_SERVICE));
+            if (SelfPermissions.checkSelfOrRemotePermission(ManifestCompat.permission.MANAGE_USERS)
+                    || SelfPermissions.checkSelfOrRemotePermission(ManifestCompat.permission.CREATE_USERS)) {
+                if (sUnprivilegedMode) {
+                    // User info were previously fetched in unprivileged mode. We need to fetch them again.
+                    sUnprivilegedMode = false;
+                    sUserInfoList.clear();
+                }
+                List<android.content.pm.UserInfo> userInfoList = null;
                 try {
                     userInfoList = userManager.getUsers(true);
-                } catch (NoSuchMethodError e) {
+                } catch (RemoteException | NoSuchMethodError e) {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                        userInfoList = userManager.getUsers(true, true, true);
-                    } else throw new SecurityException(e);
+                        userInfoList = ExUtils.exceptionAsNull(() -> userManager.getUsers(true, true, true));
+                    }
                 }
-            } catch (RemoteException | SecurityException e) {
-                Log.e(TAG, "Could not get list of users", e);
+                if (userInfoList != null) {
+                    for (android.content.pm.UserInfo userInfo : userInfoList) {
+                        sUserInfoList.add(new UserInfo(userInfo));
+                    }
+                }
+            }
+            if (sUserInfoList.isEmpty()) {
+                sUnprivilegedMode = true;
+                // The above didn't succeed, try no-root mode
+                Log.d(TAG, "Missing required permission: MANAGE_USERS or CREATE_USERS (7+). Falling back to unprivileged mode.");
+                List<android.content.pm.UserInfo> userInfoList = userManager.getProfiles(
+                        UserHandleHidden.getUserId(getSelfOrRemoteUid()), false);
+                for (android.content.pm.UserInfo userInfo : userInfoList) {
+                    sUserInfoList.add(new UserInfo(userInfo));
+                }
             }
         }
-        return userInfoList;
+        return sUserInfoList;
     }
 
-    @WorkerThread
-    @Nullable
+    @NonNull
+    @UserIdInt
+    public static int[] getAllUserIds() {
+        getAllUsers();
+        List<Integer> users = new ArrayList<>();
+        for (UserInfo userInfo : sUserInfoList) {
+            users.add(userInfo.id);
+        }
+        return ArrayUtils.convertToIntArray(users);
+    }
+
+    @NonNull
     public static List<UserInfo> getUsers() {
         getAllUsers();
-        if (userInfoList == null) return null;
-        int[] selectedUserIds = AppPref.getSelectedUsers();
+        int[] selectedUserIds = Prefs.Misc.getSelectedUsers();
         List<UserInfo> users = new ArrayList<>();
-        for (UserInfo userInfo : userInfoList) {
+        for (UserInfo userInfo : sUserInfoList) {
             if (selectedUserIds == null || ArrayUtils.contains(selectedUserIds, userInfo.id)) {
                 users.add(userInfo);
             }
@@ -62,21 +96,37 @@ public final class Users {
         return users;
     }
 
-    @WorkerThread
     @NonNull
     @UserIdInt
     public static int[] getUsersIds() {
         getAllUsers();
-        if (userInfoList == null) {
-            return new int[]{UserHandleHidden.myUserId()};
-        }
-        int[] selectedUserIds = AppPref.getSelectedUsers();
+        int[] selectedUserIds = Prefs.Misc.getSelectedUsers();
         List<Integer> users = new ArrayList<>();
-        for (UserInfo userInfo : userInfoList) {
+        for (UserInfo userInfo : sUserInfoList) {
             if (selectedUserIds == null || ArrayUtils.contains(selectedUserIds, userInfo.id)) {
                 users.add(userInfo.id);
             }
         }
         return ArrayUtils.convertToIntArray(users);
+    }
+
+    @Nullable
+    public static UserHandle getUserHandle(@UserIdInt int userId) {
+        getAllUsers();
+        for (UserInfo userInfo : sUserInfoList) {
+            if (userInfo.id == userId) {
+                return userInfo.userHandle;
+            }
+        }
+        return null;
+    }
+
+    @IntRange(from = 0)
+    public static int getSelfOrRemoteUid() {
+        try {
+            return LocalServices.getAmService().getUid();
+        } catch (RemoteException e) {
+            return Process.myUid();
+        }
     }
 }

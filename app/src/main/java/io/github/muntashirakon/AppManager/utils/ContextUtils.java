@@ -3,10 +3,14 @@
 package io.github.muntashirakon.AppManager.utils;
 
 import android.annotation.SuppressLint;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.ContextWrapper;
 import android.os.Build;
-import android.util.Log;
+
+import androidx.annotation.NonNull;
+
+import java.util.Objects;
 
 // Copyright 2020 John "topjohnwu" Wu
 public final class ContextUtils {
@@ -23,10 +27,10 @@ public final class ContextUtils {
                 Context c = (Context) Class.forName("android.app.ActivityThread")
                         .getMethod("currentApplication")
                         .invoke(null);
-                context = getContextImpl(c);
+                context = getContextImpl(Objects.requireNonNull(c));
             } catch (Exception e) {
                 // Shall never happen
-                Log.e(TAG, e.getMessage(), e);
+                throw new RuntimeException(e);
             }
         }
         return context;
@@ -42,5 +46,9 @@ public final class ContextUtils {
             context = ((ContextWrapper) context).getBaseContext();
         }
         return context;
+    }
+
+    public static void unregisterReceiver(@NonNull Context context, @NonNull BroadcastReceiver receiver) {
+        ExUtils.exceptionAsIgnored(() -> context.unregisterReceiver(receiver));
     }
 }

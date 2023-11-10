@@ -1,14 +1,16 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-apply plugin: 'com.android.library'
+plugins {
+    id('com.android.library')
+}
 
 android {
-    compileSdkVersion rootProject.ext.compileSdk
-    buildToolsVersion rootProject.ext.buildTools
+    namespace 'io.github.muntashirakon.AppManager.docs'
+    compileSdk compile_sdk
 
     defaultConfig {
-        minSdkVersion rootProject.ext.minSdk
-        targetSdkVersion rootProject.ext.targetSdk
+        minSdk min_sdk
+        targetSdk target_sdk
     }
 
     compileOptions {
@@ -16,7 +18,7 @@ android {
     }
 }
 
-task buildDocs {
+tasks.register('buildDocs') {
     doLast {
         println("=== docs: start ===")
         String buildExec = "${rootProject.projectDir.absolutePath}/scripts/make_docs.sh"
@@ -28,7 +30,7 @@ task buildDocs {
     }
 }
 
-task cleanupDocs {
+tasks.register('cleanupDocs') {
     doLast {
         File file = new File("${rootProject.projectDir.absolutePath}/docs/src/main/res")
         if (file.exists()) {

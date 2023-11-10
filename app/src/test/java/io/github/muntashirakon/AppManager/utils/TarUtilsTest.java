@@ -2,7 +2,9 @@
 
 package io.github.muntashirakon.AppManager.utils;
 
-import android.content.Context;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -19,25 +21,21 @@ import org.robolectric.RobolectricTestRunner;
 
 import java.io.BufferedInputStream;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import io.github.muntashirakon.AppManager.AppManager;
+import io.github.muntashirakon.io.IoUtils;
 import io.github.muntashirakon.io.Path;
 import io.github.muntashirakon.io.Paths;
 import io.github.muntashirakon.io.SplitInputStream;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
-
 @RunWith(RobolectricTestRunner.class)
 public class TarUtilsTest {
     private final ClassLoader classLoader = getClass().getClassLoader();
-    private final Context context = AppManager.getContext();
     private Path testRoot;
     private Path tmpRoot;
     private Path[] tarGzFilesForExtractTest;
@@ -46,12 +44,12 @@ public class TarUtilsTest {
     public void setUp() throws Throwable {
         assert classLoader != null;
         List<Path> resFiles = new ArrayList<>();
-        resFiles.add(new Path(context, new File(classLoader.getResource("plain.txt").getFile())));
-        resFiles.add(new Path(context, new File(classLoader.getResource("raw/exclude.txt").getFile())));
-        resFiles.add(new Path(context, new File(classLoader.getResource("raw/include.txt").getFile())));
-        resFiles.add(new Path(context, new File(classLoader.getResource("prefixed/prefixed_exclude.txt").getFile())));
-        resFiles.add(new Path(context, new File(classLoader.getResource("prefixed/prefixed_include.txt").getFile())));
-        tmpRoot = new Path(context, new File("/tmp"));
+        resFiles.add(Paths.get(classLoader.getResource("plain.txt").getFile()));
+        resFiles.add(Paths.get(classLoader.getResource("raw/exclude.txt").getFile()));
+        resFiles.add(Paths.get(classLoader.getResource("raw/include.txt").getFile()));
+        resFiles.add(Paths.get(classLoader.getResource("prefixed/prefixed_exclude.txt").getFile()));
+        resFiles.add(Paths.get(classLoader.getResource("prefixed/prefixed_include.txt").getFile()));
+        tmpRoot = Paths.get("/tmp");
         List<Path> tmpFiles = new ArrayList<>();
         testRoot = tmpRoot.findOrCreateDirectory("test");
         testRoot.findOrCreateDirectory("raw");
@@ -63,16 +61,19 @@ public class TarUtilsTest {
         tmpFiles.add(testRoot.findOrCreateDirectory("prefixed").findOrCreateFile("prefixed_include.txt", null));
         // Copy files to tmpRoot
         for (int i = 0; i < resFiles.size(); ++i) {
-            FileUtils.copy(resFiles.get(i), tmpFiles.get(i));
+            IoUtils.copy(resFiles.get(i), tmpFiles.get(i), null);
         }
         tarGzFilesForExtractTest = TarUtils.create(TarUtils.TAR_GZIP, testRoot, tmpRoot, "am_ex.tar.gz",
                 null, null, null, false).toArray(new Path[0]);
     }
 
     @After
-    public void tearDown() {
+    public void tearDown() throws FileNotFoundException {
         testRoot.delete();
         tarGzFilesForExtractTest[0].delete();
+        if (tmpRoot.hasFile("am.tar.gz.0")) {
+            tmpRoot.findFile("am.tar.gz.0").delete();
+        }
     }
 
     @Test
@@ -96,7 +97,7 @@ public class TarUtilsTest {
     @Test
     public void testExtractTarGZipWithDirectoryFilter() throws Throwable {
         extractTest(tarGzFilesForExtractTest, testRoot, /* language=regexp */ new String[]{"prefixed/.*"}, null,
-                Arrays.asList("", "prefixed/", "prefixed/prefixed_include.txt", "prefixed/prefixed_exclude.txt"));
+                Arrays.asList("", "prefixed/", "prefixed/prefixed_include.txt", "prefixed/prefixed_exclude.txt", "raw/"));
     }
 
     @Test
@@ -203,7 +204,7 @@ public class TarUtilsTest {
     public void testExtractTarGZipWithFilterAndExcludeContainingDirectory() throws Throwable {
         extractTest(tarGzFilesForExtractTest, testRoot, /* language=regexp */ new String[]{".*\\.txt", "include/.*"},
                 /* language=regexp */ new String[]{".*exclude\\.txt", "raw/.*"}, Arrays.asList("", "prefixed/",
-                        "prefixed/prefixed_include.txt", "plain.txt"));
+                        "prefixed/prefixed_include.txt", "plain.txt", "raw/"));
     }
 
     @Test
@@ -413,7 +414,7 @@ public class TarUtilsTest {
     }
 
     private static void gatherFiles(@NonNull List<String> files, @NonNull Path basePath, @NonNull Path source) {
-        files.add(Paths.getRelativePath(source, basePath, File.separator));
+        files.add(Paths.relativePath(source, basePath));
         if (source.isDirectory()) {
             Path[] children = source.listFiles();
             if (children.length == 0) return;
@@ -428,6 +429,6 @@ public class TarUtilsTest {
     static String getRelativePath(@NonNull File file, @NonNull File basePath, @NonNull String separator) {
         String baseDir = basePath.toURI().getPath();
         String targetPath = file.toURI().getPath();
-        return Paths.getRelativePath(targetPath, baseDir, separator);
+        return Paths.relativePath(targetPath, baseDir, separator);
     }
 }

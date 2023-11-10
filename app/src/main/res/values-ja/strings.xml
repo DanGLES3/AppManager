@@ -75,17 +75,13 @@
     <string name="user_id">ユーザーID</string>
     <string name="main_activity">メインアクティビティ</string>
     <string name="empty_package_name">空のパッケージ名</string>
-    <string name="instructions">ヘルプ</string>
     <string name="error_creating_shortcut">ショートカットの作成中にエラーが発生しました</string>
     <string name="error_verbose_pin_shortcut">現在のホームアプリはショートカットに対応していません。ショートカットが作成できませんでした。</string>
     <string name="starting_activity">次のアクティビティを起動します: <xliff:g id="activity_name" example=".main.MainActivity">%1$s</xliff:g></string>
     <string name="create_shortcut">ｼｮｰﾄｶｯﾄを作成</string>
-    <string name="edit_shortcut">ｼｮｰﾄｶｯﾄを編集</string>
     <string name="shortcut_name">ショートカート名</string>
     <string name="package_name">パッケージ名</string>
     <string name="class_name">クラス名</string>
-    <string name="error_invalid_icon_resource">アイコンの保存先が無効です</string>
-    <string name="error_invalid_icon_format">アイコンのフォーマットが無効です</string>
     <string name="icon_picker">アイコンを選択</string>
     <string name="license">ライセンス</string>
     <string name="third_party">サードパーティのライブラリとアイコン</string>
@@ -195,8 +191,6 @@
     <string name="stopped">停止</string>
     <string name="disable">無効化</string>
     <string name="enable">有効化</string>
-    <string name="failed_to_disable"><xliff:g id="app_name" example="App Manager">%1$s</xliff:g>を無効にできませんでした。</string>
-    <string name="failed_to_enable"><xliff:g id="app_name" example="App Manager">%1$s</xliff:g>を有効にできませんでした。</string>
     <string name="force_stop">強制終了</string>
     <string name="failed_to_stop"><xliff:g id="app_name" example="App Manager">%1$s</xliff:g>を停止できませんでした。</string>
     <string name="storage_and_cache">ストレージとキャッシュ</string>
@@ -214,7 +208,6 @@
     <string name="app_settings">設定</string>
     <string name="usage_yesterday">昨日</string>
     <string name="exodus_link">\u03b5xodusのリンク</string>
-    <string name="sort_by_disabled_app">無効のものを優先</string>
     <string name="sort_by_blocked_components">ブロック済みのものを優先</string>
     <string name="external_data_dir">外部データディレクトリ</string>
     <string name="external_multiple_data_dir">外部データの場所 <xliff:g id="dir_no" example="1">%1$d</xliff:g></string>
@@ -235,7 +228,6 @@
         <item quantity="other">%1$d 個のファイルをインポートできませんでした。</item>
     </plurals>
     <string name="apk_updater">APKアップデータ</string>
-    <string name="store">ストア</string>
     <string name="running_apps">実行中のアプリ</string>
     <string name="kill_process">停止</string>
     <string name="disable_background_run">ﾊﾞｯｸｸﾞﾗｳﾝﾄﾞ実行を防止</string>
@@ -248,9 +240,6 @@
     <string name="export_blocking_rules">ﾙｰﾙをｴｸｽﾎﾟｰﾄ</string>
     <plurals name="alert_failed_to_clear_data">
         <item quantity="other">%1$d 個のアプリからデータを消去できませんでした</item>
-    </plurals>
-    <plurals name="alert_failed_to_disable">
-        <item quantity="other">%1$d 個のアプリを無効にできませんでした</item>
     </plurals>
     <plurals name="alert_failed_to_uninstall">
         <item quantity="other">%1$d 個のアプリをアンインストールできませんでした</item>
@@ -339,7 +328,6 @@
     <string name="clear_cache">キャッシュを消去</string>
     <string name="block_unblock_trackers_description">全てのインストールされたアプリから広告やトラッカーのコンポーネントをブロック/ブロック解除</string>
     <string name="block_components_dots">コンポーネントをブロック…</string>
-    <string name="block_components_description">与えられた定義によって認識された全てのコンポーネントをブロックします</string>
     <string name="deny_app_ops_description">「63」や「RUN_IN_BACKGROUND」といった形式で与えられる値からアプリのAppOpsのモードを設定します。</string>
     <string name="clear_data_from_uninstalled_apps">アンインストール済みアプリのデータを消去</string>
     <string name="clear_data_from_uninstalled_apps_description">「DONT_DELETE_DATA」フラグのあるアプリのデータを消去します</string>
@@ -364,7 +352,6 @@
     <string name="filter_system_apps">システムアプリ</string>
     <string name="filter_apps_with_rules">ルールを適用済み</string>
     <string name="select_all">全て選択</string>
-    <string name="filter_disabled_apps">無効になっているアプリ</string>
     <string name="installed_version">インストール済みのバージョン</string>
     <string name="trackers">トラッカー</string>
     <string name="components">コンポーネント</string>
@@ -398,9 +385,6 @@
     </plurals>
     <plurals name="alert_failed_to_set_app_ops">
         <item quantity="other">%1$d 個のアプリのAppOpsを設定できませんでした</item>
-    </plurals>
-    <plurals name="alert_failed_to_enable">
-        <item quantity="other">%1$d 個のアプリを有効にできませんでした</item>
     </plurals>
     <plurals name="backup_exists_are_you_sure">
         <item quantity="other">２つ以上のアプリに既存のバックアップがあります。宜しいですか？</item>
@@ -541,7 +525,6 @@
     <string name="systemless_app">システムレスアプリ</string>
     <string name="open_pgp_provider">OpenPGPプロバイダ</string>
     <string name="profiles">プロファイル</string>
-    <string name="presets">プリセット</string>
     <string name="no_profiles">プロファイルがありません</string>
     <string name="keystore">キーストア</string>
     <string name="apply_now">今すぐ反映…</string>
@@ -612,8 +595,6 @@
     <string name="new_profile">新しいプロファイル</string>
     <string name="duplicate">複製</string>
     <string name="failed_to_duplicate_profile">プロファイルを複製できませんでした</string>
-    <string name="pref_show_users_in_installer">インストーラにユーザーを表示</string>
-    <string name="pref_show_users_in_installer_msg">インストーラーでアプリをインストールするユーザーを選択できるようにします。RootかADBが必要です</string>
     <string name="select_user">ユーザーを選択</string>
     <string name="encryption">暗号化</string>
     <string name="pref_encryption_msg">バックアップを暗号化する</string>
@@ -627,7 +608,6 @@
     <string name="allow_routine_ops">規則的操作を許可</string>
     <string name="profile_state">プロファイルの状態</string>
     <string name="allow_routine_ops_msg">規則的操作をプロファイルで使用することを許可します</string>
-    <string name="profile_disable_msg">状態に応じて無効化/有効化されます</string>
     <string name="profile_force_stop_msg">アプリを強制終了する</string>
     <string name="profile_clear_cache_msg">アプリのキャッシュを自動的にクリアする</string>
     <string name="profile_clear_data_msg">アプリのデータは自動的に消去する</string>
@@ -950,7 +930,6 @@
     <plurals name="file_deletion_confirmation">
         <item quantity="other">%d 個のファイルを削除しようとしています</item>
     </plurals>
-    <string name="pref_layout_orientation">レイアウト方向</string>
     <string name="orientation_right_to_left">右から左（RTL方向）</string>
     <string name="orientation_left_to_right">左から右（LTR方向）</string>
     <string name="orientation_follow_locale">言語設定に従う</string>
@@ -961,7 +940,6 @@
     <string name="adb_connect_port_number_description">ポート番号は<b>デバイス名</b>セクション下部の<b>IPアドレス&amp;ポート</b>内に記載されています。</string>
     <string name="port_number">ポート番号</string>
     <string name="adb_connect">接続</string>
-    <string name="wireless_debugging_not_supported">この端末ではワイヤレスデバッグに対応していません。</string>
     <string name="wireless_debugging">ワイヤレスデバッグ</string>
     <string name="netpolicy_disable_network_access">ネット接続を無効化</string>
     <string name="netpolicy_reject_wifi_data">WiFi通信を拒否</string>
@@ -975,7 +953,6 @@
     <string name="help_uses_permissions_tab">項目をタップして<b>許可</b>または<b>拒否</b>できます。<b>dangerous</b>及び<b>development</b>パーミッションのみ許可/拒否できます。</string>
     <string name="help_permissions_tab">これらの権限はアプリ内部で定義されており、許可を取り消すことはできません。</string>
     <string name="failed_to_prevent_background_run">%1$sのバックグラウンド実行を防止できませんでした</string>
-    <string name="app_signing_signature_mismatch_for_data_only_app">署名が一致していないため、アプリをインストールできませんでした。このアプリはデータを保持したままアンインストールされています。</string>
     <string name="added_to_queue">キューに追加されました</string>
     <string name="minimum_version">最小バージョン:%d</string>
     <string name="help_app_ops_tab">項目をタップして<b>許可</b>または<b>拒否</b>できます。長押しすることで他の対応するオプションが選択できます。</string>
@@ -990,7 +967,6 @@
     <string name="community_links">Telegram: https://t.me/AppManagerChannel
 \nTwitter: https://twitter.com/AppManagerNews</string>
     <string name="community">コミュニティ</string>
-    <string name="enable_disable">有効化/無効化</string>
     <string name="error_with_details">エラー:%s</string>
     <string name="saved_filters">保存されたフィルタ</string>
     <string name="permission_flags">権限フラグ</string>

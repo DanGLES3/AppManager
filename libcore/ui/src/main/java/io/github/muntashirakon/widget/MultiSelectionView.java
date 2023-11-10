@@ -23,6 +23,7 @@ import androidx.annotation.Nullable;
 import androidx.annotation.Px;
 import androidx.annotation.UiThread;
 import androidx.appcompat.widget.TintTypedArray;
+import androidx.core.os.ParcelCompat;
 import androidx.core.util.ObjectsCompat;
 import androidx.core.view.OnApplyWindowInsetsListener;
 import androidx.core.view.ViewCompat;
@@ -39,106 +40,109 @@ import com.google.android.material.transition.MaterialSharedAxis;
 import java.lang.reflect.Field;
 import java.util.Locale;
 
-import io.github.muntashirakon.reflow.ReflowMenuViewWrapper;
+import io.github.muntashirakon.multiselection.MultiSelectionActionsView;
 import io.github.muntashirakon.ui.R;
-import io.github.muntashirakon.util.ParcelUtils;
 import io.github.muntashirakon.util.UiUtils;
 
 @SuppressLint("RestrictedApi")
 public class MultiSelectionView extends MaterialCardView implements OnApplyWindowInsetsListener {
     public interface OnSelectionChangeListener {
-        void onSelectionChange(int selectionCount);
+        /**
+         * Called when the number of selections has changed or an update is required internally or via
+         * {@link #updateCounter(boolean)}.
+         *
+         * @param selectionCount Present selection count
+         * @return {@code true} if it's necessary to update the visibility of menu items, or {@code false} otherwise.
+         */
+        @UiThread
+        boolean onSelectionChange(int selectionCount);
     }
 
-    private final SelectionActionsView selectionActionsView;
-    private final View divider;
-    private final MaxHeightScrollView selectionActionsContainer;
-    private final View cancelSelectionView;
-    private final CheckBox selectAllView;
-    private final TextView selectionCounter;
+    private final MultiSelectionActionsView mSelectionActionsView;
+    private final View mDivider;
+    private final View mCancelSelectionView;
+    private final CheckBox mSelectAllView;
+    private final TextView mSelectionCounter;
     @Px
-    private final int horizontalMargin;
+    private final int mHorizontalMargin;
     @Px
-    private final int bottomMargin;
+    private final int mBottomMargin;
     @Px
-    private final int maxHeight;
+    private final int mMaxHeight;
     @Px
-    private final int titleHeight;
+    private final int mTitleHeight;
 
     @Px
-    private int currentHeight;
+    private int mCurrentHeight;
     @Px
-    private int selectionBottomPadding;
-    private boolean inSelectionMode = false;
+    private int mSelectionBottomPadding;
+    private boolean mInSelectionMode = false;
     @Nullable
-    private Adapter<?> adapter;
+    private Adapter<?> mAdapter;
     @Nullable
-    private OnSelectionChangeListener selectionChangeListener;
+    private OnSelectionChangeListener mSelectionChangeListener;
     @Nullable
-    private WindowInsetsCompat lastInsets;
+    private WindowInsetsCompat mLastInsets;
 
     public MultiSelectionView(Context context) {
         this(context, null);
     }
 
-    public MultiSelectionView(Context context, AttributeSet attrs) {
-        this(context, attrs, R.attr.materialCardViewStyle);
+    public MultiSelectionView(Context context, @Nullable AttributeSet attrs) {
+        this(context, attrs, com.google.android.material.R.attr.materialCardViewStyle);
     }
 
     @SuppressLint("ClickableViewAccessibility")
-    public MultiSelectionView(Context context, AttributeSet attrs, @AttrRes int defStyleAttr) {
+    public MultiSelectionView(Context context, @Nullable AttributeSet attrs, @AttrRes int defStyleAttr) {
         super(context, attrs, defStyleAttr);
         // Ensure we are using the correctly themed context rather than the context that was passed in.
         context = getContext();
 
         // Inflate layout
         LayoutInflater.from(context).inflate(R.layout.view_selection_panel, this, true);
-        selectionActionsView = findViewById(R.id.selection_actions);
-        selectionActionsContainer = findViewById(R.id.selection_actions_container);
-        cancelSelectionView = findViewById(R.id.action_cancel);
-        selectAllView = findViewById(R.id.action_select_all);
-        selectionCounter = findViewById(R.id.selection_counter);
-        divider = findViewById(R.id.divider);
+        mSelectionActionsView = findViewById(R.id.selection_actions);
+        mCancelSelectionView = findViewById(R.id.action_cancel);
+        mSelectAllView = findViewById(R.id.action_select_all);
+        mSelectionCounter = findViewById(R.id.selection_counter);
+        mDivider = findViewById(R.id.divider);
 
         // Set heights
-        maxHeight = UiUtils.dpToPx(context, 48 + 1 + 116);
-        titleHeight = UiUtils.dpToPx(context, 48);
-        currentHeight = maxHeight;
+        mMaxHeight = UiUtils.dpToPx(context, 36 + 1 + 75); // This is a pessimistic approximation, not a real height
+        mTitleHeight = UiUtils.dpToPx(context, 48);
+        mCurrentHeight = mMaxHeight;
 
         // Clicking on counter maximizes/minimizes the selection actions
-        selectionCounter.setOnClickListener((v) -> {
+        mSelectionCounter.setOnClickListener((v) -> {
             Adapter.OnLayoutChangeListener listener;
-            if (adapter != null) {
-                listener = adapter.getLayoutChangeListener();
-                adapter.setOnLayoutChangeListener(null);
+            if (mAdapter != null) {
+                listener = mAdapter.getLayoutChangeListener();
+                mAdapter.setOnLayoutChangeListener(null);
             } else listener = null;
-            if (currentHeight == titleHeight) {
+            if (mCurrentHeight == mTitleHeight) {
                 // Minimized mode
                 maximize();
             } else minimize();
-            if (adapter != null) {
-                adapter.setOnLayoutChangeListener(listener);
+            if (mAdapter != null) {
+                mAdapter.setOnLayoutChangeListener(listener);
             }
         });
 
         // Custom attributes
         TintTypedArray attributes = ThemeEnforcement.obtainTintedStyledAttributes(context, attrs,
-                R.styleable.MultiSelectionView, defStyleAttr, R.style.Widget_MaterialComponents_CardView);
+                R.styleable.MultiSelectionView, defStyleAttr, com.google.android.material.R.style.Widget_MaterialComponents_CardView);
 
         // Set styles
         @Px
         int smallSize = getResources().getDimensionPixelSize(R.dimen.padding_small);
         setPreventCornerOverlap(false);
-        setCardElevation(UiUtils.dpToPx(context, 4));
+        setCardElevation(UiUtils.dpToPx(context, 8));
 
-        horizontalMargin = smallSize;
-        bottomMargin = getResources().getDimensionPixelSize(R.dimen.padding_very_small);
+        mHorizontalMargin = smallSize;
+        mBottomMargin = getResources().getDimensionPixelSize(R.dimen.padding_very_small);
 
         if (attributes.hasValue(R.styleable.MultiSelectionView_menu)) {
-            selectionActionsView.inflateMenu(attributes.getResourceId(R.styleable.MultiSelectionView_menu, 0));
+            mSelectionActionsView.inflateMenu(attributes.getResourceId(R.styleable.MultiSelectionView_menu, 0));
         }
-
-        selectionActionsView.setItemActiveIndicatorEnabled(false);
 
         attributes.recycle();
 
@@ -160,7 +164,7 @@ public class MultiSelectionView extends MaterialCardView implements OnApplyWindo
             currentHeight = source.readInt();
             selectionBottomPadding = source.readInt();
             selectionBottomPaddingMinimum = source.readInt();
-            inSelectionMode = ParcelUtils.readBoolean(source);
+            inSelectionMode = ParcelCompat.readBoolean(source);
         }
 
         @Override
@@ -169,7 +173,7 @@ public class MultiSelectionView extends MaterialCardView implements OnApplyWindo
             dest.writeInt(currentHeight);
             dest.writeInt(selectionBottomPadding);
             dest.writeInt(selectionBottomPaddingMinimum);
-            ParcelUtils.writeBoolean(inSelectionMode, dest);
+            ParcelCompat.writeBoolean(dest, inSelectionMode);
         }
 
         @NonNull
@@ -206,9 +210,9 @@ public class MultiSelectionView extends MaterialCardView implements OnApplyWindo
     protected Parcelable onSaveInstanceState() {
         Parcelable superState = super.onSaveInstanceState();
         SavedState ss = new SavedState(superState);
-        ss.currentHeight = currentHeight;
-        ss.selectionBottomPadding = selectionBottomPadding;
-        ss.inSelectionMode = inSelectionMode;
+        ss.currentHeight = mCurrentHeight;
+        ss.selectionBottomPadding = mSelectionBottomPadding;
+        ss.inSelectionMode = mInSelectionMode;
         return ss;
     }
 
@@ -217,11 +221,11 @@ public class MultiSelectionView extends MaterialCardView implements OnApplyWindo
         if (state instanceof SavedState) {
             SavedState ss = (SavedState) state;
             super.onRestoreInstanceState(ss.getSuperState());
-            currentHeight = ss.currentHeight;
-            selectionBottomPadding = ss.selectionBottomPadding;
-            inSelectionMode = ss.inSelectionMode;
+            mCurrentHeight = ss.currentHeight;
+            mSelectionBottomPadding = ss.selectionBottomPadding;
+            mInSelectionMode = ss.inSelectionMode;
         } else super.onRestoreInstanceState(state);
-        if (inSelectionMode) {
+        if (mInSelectionMode) {
             show();
             updateCounter(false);
         } else {
@@ -240,25 +244,26 @@ public class MultiSelectionView extends MaterialCardView implements OnApplyWindo
     protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
         super.onLayout(changed, left, top, right, bottom);
         ViewGroup.MarginLayoutParams lp = (MarginLayoutParams) getLayoutParams();
-        selectionBottomPadding = getHeight() + lp.topMargin + lp.bottomMargin + UiUtils.dpToPx(getContext(), 5);
-        if (adapter != null) {
-            adapter.setSelectionBottomPadding(selectionBottomPadding);
+        mSelectionBottomPadding = getHeight() + lp.topMargin + lp.bottomMargin + UiUtils.dpToPx(getContext(), 5);
+        if (mAdapter != null) {
+            mAdapter.setSelectionBottomPadding(mSelectionBottomPadding);
         }
     }
 
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-        super.onMeasure(widthMeasureSpec, MeasureSpec.makeMeasureSpec(currentHeight, MeasureSpec.AT_MOST));
+        super.onMeasure(widthMeasureSpec, MeasureSpec.makeMeasureSpec(mCurrentHeight, MeasureSpec.AT_MOST));
     }
 
     @Override
-    public WindowInsetsCompat onApplyWindowInsets(View v, WindowInsetsCompat insets) {
+    @NonNull
+    public WindowInsetsCompat onApplyWindowInsets(@NonNull View v, @NonNull WindowInsetsCompat insets) {
         WindowInsetsCompat newInsets = null;
         if (ViewCompat.getFitsSystemWindows(this)) {
             newInsets = insets;
         }
-        if (!ObjectsCompat.equals(lastInsets, newInsets)) {
-            lastInsets = newInsets;
+        if (!ObjectsCompat.equals(mLastInsets, newInsets)) {
+            mLastInsets = newInsets;
             updateMarginAndPosition();
             requestLayout();
         }
@@ -267,33 +272,33 @@ public class MultiSelectionView extends MaterialCardView implements OnApplyWindo
 
     @NonNull
     public Menu getMenu() {
-        return selectionActionsView.getMenu();
+        return mSelectionActionsView.getMenu();
     }
 
     @Px
     public int getHorizontalMargin() {
-        return horizontalMargin;
+        return mHorizontalMargin;
     }
 
     @Px
     public int getBottomMargin() {
-        return bottomMargin;
+        return mBottomMargin;
     }
 
     @Px
     public int getSelectionBottomPadding() {
-        return selectionBottomPadding;
+        return mSelectionBottomPadding;
     }
 
     public void setAdapter(@NonNull Adapter<?> adapter) {
-        this.adapter = adapter;
+        mAdapter = adapter;
         // Set listeners
         adapter.setOnLayoutChangeListener((v, rect, oldRect) -> toggleSelectionActions(rect.height()));
-        cancelSelectionView.setOnClickListener(v -> {
+        mCancelSelectionView.setOnClickListener(v -> {
             adapter.cancelSelection();
             hide();
         });
-        selectAllView.setOnCheckedChangeListener((buttonView, isChecked) -> {
+        mSelectAllView.setOnCheckedChangeListener((buttonView, isChecked) -> {
             if (isChecked) adapter.selectAll();
             else adapter.deselectAll();
         });
@@ -306,76 +311,77 @@ public class MultiSelectionView extends MaterialCardView implements OnApplyWindo
         TransitionManager.beginDelayedTransition(this, sharedAxis);
         setVisibility(VISIBLE);
         ViewGroup.MarginLayoutParams lp = (MarginLayoutParams) getLayoutParams();
-        selectionBottomPadding = getHeight() + lp.topMargin + lp.bottomMargin;
-        inSelectionMode = true;
-        if (adapter != null) {
-            adapter.setInSelectionMode(true);
-            adapter.setSelectionBottomPadding(selectionBottomPadding);
+        mSelectionBottomPadding = getHeight() + lp.topMargin + lp.bottomMargin;
+        mInSelectionMode = true;
+        if (mAdapter != null) {
+            mAdapter.setInSelectionMode(true);
+            mAdapter.setSelectionBottomPadding(mSelectionBottomPadding);
         }
     }
 
     public void cancel() {
-        cancelSelectionView.performClick();
+        mCancelSelectionView.performClick();
     }
 
+    @SuppressWarnings("deprecation")
     @UiThread
     public void hide() {
         Transition sharedAxis = new MaterialSharedAxis(MaterialSharedAxis.Y, false);
         TransitionManager.beginDelayedTransition(this, sharedAxis);
         setVisibility(GONE);
-        selectionBottomPadding = 0;
-        inSelectionMode = false;
-        if (adapter != null) {
+        mSelectionBottomPadding = 0;
+        mInSelectionMode = false;
+        if (mAdapter != null) {
             //noinspection PointlessNullCheck
-            if (adapter.recyclerView != null
-                    && ViewCompat.getFitsSystemWindows(adapter.recyclerView)
-                    && lastInsets != null) {
-                selectionBottomPadding += lastInsets.getSystemWindowInsetBottom();
+            if (mAdapter.mRecyclerView != null
+                    && ViewCompat.getFitsSystemWindows(mAdapter.mRecyclerView)
+                    && mLastInsets != null) {
+                mSelectionBottomPadding += mLastInsets.getSystemWindowInsetBottom();
             }
-            adapter.setInSelectionMode(false);
-            adapter.setSelectionBottomPadding(selectionBottomPadding);
+            mAdapter.setInSelectionMode(false);
+            mAdapter.setSelectionBottomPadding(mSelectionBottomPadding);
         }
     }
 
-    public void setOnItemSelectedListener(ReflowMenuViewWrapper.OnItemSelectedListener listener) {
-        selectionActionsView.setOnItemSelectedListener(listener);
+    public void setOnItemSelectedListener(MultiSelectionActionsView.OnItemSelectedListener listener) {
+        mSelectionActionsView.setOnItemSelectedListener(listener);
     }
 
     public void setOnSelectionChangeListener(OnSelectionChangeListener selectionChangeListener) {
-        this.selectionChangeListener = selectionChangeListener;
+        mSelectionChangeListener = selectionChangeListener;
     }
 
     @SuppressLint("SetTextI18n")
     @UiThread
     public void updateCounter(boolean hideOnEmpty) {
-        if (adapter == null) {
+        if (mAdapter == null) {
             hide();
             return;
         }
-        int selectionCount = adapter.getSelectedItemCount();
+        int selectionCount = mAdapter.getSelectedItemCount();
         if (selectionCount <= 0 && hideOnEmpty) {
             if (getVisibility() != GONE) hide();
-            if (selectionChangeListener != null) {
-                selectionChangeListener.onSelectionChange(0);
+            if (mSelectionChangeListener != null && mSelectionChangeListener.onSelectionChange(0)) {
+                mSelectionActionsView.updateMenuView();
             }
             return;
         }
         if (selectionCount > 0) {
             if (getVisibility() != VISIBLE) show();
         }
-        selectionCounter.setText(String.format(Locale.getDefault(), "%d/%d", selectionCount, adapter.getTotalItemCount()));
-        selectAllView.setChecked(adapter.areAllSelected(), false);
-        if (selectionChangeListener != null) {
-            selectionChangeListener.onSelectionChange(selectionCount);
+        mSelectionCounter.setText(String.format(Locale.getDefault(), "%d/%d", selectionCount, mAdapter.getTotalItemCount()));
+        mSelectAllView.setChecked(mAdapter.areAllSelected(), false);
+        if (mSelectionChangeListener != null && mSelectionChangeListener.onSelectionChange(selectionCount)) {
+            mSelectionActionsView.updateMenuView();
         }
-        if (!adapter.isInSelectionMode()) {
+        if (!mAdapter.isInSelectionMode()) {
             // Special check to avoid displaying the selection panel on resizing the view
             hide();
         }
     }
 
     private void toggleSelectionActions(int recyclerViewHeight) {
-        if (maxHeight * 2 > recyclerViewHeight) {
+        if (mMaxHeight * 2 > recyclerViewHeight) {
             minimize();
         } else {
             maximize();
@@ -383,29 +389,30 @@ public class MultiSelectionView extends MaterialCardView implements OnApplyWindo
     }
 
     private void minimize() {
-        currentHeight = titleHeight;
-        selectionActionsContainer.setVisibility(GONE);
-        divider.setVisibility(GONE);
+        mCurrentHeight = mTitleHeight;
+        mSelectionActionsView.setVisibility(GONE);
+        mDivider.setVisibility(GONE);
         requestLayout();
     }
 
     private void maximize() {
-        currentHeight = maxHeight;
-        selectionActionsContainer.setVisibility(VISIBLE);
-        divider.setVisibility(VISIBLE);
+        mCurrentHeight = mMaxHeight;
+        mSelectionActionsView.setVisibility(VISIBLE);
+        mDivider.setVisibility(VISIBLE);
         requestLayout();
     }
 
+    @SuppressWarnings("deprecation")
     private void updateMarginAndPosition() {
         ViewGroup.LayoutParams params = getLayoutParams();
         if (params instanceof MarginLayoutParams) {
-            int totalLeftMargin = horizontalMargin;
-            int totalRightMargin = horizontalMargin;
-            int totalBottomMargin = bottomMargin;
-            if (ViewCompat.getFitsSystemWindows(this) && lastInsets != null) {
-                totalLeftMargin += lastInsets.getSystemWindowInsetLeft();
-                totalRightMargin += lastInsets.getSystemWindowInsetRight();
-                totalBottomMargin += lastInsets.getSystemWindowInsetBottom();
+            int totalLeftMargin = mHorizontalMargin;
+            int totalRightMargin = mHorizontalMargin;
+            int totalBottomMargin = mBottomMargin;
+            if (ViewCompat.getFitsSystemWindows(this) && mLastInsets != null) {
+                totalLeftMargin += mLastInsets.getSystemWindowInsetLeft();
+                totalRightMargin += mLastInsets.getSystemWindowInsetRight();
+                totalBottomMargin += mLastInsets.getSystemWindowInsetBottom();
             }
             ((MarginLayoutParams) params).leftMargin = totalLeftMargin;
             ((MarginLayoutParams) params).rightMargin = totalRightMargin;
@@ -431,13 +438,13 @@ public class MultiSelectionView extends MaterialCardView implements OnApplyWindo
         }
 
         @Nullable
-        private OnSelectionChangeListener selectionChangeListener;
+        private OnSelectionChangeListener mSelectionChangeListener;
         @Nullable
-        private OnLayoutChangeListener layoutChangeListener;
-        private boolean isInSelectionMode;
+        private OnLayoutChangeListener mLayoutChangeListener;
+        private boolean mIsInSelectionMode;
         @Nullable
-        private RecyclerView recyclerView;
-        private int defaultBottomPadding;
+        private RecyclerView mRecyclerView;
+        private int mDefaultBottomPadding;
 
         public Adapter() {
             setHasStableIds(true);
@@ -475,7 +482,7 @@ public class MultiSelectionView extends MaterialCardView implements OnApplyWindo
 
         @AnyThread
         public final boolean isInSelectionMode() {
-            return isInSelectionMode;
+            return mIsInSelectionMode;
         }
 
         @AnyThread
@@ -488,12 +495,12 @@ public class MultiSelectionView extends MaterialCardView implements OnApplyWindo
 
         @UiThread
         public final void notifySelectionChange() {
-            if (selectionChangeListener != null) selectionChangeListener.onSelectionChange();
+            if (mSelectionChangeListener != null) mSelectionChangeListener.onSelectionChange();
         }
 
         @AnyThread
         public final void setInSelectionMode(boolean inSelectionMode) {
-            isInSelectionMode = inSelectionMode;
+            mIsInSelectionMode = inSelectionMode;
         }
 
         @UiThread
@@ -543,28 +550,28 @@ public class MultiSelectionView extends MaterialCardView implements OnApplyWindo
         @Override
         public final void onLayoutChange(View v, int left, int top, int right, int bottom,
                                          int oldLeft, int oldTop, int oldRight, int oldBottom) {
-            if (layoutChangeListener == null) return;
+            if (mLayoutChangeListener == null) return;
             Rect rect = new Rect(left, top, right, bottom);
             Rect oldRect = new Rect(oldLeft, oldTop, oldRight, oldBottom);
             if (rect.width() != oldRect.width() || rect.height() != oldRect.height()) {
-                layoutChangeListener.onLayoutChange(recyclerView, rect, oldRect);
+                mLayoutChangeListener.onLayoutChange(mRecyclerView, rect, oldRect);
             }
         }
 
         @AnyThread
         private void setOnSelectionChangeListener(@Nullable OnSelectionChangeListener listener) {
-            selectionChangeListener = listener;
+            mSelectionChangeListener = listener;
         }
 
         @AnyThread
         private void setOnLayoutChangeListener(@Nullable OnLayoutChangeListener listener) {
-            layoutChangeListener = listener;
+            mLayoutChangeListener = listener;
         }
 
         @AnyThread
         @Nullable
         public OnLayoutChangeListener getLayoutChangeListener() {
-            return layoutChangeListener;
+            return mLayoutChangeListener;
         }
 
         /**
@@ -572,13 +579,13 @@ public class MultiSelectionView extends MaterialCardView implements OnApplyWindo
          */
         @UiThread
         private void setSelectionBottomPadding(@Px int selectionBottomPadding) {
-            if (recyclerView == null) return;
-            if (recyclerView.getClipToPadding()) {
+            if (mRecyclerView == null) return;
+            if (mRecyclerView.getClipToPadding()) {
                 // Clip to padding must be disabled
-                recyclerView.setClipToPadding(false);
+                mRecyclerView.setClipToPadding(false);
             }
-            recyclerView.setPadding(recyclerView.getPaddingLeft(), recyclerView.getPaddingTop(),
-                    recyclerView.getPaddingRight(), selectionBottomPadding == 0 ? defaultBottomPadding
+            mRecyclerView.setPadding(mRecyclerView.getPaddingLeft(), mRecyclerView.getPaddingTop(),
+                    mRecyclerView.getPaddingRight(), selectionBottomPadding == 0 ? mDefaultBottomPadding
                             : selectionBottomPadding);
         }
 
@@ -586,8 +593,8 @@ public class MultiSelectionView extends MaterialCardView implements OnApplyWindo
         @Override
         public void onAttachedToRecyclerView(@NonNull RecyclerView recyclerView) {
             super.onAttachedToRecyclerView(recyclerView);
-            this.recyclerView = recyclerView;
-            this.defaultBottomPadding = recyclerView.getPaddingBottom();
+            mRecyclerView = recyclerView;
+            mDefaultBottomPadding = recyclerView.getPaddingBottom();
             recyclerView.addOnLayoutChangeListener(this);
         }
 
@@ -596,7 +603,7 @@ public class MultiSelectionView extends MaterialCardView implements OnApplyWindo
         public void onDetachedFromRecyclerView(@NonNull RecyclerView recyclerView) {
             super.onDetachedFromRecyclerView(recyclerView);
             recyclerView.removeOnLayoutChangeListener(this);
-            this.recyclerView = null;
+            mRecyclerView = null;
         }
 
         @CallSuper

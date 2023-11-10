@@ -10,12 +10,11 @@ import android.os.Parcelable;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.os.ParcelCompat;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-
-import io.github.muntashirakon.AppManager.utils.DateUtils;
 
 public class PackageUsageInfo implements Parcelable {
     @NonNull
@@ -50,17 +49,17 @@ public class PackageUsageInfo implements Parcelable {
     protected PackageUsageInfo(@NonNull Parcel in) {
         packageName = Objects.requireNonNull(in.readString());
         userId = in.readInt();
-        applicationInfo = in.readParcelable(ApplicationInfo.class.getClassLoader());
+        applicationInfo = ParcelCompat.readParcelable(in, ApplicationInfo.class.getClassLoader(), ApplicationInfo.class);
         appLabel = in.readString();
         screenTime = in.readLong();
         lastUsageTime = in.readLong();
         timesOpened = in.readInt();
-        mobileData = in.readParcelable(AppUsageStatsManager.DataUsage.class.getClassLoader());
-        wifiData = in.readParcelable(AppUsageStatsManager.DataUsage.class.getClassLoader());
+        mobileData = ParcelCompat.readParcelable(in, AppUsageStatsManager.DataUsage.class.getClassLoader(), AppUsageStatsManager.DataUsage.class);
+        wifiData = ParcelCompat.readParcelable(in, AppUsageStatsManager.DataUsage.class.getClassLoader(), AppUsageStatsManager.DataUsage.class);
         int size = in.readInt();
         if (size != 0) {
             entries = new ArrayList<>(size);
-            in.readList(entries, Entry.class.getClassLoader());
+            ParcelCompat.readList(in, entries, Entry.class.getClassLoader(), Entry.class);
         }
     }
 
@@ -159,8 +158,8 @@ public class PackageUsageInfo implements Parcelable {
         @Override
         public String toString() {
             return "USEntry{" +
-                    "startTime=" + DateUtils.formatDateTime(startTime) +
-                    ", endTime=" + DateUtils.formatDateTime(endTime) +
+                    "startTime=" + startTime +
+                    ", endTime=" + endTime +
                     '}';
         }
 

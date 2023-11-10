@@ -2,17 +2,17 @@
 
 package io.github.muntashirakon.AppManager.profiles;
 
-import android.content.pm.UserInfo;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.view.View;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.preference.Preference;
 import androidx.preference.PreferenceDataStore;
 import androidx.preference.PreferenceFragmentCompat;
 import androidx.preference.SwitchPreferenceCompat;
 
-import com.android.internal.util.TextUtils;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.textfield.TextInputEditText;
 
@@ -24,44 +24,60 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import io.github.muntashirakon.AppManager.R;
 import io.github.muntashirakon.AppManager.backup.BackupFlags;
+import io.github.muntashirakon.AppManager.profiles.struct.AppsProfile;
 import io.github.muntashirakon.AppManager.rules.RulesTypeSelectionDialogFragment;
-import io.github.muntashirakon.AppManager.types.SearchableMultiChoiceDialogBuilder;
+import io.github.muntashirakon.AppManager.users.UserInfo;
 import io.github.muntashirakon.AppManager.users.Users;
 import io.github.muntashirakon.AppManager.utils.ArrayUtils;
+import io.github.muntashirakon.AppManager.utils.TextUtilsCompat;
+import io.github.muntashirakon.AppManager.utils.Utils;
+import io.github.muntashirakon.dialog.SearchableMultiChoiceDialogBuilder;
+import io.github.muntashirakon.dialog.SearchableSingleChoiceDialogBuilder;
 import io.github.muntashirakon.dialog.TextInputDialogBuilder;
 
 public class ConfPreferences extends PreferenceFragmentCompat {
-    AppsProfileActivity activity;
-    private ProfileViewModel model;
+    private AppsProfileActivity mActivity;
+    private ProfileViewModel mModel;
 
-    @ProfileMetaManager.ProfileState
-    private final List<String> states = Arrays.asList(ProfileMetaManager.STATE_ON, ProfileMetaManager.STATE_OFF);
-    private String[] components;
-    private String[] app_ops;
-    private String[] permissions;
-    private ProfileMetaManager.Profile.BackupInfo backupInfo;
+    @AppsProfile.ProfileState
+    private final List<String> mStates = Arrays.asList(AppsProfile.STATE_ON, AppsProfile.STATE_OFF);
+    @Nullable
+    private String[] mComponents;
+    @Nullable
+    private String[] mAppOps;
+    @Nullable
+    private String[] mPermissions;
+    @Nullable
+    private AppsProfile.BackupInfo mBackupInfo;
 
     @Override
     public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
         setPreferencesFromResource(R.xml.preferences_profile_config, rootKey);
         getPreferenceManager().setPreferenceDataStore(new ConfDataStore());
-        activity = (AppsProfileActivity) requireActivity();
-        if (activity.model == null) {
+        mActivity = (AppsProfileActivity) requireActivity();
+        if (mActivity.model == null) {
             // ViewModel should never be null.
             // If it's null, it means that we're on the wrong Fragment
             return;
         }
-        model = this.activity.model;
+        mModel = mActivity.model;
+        // Set profile ID
+        Preference profileIdPref = Objects.requireNonNull(findPreference("profile_id"));
+        profileIdPref.setSummary(mModel.getProfileId());
+        profileIdPref.setOnPreferenceClickListener(preference -> {
+            Utils.copyToClipboard(mActivity, mModel.getProfileName(), mModel.getProfileId());
+            return true;
+        });
         // Set comment
         Preference commentPref = Objects.requireNonNull(findPreference("comment"));
-        commentPref.setSummary(model.getComment());
+        commentPref.setSummary(mModel.getComment());
         commentPref.setOnPreferenceClickListener(preference -> {
-            new TextInputDialogBuilder(activity, R.string.comment)
+            new TextInputDialogBuilder(mActivity, R.string.comment)
                     .setTitle(R.string.comment)
-                    .setInputText(model.getComment())
+                    .setInputText(mModel.getComment())
                     .setPositiveButton(R.string.ok, (dialog, which, inputText, isChecked) -> {
-                        model.setComment(TextUtils.isEmpty(inputText) ? null : inputText.toString());
-                        commentPref.setSummary(model.getComment());
+                        mModel.setComment(TextUtils.isEmpty(inputText) ? null : inputText.toString());
+                        commentPref.setSummary(mModel.getComment());
                     })
                     .setNegativeButton(R.string.cancel, null)
                     .show();
@@ -73,12 +89,16 @@ public class ConfPreferences extends PreferenceFragmentCompat {
                 getString(R.string.on),
                 getString(R.string.off)
         };
-        statePref.setTitle(getString(R.string.process_state, statesL[states.indexOf(model.getState())]));
+        statePref.setTitle(getString(R.string.process_state, statesL[mStates.indexOf(mModel.getState())]));
         statePref.setOnPreferenceClickListener(preference -> {
-            new MaterialAlertDialogBuilder(activity)
+            new SearchableSingleChoiceDialogBuilder<>(mActivity, mStates, statesL)
                     .setTitle(R.string.profile_state)
-                    .setSingleChoiceItems(statesL, states.indexOf(model.getState()), (dialog, which) -> {
-                        model.setState(states.get(which));
+                    .setSelection(mModel.getState())
+                    .setOnSingleChoiceClickListener((dialog, which, item, isChecked) -> {
+                        if (!isChecked) {
+                            return;
+                        }
+                        mModel.setState(mStates.get(which));
                         statePref.setTitle(getString(R.string.process_state, statesL[which]));
                         dialog.dismiss();
                     })
@@ -92,19 +112,19 @@ public class ConfPreferences extends PreferenceFragmentCompat {
         Preference componentsPref = Objects.requireNonNull(findPreference("components"));
         updateComponentsPref(componentsPref);
         componentsPref.setOnPreferenceClickListener(preference -> {
-            new TextInputDialogBuilder(activity, R.string.input_signatures)
+            new TextInputDialogBuilder(mActivity, R.string.input_signatures)
                     .setTitle(R.string.components)
-                    .setInputText(components == null ? "" : TextUtils.join(" ", components))
+                    .setInputText(mComponents == null ? "" : TextUtils.join(" ", mComponents))
                     .setHelperText(R.string.input_signatures_description)
                     .setPositiveButton(R.string.ok, (dialog, which, inputText, isChecked) -> {
                         if (!TextUtils.isEmpty(inputText)) {
                             String[] newComponents = inputText.toString().split("\\s+");
-                            model.setComponents(newComponents);
-                        } else model.setComponents(null);
+                            mModel.setComponents(newComponents);
+                        } else mModel.setComponents(null);
                         updateComponentsPref(componentsPref);
                     })
                     .setNegativeButton(R.string.disable, (dialog, which, inputText, isChecked) -> {
-                        model.setComponents(null);
+                        mModel.setComponents(null);
                         updateComponentsPref(componentsPref);
                     })
                     .show();
@@ -114,19 +134,19 @@ public class ConfPreferences extends PreferenceFragmentCompat {
         Preference appOpsPref = Objects.requireNonNull(findPreference("app_ops"));
         updateAppOpsPref(appOpsPref);
         appOpsPref.setOnPreferenceClickListener(preference -> {
-            new TextInputDialogBuilder(activity, R.string.input_app_ops)
+            new TextInputDialogBuilder(mActivity, R.string.input_app_ops)
                     .setTitle(R.string.app_ops)
-                    .setInputText(app_ops == null ? "" : TextUtils.join(" ", app_ops))
+                    .setInputText(mAppOps == null ? "" : TextUtils.join(" ", mAppOps))
                     .setHelperText(R.string.input_app_ops_description_profile)
                     .setPositiveButton(R.string.ok, (dialog, which, inputText, isChecked) -> {
                         if (!TextUtils.isEmpty(inputText)) {
                             String[] newAppOps = inputText.toString().split("\\s+");
-                            model.setAppOps(newAppOps);
-                        } else model.setAppOps(null);
+                            mModel.setAppOps(newAppOps);
+                        } else mModel.setAppOps(null);
                         updateAppOpsPref(appOpsPref);
                     })
                     .setNegativeButton(R.string.disable, (dialog, which, inputText, isChecked) -> {
-                        model.setAppOps(null);
+                        mModel.setAppOps(null);
                         updateAppOpsPref(appOpsPref);
                     })
                     .show();
@@ -136,75 +156,79 @@ public class ConfPreferences extends PreferenceFragmentCompat {
         Preference permissionsPref = Objects.requireNonNull(findPreference("permissions"));
         updatePermissionsPref(permissionsPref);
         permissionsPref.setOnPreferenceClickListener(preference -> {
-            new TextInputDialogBuilder(activity, R.string.input_permissions)
+            new TextInputDialogBuilder(mActivity, R.string.input_permissions)
                     .setTitle(R.string.declared_permission)
-                    .setInputText(permissions == null ? "" : TextUtils.join(" ", permissions))
+                    .setInputText(mPermissions == null ? "" : TextUtils.join(" ", mPermissions))
                     .setHelperText(R.string.input_permissions_description)
                     .setPositiveButton(R.string.ok, (dialog, which, inputText, isChecked) -> {
                         if (!TextUtils.isEmpty(inputText)) {
                             String[] newPermissions = inputText.toString().split("\\s+");
-                            model.setPermissions(newPermissions);
-                        } else model.setPermissions(null);
+                            mModel.setPermissions(newPermissions);
+                        } else mModel.setPermissions(null);
                         updatePermissionsPref(permissionsPref);
                     })
                     .setNegativeButton(R.string.disable, (dialog, which, inputText, isChecked) -> {
-                        model.setPermissions(null);
+                        mModel.setPermissions(null);
                         updatePermissionsPref(permissionsPref);
                     })
                     .show();
             return true;
         });
         Preference backupDataPref = Objects.requireNonNull(findPreference("backup_data"));
-        backupInfo = model.getBackupInfo();
-        backupDataPref.setSummary(backupInfo != null ? R.string.enabled : R.string.disabled_app);
+        mBackupInfo = mModel.getBackupInfo();
+        backupDataPref.setSummary(mBackupInfo != null ? R.string.enabled : R.string.disabled_app);
         backupDataPref.setOnPreferenceClickListener(preference -> {
-            View view = activity.getLayoutInflater().inflate(R.layout.dialog_profile_backup_restore, null);
+            View view = View.inflate(mActivity, R.layout.dialog_profile_backup_restore, null);
             final BackupFlags flags;
-            if (backupInfo != null) flags = new BackupFlags(backupInfo.flags);
-            else flags = BackupFlags.fromPref();
+            if (mBackupInfo != null) {
+                flags = new BackupFlags(mBackupInfo.flags);
+            } else flags = BackupFlags.fromPref();
             final AtomicInteger backupFlags = new AtomicInteger(flags.getFlags());
-            List<Integer> supportedBackupFlags = BackupFlags.getSupportedBackupFlagsAsArray();
-            new SearchableMultiChoiceDialogBuilder<>(requireActivity(), supportedBackupFlags, BackupFlags.getFormattedFlagNames(requireContext(), supportedBackupFlags))
-                    .setTitle(R.string.backup_options)
-                    .addSelections(flags.flagsToCheckedIndexes(supportedBackupFlags))
-                    .hideSearchBar(true)
-                    .showSelectAll(false)
-                    .setPositiveButton(R.string.save, (dialog, which, selectedItems) -> {
-                        int flagsInt = 0;
-                        for (int flag : selectedItems) {
-                            flagsInt |= flag;
-                        }
-                        flags.setFlags(flagsInt);
-                        backupFlags.set(flags.getFlags());
-                    })
-                    .setNegativeButton(R.string.cancel, null)
-                    .show();
+            view.findViewById(R.id.dialog_button).setOnClickListener(v -> {
+                List<Integer> supportedBackupFlags = BackupFlags.getSupportedBackupFlagsAsArray();
+                new SearchableMultiChoiceDialogBuilder<>(requireActivity(), supportedBackupFlags,
+                        BackupFlags.getFormattedFlagNames(requireContext(), supportedBackupFlags))
+                        .setTitle(R.string.backup_options)
+                        .addSelections(flags.flagsToCheckedIndexes(supportedBackupFlags))
+                        .hideSearchBar(true)
+                        .showSelectAll(false)
+                        .setPositiveButton(R.string.save, (dialog, which, selectedItems) -> {
+                            int flagsInt = 0;
+                            for (int flag : selectedItems) {
+                                flagsInt |= flag;
+                            }
+                            flags.setFlags(flagsInt);
+                            backupFlags.set(flags.getFlags());
+                        })
+                        .setNegativeButton(R.string.cancel, null)
+                        .show();
+            });
             final TextInputEditText editText = view.findViewById(android.R.id.input);
-            if (backupInfo != null) {
-                editText.setText(backupInfo.name);
+            if (mBackupInfo != null) {
+                editText.setText(mBackupInfo.name);
             }
-            new MaterialAlertDialogBuilder(activity)
+            new MaterialAlertDialogBuilder(mActivity)
                     .setTitle(R.string.backup_restore)
                     .setView(view)
                     .setPositiveButton(R.string.ok, (dialog, which) -> {
-                        if (backupInfo == null) {
-                            backupInfo = new ProfileMetaManager.Profile.BackupInfo();
+                        if (mBackupInfo == null) {
+                            mBackupInfo = new AppsProfile.BackupInfo();
                         }
                         CharSequence backupName = editText.getText();
                         BackupFlags backupFlags1 = new BackupFlags(backupFlags.get());
                         if (!TextUtils.isEmpty(backupName)) {
                             backupFlags1.addFlag(BackupFlags.BACKUP_MULTIPLE);
-                            backupInfo.name = backupName.toString();
+                            mBackupInfo.name = backupName.toString();
                         } else {
                             backupFlags1.removeFlag(BackupFlags.BACKUP_MULTIPLE);
-                            backupInfo.name = null;
+                            mBackupInfo.name = null;
                         }
-                        backupInfo.flags = backupFlags1.getFlags();
-                        model.setBackupInfo(backupInfo);
+                        mBackupInfo.flags = backupFlags1.getFlags();
+                        mModel.setBackupInfo(mBackupInfo);
                         backupDataPref.setSummary(R.string.enabled);
                     })
                     .setNegativeButton(R.string.disable, (dialog, which) -> {
-                        model.setBackupInfo(backupInfo = null);
+                        mModel.setBackupInfo(mBackupInfo = null);
                         backupDataPref.setSummary(R.string.disabled_app);
                     })
                     .show();
@@ -212,12 +236,12 @@ public class ConfPreferences extends PreferenceFragmentCompat {
         });
         // Set export rules
         Preference exportRulesPref = Objects.requireNonNull(findPreference("export_rules"));
-        int rulesCount = RulesTypeSelectionDialogFragment.types.length;
+        int rulesCount = RulesTypeSelectionDialogFragment.RULE_TYPES.length;
         List<Integer> checkedItems = new ArrayList<>(rulesCount);
         List<Integer> selectedRules = updateExportRulesPref(exportRulesPref);
         for (int i = 0; i < rulesCount; ++i) checkedItems.add(1 << i);
         exportRulesPref.setOnPreferenceClickListener(preference -> {
-            new SearchableMultiChoiceDialogBuilder<>(activity, checkedItems, R.array.rule_types)
+            new SearchableMultiChoiceDialogBuilder<>(mActivity, checkedItems, R.array.rule_types)
                     .setTitle(R.string.options)
                     .hideSearchBar(true)
                     .addSelections(selectedRules)
@@ -225,13 +249,13 @@ public class ConfPreferences extends PreferenceFragmentCompat {
                         int value = 0;
                         for (int item : selectedItems) value |= item;
                         if (value != 0) {
-                            model.setExportRules(value);
-                        } else model.setExportRules(null);
+                            mModel.setExportRules(value);
+                        } else mModel.setExportRules(null);
                         selectedRules.clear();
                         selectedRules.addAll(updateExportRulesPref(exportRulesPref));
                     })
                     .setNegativeButton(R.string.disable, (dialog, which, selectedItems) -> {
-                        model.setExportRules(null);
+                        mModel.setExportRules(null);
                         selectedRules.clear();
                         selectedRules.addAll(updateExportRulesPref(exportRulesPref));
                     })
@@ -240,24 +264,24 @@ public class ConfPreferences extends PreferenceFragmentCompat {
         });
         // Set others
         ((SwitchPreferenceCompat) Objects.requireNonNull(findPreference("freeze")))
-                .setChecked(model.getBoolean("freeze", false));
+                .setChecked(mModel.getBoolean("freeze", false));
         ((SwitchPreferenceCompat) Objects.requireNonNull(findPreference("force_stop")))
-                .setChecked(model.getBoolean("force_stop", false));
+                .setChecked(mModel.getBoolean("force_stop", false));
         ((SwitchPreferenceCompat) Objects.requireNonNull(findPreference("clear_cache")))
-                .setChecked(model.getBoolean("clear_cache", false));
+                .setChecked(mModel.getBoolean("clear_cache", false));
         ((SwitchPreferenceCompat) Objects.requireNonNull(findPreference("clear_data")))
-                .setChecked(model.getBoolean("clear_data", false));
+                .setChecked(mModel.getBoolean("clear_data", false));
         ((SwitchPreferenceCompat) Objects.requireNonNull(findPreference("block_trackers")))
-                .setChecked(model.getBoolean("block_trackers", false));
+                .setChecked(mModel.getBoolean("block_trackers", false));
         ((SwitchPreferenceCompat) Objects.requireNonNull(findPreference("save_apk")))
-                .setChecked(model.getBoolean("save_apk", false));
+                .setChecked(mModel.getBoolean("save_apk", false));
         ((SwitchPreferenceCompat) Objects.requireNonNull(findPreference("allow_routine")))
-                .setChecked(model.getBoolean("allow_routine", false));
+                .setChecked(mModel.getBoolean("allow_routine", false));
     }
 
     @NonNull
     private List<Integer> updateExportRulesPref(Preference pref) {
-        Integer rules = model.getExportRules();
+        Integer rules = mModel.getExportRules();
         List<Integer> selectedRules = new ArrayList<>();
         if (rules == null || rules == 0) pref.setSummary(R.string.disabled_app);
         else {
@@ -266,7 +290,7 @@ public class ConfPreferences extends PreferenceFragmentCompat {
             while (rules != 0) {
                 int flag = (rules & (~(1 << i)));
                 if (flag != rules) {
-                    selectedRulesStr.add(RulesTypeSelectionDialogFragment.types[i].toString());
+                    selectedRulesStr.add(RulesTypeSelectionDialogFragment.RULE_TYPES[i].toString());
                     rules = flag;
                     selectedRules.add(1 << i);
                 }
@@ -278,59 +302,60 @@ public class ConfPreferences extends PreferenceFragmentCompat {
     }
 
     private void updateComponentsPref(Preference pref) {
-        components = model.getComponents();
-        if (components == null || components.length == 0) pref.setSummary(R.string.disabled_app);
+        mComponents = mModel.getComponents();
+        if (mComponents == null || mComponents.length == 0) pref.setSummary(R.string.disabled_app);
         else {
-            pref.setSummary(TextUtils.join(", ", components));
+            pref.setSummary(TextUtils.join(", ", mComponents));
         }
     }
 
     private void updateAppOpsPref(Preference pref) {
-        app_ops = model.getAppOps();
-        if (app_ops == null || app_ops.length == 0) pref.setSummary(R.string.disabled_app);
+        mAppOps = mModel.getAppOps();
+        if (mAppOps == null || mAppOps.length == 0) pref.setSummary(R.string.disabled_app);
         else {
-            pref.setSummary(TextUtils.join(", ", app_ops));
+            pref.setSummary(TextUtils.join(", ", mAppOps));
         }
     }
 
     private void updatePermissionsPref(Preference pref) {
-        permissions = model.getPermissions();
-        if (permissions == null || permissions.length == 0) pref.setSummary(R.string.disabled_app);
+        mPermissions = mModel.getPermissions();
+        if (mPermissions == null || mPermissions.length == 0) pref.setSummary(R.string.disabled_app);
         else {
-            pref.setSummary(TextUtils.join(", ", permissions));
+            pref.setSummary(TextUtils.join(", ", mPermissions));
         }
     }
 
-    private List<Integer> selectedUsers;
+    private List<Integer> mSelectedUsers;
+
     private void handleUsersPref(Preference pref) {
         List<UserInfo> users = Users.getUsers();
-        if (users != null && users.size() > 1) {
+        if (users.size() > 1) {
             pref.setVisible(true);
             CharSequence[] userNames = new String[users.size()];
             List<Integer> userHandles = new ArrayList<>(users.size());
             int i = 0;
             for (UserInfo info : users) {
-                userNames[i] = info.name == null ? String.valueOf(info.id) : info.name;
+                userNames[i] = info.toLocalizedString(requireContext());
                 userHandles.add(info.id);
                 ++i;
             }
-            selectedUsers = new ArrayList<>();
-            for (Integer user : model.getUsers()) {
-                selectedUsers.add(user);
+            mSelectedUsers = new ArrayList<>();
+            for (Integer user : mModel.getUsers()) {
+                mSelectedUsers.add(user);
             }
-            activity.runOnUiThread(() -> {
-                pref.setSummary(TextUtils.joinSpannable(", " , getUserInfo(users, selectedUsers)));
+            mActivity.runOnUiThread(() -> {
+                pref.setSummary(TextUtilsCompat.joinSpannable(", ", getUserInfo(users, mSelectedUsers)));
                 pref.setOnPreferenceClickListener(v -> {
-                    new SearchableMultiChoiceDialogBuilder<>(activity, userHandles, userNames)
+                    new SearchableMultiChoiceDialogBuilder<>(mActivity, userHandles, userNames)
                             .setTitle(R.string.select_user)
-                            .addSelections(selectedUsers)
+                            .addSelections(mSelectedUsers)
                             .showSelectAll(false)
                             .setPositiveButton(R.string.ok, (dialog, which, selectedUserHandles) -> {
-                                if (selectedUserHandles.size() == 0) {
-                                    selectedUsers = userHandles;
-                                } else selectedUsers = selectedUserHandles;
-                                pref.setSummary(TextUtils.joinSpannable(", " , getUserInfo(users, selectedUsers)));
-                                model.setUsers(ArrayUtils.convertToIntArray(selectedUsers));
+                                if (selectedUserHandles.isEmpty()) {
+                                    mSelectedUsers = userHandles;
+                                } else mSelectedUsers = selectedUserHandles;
+                                pref.setSummary(TextUtilsCompat.joinSpannable(", ", getUserInfo(users, mSelectedUsers)));
+                                mModel.setUsers(ArrayUtils.convertToIntArray(mSelectedUsers));
                             })
                             .setNegativeButton(R.string.cancel, null)
                             .show();
@@ -338,7 +363,7 @@ public class ConfPreferences extends PreferenceFragmentCompat {
                 });
             });
         } else {
-            activity.runOnUiThread(() -> pref.setVisible(false));
+            mActivity.runOnUiThread(() -> pref.setVisible(false));
         }
     }
 
@@ -347,7 +372,7 @@ public class ConfPreferences extends PreferenceFragmentCompat {
         List<CharSequence> userInfoOut = new ArrayList<>();
         for (UserInfo info : userInfoList) {
             if (userHandles.contains(info.id)) {
-                userInfoOut.add(info.name);
+                userInfoOut.add(info.toLocalizedString(requireContext()));
             }
         }
         return userInfoOut;
@@ -356,12 +381,12 @@ public class ConfPreferences extends PreferenceFragmentCompat {
     public class ConfDataStore extends PreferenceDataStore {
         @Override
         public void putBoolean(@NonNull String key, boolean value) {
-            model.putBoolean(key, value);
+            mModel.putBoolean(key, value);
         }
 
         @Override
         public boolean getBoolean(@NonNull String key, boolean defValue) {
-            return model.getBoolean(key, defValue);
+            return mModel.getBoolean(key, defValue);
         }
     }
 }

@@ -2,13 +2,14 @@
 
 package io.github.muntashirakon.AppManager.utils;
 
-import android.system.ErrnoException;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.StringDef;
 import androidx.annotation.VisibleForTesting;
 import androidx.annotation.WorkerThread;
+
+import com.github.luben.zstd.ZstdInputStream;
+import com.github.luben.zstd.ZstdOutputStream;
 
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
@@ -27,11 +28,10 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
-import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.regex.Pattern;
 
+import io.github.muntashirakon.io.IoUtils;
 import io.github.muntashirakon.io.Path;
 import io.github.muntashirakon.io.Paths;
 import io.github.muntashirakon.io.SplitInputStream;
@@ -42,7 +42,8 @@ public final class TarUtils {
 
     @StringDef(value = {
             TAR_GZIP,
-            TAR_BZIP2
+            TAR_BZIP2,
+            TAR_ZSTD,
     })
     @Retention(RetentionPolicy.SOURCE)
     public @interface TarType {
@@ -50,6 +51,7 @@ public final class TarUtils {
 
     public static final String TAR_GZIP = "z";
     public static final String TAR_BZIP2 = "j";
+    public static final String TAR_ZSTD = "s";
 
     /**
      * Create a tar file using the given compression method and split it into multiple files based
@@ -74,24 +76,30 @@ public final class TarUtils {
         try (SplitOutputStream sos = new SplitOutputStream(dest, destFilePrefix, splitSize == null ? DEFAULT_SPLIT_SIZE : splitSize);
              BufferedOutputStream bos = new BufferedOutputStream(sos)) {
             OutputStream os;
-            if (TAR_GZIP.equals(type)) {
-                os = new GzipCompressorOutputStream(bos);
-            } else if (TAR_BZIP2.equals(type)) {
-                os = new BZip2CompressorOutputStream(bos);
-            } else {
-                throw new IllegalArgumentException("Invalid compression type: " + type);
+            switch (type) {
+                case TAR_GZIP:
+                    os = new GzipCompressorOutputStream(bos);
+                    break;
+                case TAR_BZIP2:
+                    os = new BZip2CompressorOutputStream(bos);
+                    break;
+                case TAR_ZSTD:
+                    os = new ZstdOutputStream(bos);
+                    break;
+                default:
+                    throw new IllegalArgumentException("Invalid compression type: " + type);
             }
             try (TarArchiveOutputStream tos = new TarArchiveOutputStream(os)) {
                 tos.setLongFileMode(TarArchiveOutputStream.LONGFILE_POSIX);
                 tos.setBigNumberMode(TarArchiveOutputStream.BIGNUMBER_POSIX);
-                Path basePath = source.isDirectory() ? source : source.getParentFile();
+                Path basePath = source.isDirectory() ? source : source.getParent();
                 if (basePath == null) {
                     basePath = Paths.get("/");
                 }
                 List<Path> files = Paths.getAll(basePath, source, filters, exclude, followLinks);
                 for (Path file : files) {
-                    String relativePath = Paths.getRelativePath(file, basePath);
-                    if (relativePath.equals("") || relativePath.equals("/")) continue;
+                    String relativePath = Paths.relativePath(file, basePath);
+                    if (relativePath.isEmpty() || relativePath.equals("/")) continue;
                     // For links, check if followLinks is enabled
                     if (!followLinks && file.isSymbolicLink()) {
                         // A path can be symbolic link only if it's a file
@@ -104,7 +112,7 @@ public final class TarUtils {
                         tos.putArchiveEntry(tarEntry);
                         if (!file.isDirectory()) {
                             try (InputStream is = file.openInputStream()) {
-                                FileUtils.copy(is, tos);
+                                IoUtils.copy(is, tos, -1, null);
                             }
                         }
                     }
@@ -152,21 +160,34 @@ public final class TarUtils {
         try (SplitInputStream sis = new SplitInputStream(sources);
              BufferedInputStream bis = new BufferedInputStream(sis)) {
             InputStream is;
-            if (TAR_GZIP.equals(type)) {
-                is = new GzipCompressorInputStream(bis, true);
-            } else if (TAR_BZIP2.equals(type)) {
-                is = new BZip2CompressorInputStream(bis, true);
-            } else {
-                throw new IllegalArgumentException("Invalid compression type: " + type);
+            switch (type) {
+                case TAR_GZIP:
+                    is = new GzipCompressorInputStream(bis, true);
+                    break;
+                case TAR_BZIP2:
+                    is = new BZip2CompressorInputStream(bis, true);
+                    break;
+                case TAR_ZSTD:
+                    is = new ZstdInputStream(bis);
+                    break;
+                default:
+                    throw new IllegalArgumentException("Invalid compression type: " + type);
             }
             try (TarArchiveInputStream tis = new TarArchiveInputStream(is)) {
                 String realDestPath = dest.getRealFilePath();
                 TarArchiveEntry entry;
                 while ((entry = tis.getNextEntry()) != null) {
+                    String filename = Paths.normalize(entry.getName());
+                    // Early zip slip vulnerability check to avoid creating any files at all
+                    if (filename == null || filename.startsWith("../")) {
+                        throw new IOException("Zip slip vulnerability detected!" +
+                                "\nExpected dest: " + new File(realDestPath, entry.getName()) +
+                                "\nActual path: " + (filename != null ? new File(realDestPath, filename) : realDestPath));
+                    }
                     Path file;
                     if (entry.isDirectory()) {
-                        file = dest.createDirectories(entry.getName());
-                    } else file = dest.createNewArbitraryFile(entry.getName(), null);
+                        file = dest.createDirectoriesIfRequired(filename);
+                    } else file = dest.createNewArbitraryFile(filename, null);
                     if (!entry.isDirectory() && (!Paths.isUnderFilter(file, dest, filterPatterns)
                             || Paths.willExclude(file, dest, exclusionPatterns))) {
                         // Unlike create, there's no efficient way to detect if a directory contains any filters.
@@ -193,7 +214,7 @@ public final class TarUtils {
                         }
                         continue;  // links do not need permission fixes
                     } else {
-                        // Zip slip vulnerability check
+                        // Zip slip vulnerability might still be present
                         String realFilePath = file.getRealFilePath();
                         if (realDestPath != null && realFilePath != null && !realFilePath.startsWith(realDestPath)) {
                             throw new IOException("Zip slip vulnerability detected!" +
@@ -202,91 +223,23 @@ public final class TarUtils {
                         }
                         if (!entry.isDirectory()) {
                             try (OutputStream os = file.openOutputStream()) {
-                                FileUtils.copy(tis, os);
+                                IoUtils.copy(tis, os, -1, null);
                             }
                         }
                     }
                     // Fix permissions
-                    Paths.setPermissions(file, entry.getMode(), entry.getUserId(), entry.getGroupId());
+                    TarArchiveEntry finalEntry = entry;
+                    ExUtils.exceptionAsIgnored(() -> Paths.setPermissions(file, finalEntry.getMode(),
+                            finalEntry.getUserId(), finalEntry.getGroupId()));
                     // Restore timestamp
                     long modificationTime = entry.getModTime().getTime();
                     if (modificationTime > 0) { // Backward-compatibility
                         file.setLastModified(entry.getModTime().getTime());
                     }
                 }
-                // Delete unwanted files
-                validateFiles(dest, dest, filterPatterns, exclusionPatterns);
-            } catch (ErrnoException e) {
-                throw new IOException(e);
             } finally {
                 is.close();
             }
-        }
-    }
-
-    private static void validateFiles(@NonNull Path basePath,
-                                      @NonNull Path source,
-                                      @Nullable Pattern[] filters,
-                                      @Nullable Pattern[] exclusions) {
-        if (!source.isDirectory()) {
-            // Not a directory, skip
-            return;
-        }
-        // List matched and unmatched children for top-level directory
-        LinkedList<Path> matchedChildren = new LinkedList<>();
-        List<Path> unmatchedChildren = new ArrayList<>();
-        for (Path childPath : source.listFiles()) {
-            if (childPath.isDirectory() || (Paths.isUnderFilter(childPath, basePath, filters)
-                    && !Paths.willExclude(childPath, basePath, exclusions))) {
-                // Matches the filter or it is a directory
-                matchedChildren.add(childPath);
-            } else unmatchedChildren.add(childPath);
-        }
-        if (matchedChildren.isEmpty()) {
-            // No children have matched, delete this directory
-            if (!basePath.equals(source)) {
-                // Only delete if the source is not the base path
-                source.delete();
-            }
-            // Create this directory again if it matches one of the filters
-            if (Paths.isUnderFilter(source, basePath, filters) && !Paths.willExclude(source, basePath, exclusions)) {
-                source.mkdirs();
-            }
-            return;
-        }
-        // Validate matched children
-        while (!matchedChildren.isEmpty()) {
-            Path removedChild = matchedChildren.removeFirst();
-            if (!removedChild.isDirectory()) {
-                // Not a directory, skip
-                continue;
-            }
-            // List matched and unmatched children
-            int matchedCount = 0;
-            for (Path childPath : removedChild.listFiles()) {
-                if (childPath.isDirectory() || (Paths.isUnderFilter(childPath, basePath, filters)
-                        && !Paths.willExclude(childPath, basePath, exclusions))) {
-                    // Matches the filter or it is a directory
-                    matchedChildren.add(childPath);
-                    ++matchedCount;
-                } else unmatchedChildren.add(childPath);
-            }
-            if (matchedCount == 0) {
-                // No children have matched, delete this directory
-                if (!basePath.equals(removedChild)) {
-                    // Only delete if the source is not the base path
-                    removedChild.delete();
-                }
-                // Create this directory again if it matches one of the filters
-                if (Paths.isUnderFilter(removedChild, basePath, filters) && !Paths.willExclude(removedChild, basePath, exclusions)) {
-                    removedChild.mkdirs();
-                }
-            }
-        }
-        // Delete unmatched children
-        for (Path child : unmatchedChildren) {
-            // No need to check return value as some paths may not exist
-            child.delete();
         }
     }
 
@@ -298,6 +251,7 @@ public final class TarUtils {
         if ("/data/app".equals(brokenPath)) {
             return brokenPath;
         }
+        //noinspection SuspiciousRegexArgument
         String[] brokenPathParts = brokenPath.split(File.separator);
         // The initial number of File.separator is 4, and the rests could be either part of the app path or
         // point to lib, oat or apk files

@@ -1,23 +1,27 @@
 // SPDX-License-Identifier: Apache-2.0 AND GPL-3.0-or-later
 
-apply plugin: 'com.android.application'
-apply plugin: 'dev.rikka.tools.refine.gradle-plugin'
+plugins {
+    id('com.android.application')
+    id('dev.rikka.tools.refine') version "${refine_version}"
+}
 
 android {
-    compileSdkVersion rootProject.ext.compileSdk
-    buildToolsVersion rootProject.ext.buildTools
+    namespace 'io.github.muntashirakon.AppManager'
+    compileSdk compile_sdk
 
     defaultConfig {
         applicationId 'io.github.muntashirakon.AppManager'
-        minSdkVersion rootProject.ext.minSdk
-        targetSdkVersion rootProject.ext.targetSdk
-        versionCode 411
-        versionName "3.1.0-alpha01"
+        minSdk min_sdk
+        targetSdk target_sdk
+        versionCode 435
+        versionName "4.0.0-alpha02"
         javaCompileOptions {
             annotationProcessorOptions {
                 arguments = ["room.schemaLocation": "$projectDir/schemas".toString()]
             }
         }
+        // Add build time to BuildConfig
+        buildConfigField "long", "BUILD_TIME_MILLIS", "${buildTime()}"
     }
 
     signingConfigs {
@@ -42,14 +46,15 @@ android {
             resValue "string", "app_name", "AM Debug"
         }
     }
-    lintOptions {
+    lint {
         checkReleaseBuilds false
-        // Or, if you prefer, you can continue to check for errors in release builds,
-        // but continue the build even when errors are found:
         abortOnError false
+        checkDependencies true
     }
     compileOptions {
         encoding "UTF-8"
+        // Flag to enable support for the new language APIs
+        coreLibraryDesugaringEnabled true
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
@@ -65,7 +70,7 @@ android {
             universalApk true
         }
     }
-    aaptOptions {
+    androidResources {
         noCompress 'jar', 'sh'
     }
     testOptions {
@@ -76,48 +81,94 @@ android {
     sourceSets {
         androidTest.assets.srcDirs += files("$projectDir/schemas".toString())
     }
+    dependenciesInfo {
+        includeInApk false
+        includeInBundle false
+    }
+    packagingOptions {
+        jniLibs {
+            useLegacyPackaging true
+        }
+        resources {
+            excludes += ['META-INF/*.version']
+        }
+    }
+    buildFeatures {
+        aidl true
+    }
 }
 
 dependencies {
     compileOnly project(path: ':hiddenapi')
+    coreLibraryDesugaring "com.android.tools:desugar_jdk_libs:${desugar_jdk_version}"
 
-    implementation project(path: ':libapkparser')
+    // Core Libraries
     implementation project(path: ':libcore:compat')
     implementation project(path: ':libcore:io')
     implementation project(path: ':libcore:ui')
-    implementation project(path: ':libopenpgp')
     implementation project(path: ':libserver')
     implementation project(path: ':docs')
 
-    implementation 'com.github.MuntashirAkon:apksig-android:178a05e4c9'
-    implementation 'com.github.MuntashirAkon:unapkm-android:1.2'
-    implementation 'com.github.MuntashirAkon:sun-security-android:1.1'
-    implementation 'com.github.MuntashirAkon:libadb-android:2.2.0'
-    implementation 'org.bouncycastle:bcprov-jdk15on:1.70'
-    implementation 'org.bouncycastle:bcpkix-jdk15on:1.70'
-    implementation 'com.github.MuntashirAkon.jadx:jadx-core:5a62a8e625'
-    implementation 'com.github.MuntashirAkon.jadx:jadx-dex-input:5a62a8e625'
+    // API
+    implementation "com.github.MuntashirAkon:unapkm-android:${unapkm_version}"
+    implementation project(path: ':libopenpgp')
 
+    // APK Editing
+    implementation "com.github.REAndroid:ARSCLib:${arsclib_version}"
+    implementation "com.github.MuntashirAkon:apksig-android:${apksig_version}"
+    implementation "com.github.MuntashirAkon:sun-security-android:${sun_security_version}"
+    implementation "org.bouncycastle:bcprov-jdk15on:${bouncycastle_version}"
+    implementation "org.bouncycastle:bcpkix-jdk15on:${bouncycastle_version}"
+    implementation "org.smali:baksmali:${baksmali_version}"
+    implementation "org.smali:smali:${baksmali_version}"
+    implementation "com.github.MuntashirAkon.jadx:jadx-core:${jadx_version}"
+    // Replace SLF4J with a placeholder
+    configurations {
+        configureEach {
+            exclude group: 'org.slf4j', module: 'slf4j-api'
+        }
+    }
+    implementation "com.github.MuntashirAkon.jadx:jadx-dex-input:${jadx_version}"
+    // Replace SLF4J with a placeholder
+    configurations {
+        configureEach {
+            exclude group: 'org.slf4j', module: 'slf4j-api'
+        }
+    }
+
+    // DB
+    implementation "androidx.room:room-runtime:${room_version}"
+    annotationProcessor "androidx.room:room-compiler:${room_version}"
+
+    // FM
+    implementation "com.j256.simplemagic:simplemagic:${simplemagic_version}"
+
+    // Privileged
+    implementation "com.github.MuntashirAkon:libadb-android:${libadb_version}"
+    implementation "com.github.topjohnwu.libsu:core:${libsu_version}"
+    implementation "org.lsposed.hiddenapibypass:hiddenapibypass:${hiddenapibypass_version}"
+    implementation "dev.rikka.tools.refine:runtime:${refine_version}"
+
+    // UI
     implementation "com.google.android.material:material:${material_version}"
+    implementation "androidx.core:core:${androidx_core_version}"
     implementation "androidx.appcompat:appcompat:${appcompat_version}"
     // Fix duplicate classes issue in material
     configurations {
-        all {
+        configureEach {
             exclude group: 'androidx.lifecycle', module: 'lifecycle-viewmodel-ktx'
         }
     }
     // AppCompat 1.5.0 still includes the buggy implementation of documentfile library (1.0.0)
-    implementation "androidx.documentfile:documentfile:1.0.1"
+    implementation "androidx.documentfile:documentfile:${documentfile_version}"
     implementation "androidx.core:core-splashscreen:${splashscreen_version}"
-    implementation 'androidx.webkit:webkit:1.5.0'
-    implementation "androidx.room:room-runtime:${room_version}"
-    annotationProcessor "androidx.room:room-compiler:${room_version}"
-    implementation 'com.google.code.gson:gson:2.9.1'
+    implementation "androidx.webkit:webkit:${webkit_version}"
+    implementation "io.github.Rosemoe.sora-editor:editor:${sora_editor_version}"
+    implementation "io.github.Rosemoe.sora-editor:language-textmate:${sora_editor_version}"
 
-    implementation "com.github.topjohnwu.libsu:core:${libsu_version}"
-
-    implementation 'org.lsposed.hiddenapibypass:hiddenapibypass:4.3'
-    implementation "dev.rikka.tools.refine:runtime:${refine_version}"
+    // Utility
+    implementation "com.google.code.gson:gson:${gson_version}"
+    implementation "com.github.luben:zstd-jni:${zstd_version}@aar"
 
 //    debugImplementation 'com.squareup.leakcanary:leakcanary-android:2.9.1'
 
@@ -126,8 +177,13 @@ dependencies {
     // Optional if you need to detect intents.
 //    androidTestImplementation "com.android.support.test.espresso:espresso-intents:3.0.2"
 
-    testImplementation 'junit:junit:4.13.2'
-    testImplementation 'org.robolectric:robolectric:4.8.1'
+    // Unit Testing
+    testImplementation "junit:junit:${junit_version}"
+    testImplementation "org.robolectric:robolectric:${robolectric_version}"
 }
 
 preBuild.dependsOn ":server:build"
+
+static def buildTime() {
+    return System.currentTimeMillis()
+}

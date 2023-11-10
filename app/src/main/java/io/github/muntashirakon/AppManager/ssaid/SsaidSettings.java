@@ -2,6 +2,7 @@
 
 package io.github.muntashirakon.AppManager.ssaid;
 
+import android.annotation.UserIdInt;
 import android.content.pm.PackageInfo;
 import android.content.pm.Signature;
 import android.os.Build;
@@ -19,6 +20,7 @@ import java.nio.ByteBuffer;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.util.Objects;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
@@ -36,29 +38,25 @@ public class SsaidSettings {
     public static final String SSAID_USER_KEY = "userkey";
 
     @SuppressWarnings("FieldCanBeLocal")
-    private final Object lock = new Object();
-    private final int uid;
-    private final String packageName;
-    private final SettingsState settingsState;
+    private final Object mLock = new Object();
+    private final SettingsState mSettingsState;
 
     @WorkerThread
-    public SsaidSettings(String packageName, int uid) throws IOException {
-        this.uid = uid;
-        this.packageName = packageName;
+    public SsaidSettings(@UserIdInt int userId) throws IOException {
         HandlerThread thread = new HandlerThread("SSAID", Process.THREAD_PRIORITY_BACKGROUND);
         thread.start();
-        int ssaidKey = SettingsStateV26.makeKey(SettingsState.SETTINGS_TYPE_SSAID, 0);
-        Path ssaidLocation = OsEnvironment.getUserSystemDirectory(UserHandleHidden.getUserId(uid))
+        int ssaidKey = SettingsStateV26.makeKey(SettingsState.SETTINGS_TYPE_SSAID, userId);
+        Path ssaidLocation = OsEnvironment.getUserSystemDirectory(userId)
                 .findFile("settings_ssaid.xml");
         if (!ssaidLocation.canRead()) {
             throw new IOException("settings_ssaid.xml is inaccessible.");
         }
         try {
-            if (Build.VERSION.SDK_INT > Build.VERSION_CODES.S) {
-                settingsState = new SettingsStateV31(lock, ssaidLocation, ssaidKey,
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                mSettingsState = new SettingsStateV31(mLock, ssaidLocation, ssaidKey,
                         SettingsState.MAX_BYTES_PER_APP_PACKAGE_UNLIMITED, thread.getLooper());
             } else {
-                settingsState = new SettingsStateV26(lock, ssaidLocation, ssaidKey,
+                mSettingsState = new SettingsStateV26(mLock, ssaidLocation, ssaidKey,
                         SettingsState.MAX_BYTES_PER_APP_PACKAGE_UNLIMITED, thread.getLooper());
             }
         } catch (IllegalStateException e) {
@@ -67,21 +65,21 @@ public class SsaidSettings {
     }
 
     @Nullable
-    public String getSsaid() {
-        return settingsState.getSettingLocked(getName()).getValue();
+    public String getSsaid(@NonNull String packageName, int uid) {
+        return mSettingsState.getSettingLocked(getName(packageName, uid)).getValue();
     }
 
-    public boolean setSsaid(String ssaid) {
+    public boolean setSsaid(@NonNull String packageName, int uid, String ssaid) {
         try {
             PackageManagerCompat.forceStopPackage(packageName, UserHandleHidden.getUserId(uid));
         } catch (Throwable e) {
             e.printStackTrace();
         }
-        return settingsState.insertSettingLocked(getName(), ssaid, null, true, packageName);
+        return mSettingsState.insertSettingLocked(getName(packageName, uid), ssaid, null, true, packageName);
     }
 
-    private String getName() {
-        return packageName.equals(SYSTEM_PACKAGE_NAME) ? SSAID_USER_KEY : String.valueOf(uid);
+    private static String getName(@Nullable String packageName, int uid) {
+        return Objects.equals(packageName, SYSTEM_PACKAGE_NAME) ? SSAID_USER_KEY : String.valueOf(uid);
     }
 
     @NonNull
@@ -98,8 +96,8 @@ public class SsaidSettings {
     @NonNull
     public static String generateSsaid(@NonNull PackageInfo callingPkg) throws IOException {
         // Read the user's key from the ssaid table.
-        SsaidSettings ssaidSettings = new SsaidSettings(callingPkg.packageName, callingPkg.applicationInfo.uid);
-        SettingsState settingsState = ssaidSettings.settingsState;
+        SsaidSettings ssaidSettings = new SsaidSettings(UserHandleHidden.getUserId(callingPkg.applicationInfo.uid));
+        SettingsState settingsState = ssaidSettings.mSettingsState;
         SettingsState.Setting userKeySetting = settingsState.getSettingLocked(SSAID_USER_KEY);
         if (userKeySetting == null || userKeySetting.isNull()
                 || userKeySetting.getValue() == null) {

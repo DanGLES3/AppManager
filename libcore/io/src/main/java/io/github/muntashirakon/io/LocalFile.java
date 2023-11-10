@@ -2,6 +2,7 @@
 
 package io.github.muntashirakon.io;
 
+import android.os.SELinux;
 import android.system.ErrnoException;
 import android.system.Os;
 import android.system.OsConstants;
@@ -14,7 +15,11 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
+import io.github.muntashirakon.compat.system.OsCompat;
+import io.github.muntashirakon.compat.system.StructTimespec;
+
 // Copyright 2022 John "topjohnwu" Wu
+// Copyright 2022 Muntashir Al-Islam
 class LocalFile extends FileImpl<LocalFile> {
 
     LocalFile(@NonNull String pathname) {
@@ -65,6 +70,21 @@ class LocalFile extends FileImpl<LocalFile> {
     }
 
     @Override
+    public String getSelinuxContext() {
+        return SELinux.getFileContext(getPath());
+    }
+
+    @Override
+    public boolean restoreSelinuxContext() {
+        return SELinux.restorecon(getPath());
+    }
+
+    @Override
+    public boolean setSelinuxContext(String context) {
+        return SELinux.setFileContext(getPath(), context);
+    }
+
+    @Override
     public boolean isBlock() {
         try {
             return OsConstants.S_ISBLK(getMode());
@@ -104,6 +124,38 @@ class LocalFile extends FileImpl<LocalFile> {
     public boolean isSocket() {
         try {
             return OsConstants.S_ISSOCK(getMode());
+        } catch (ErrnoException e) {
+            return false;
+        }
+    }
+
+    @Override
+    public long creationTime() {
+        try {
+            return Os.lstat(getPath()).st_ctime * 1000;
+        } catch (ErrnoException e) {
+            return 0;
+        }
+    }
+
+    @Override
+    public long lastAccess() {
+        try {
+            return Os.lstat(getPath()).st_atime * 1000;
+        } catch (ErrnoException e) {
+            return 0;
+        }
+    }
+
+    @Override
+    public boolean setLastAccess(long millis) {
+        long seconds_part = millis / 1_000;
+        long nanoseconds_part = (millis % 1_000) * 1_000_000;
+        StructTimespec atime = new StructTimespec(seconds_part, nanoseconds_part);
+        StructTimespec mtime = new StructTimespec(0, OsCompat.UTIME_OMIT);
+        try {
+            OsCompat.utimensat(OsCompat.AT_FDCWD, getPath(), atime, mtime, OsCompat.AT_SYMLINK_NOFOLLOW);
+            return true;
         } catch (ErrnoException e) {
             return false;
         }

@@ -3,9 +3,9 @@
 package io.github.muntashirakon.AppManager.settings;
 
 import android.app.Application;
-import android.content.pm.UserInfo;
 import android.net.Uri;
 import android.os.Build;
+import android.os.PowerManager;
 import android.os.UserHandleHidden;
 
 import androidx.annotation.NonNull;
@@ -40,9 +40,12 @@ import io.github.muntashirakon.AppManager.db.utils.AppDb;
 import io.github.muntashirakon.AppManager.misc.DeviceInfo2;
 import io.github.muntashirakon.AppManager.rules.compontents.ComponentUtils;
 import io.github.muntashirakon.AppManager.rules.compontents.ComponentsBlocker;
+import io.github.muntashirakon.AppManager.users.UserInfo;
 import io.github.muntashirakon.AppManager.users.Users;
+import io.github.muntashirakon.AppManager.utils.CpuUtils;
 import io.github.muntashirakon.AppManager.utils.DigestUtils;
 import io.github.muntashirakon.AppManager.utils.StorageUtils;
+import io.github.muntashirakon.AppManager.utils.ThreadUtils;
 import io.github.muntashirakon.adb.android.AdbMdns;
 import io.github.muntashirakon.lifecycle.SingleLiveEvent;
 
@@ -70,7 +73,7 @@ public class MainPreferencesViewModel extends AndroidViewModel implements Ops.Ad
     }
 
     public void loadAllUsers() {
-        mExecutor.submit(() -> mSelectUsers.postValue(Users.getAllUsers()));
+        ThreadUtils.postOnBackgroundThread(() -> mSelectUsers.postValue(Users.getAllUsers()));
     }
 
     public LiveData<Changelog> getChangeLog() {
@@ -78,7 +81,7 @@ public class MainPreferencesViewModel extends AndroidViewModel implements Ops.Ad
     }
 
     public void loadChangeLog() {
-        mExecutor.submit(() -> {
+        ThreadUtils.postOnBackgroundThread(() -> {
             try {
                 Changelog changelog = new ChangelogParser(getApplication(), R.raw.changelog).parse();
                 mChangeLog.postValue(changelog);
@@ -93,26 +96,24 @@ public class MainPreferencesViewModel extends AndroidViewModel implements Ops.Ad
     }
 
     public void loadDeviceInfo(@NonNull DeviceInfo2 di) {
-        mExecutor.submit(() -> {
+        ThreadUtils.postOnBackgroundThread(() -> {
             di.loadInfo();
             mDeviceInfo.postValue(di);
         });
     }
 
     public void reloadApps() {
-        mExecutor.submit(() -> {
-            AppDb appDb = new AppDb();
-            appDb.deleteAllApplications();
-            appDb.deleteAllBackups();
-            appDb.loadInstalledOrBackedUpApplications(getApplication());
-        });
-    }
-
-    public void updateBackups() {
-        mExecutor.submit(() -> {
-            AppDb appDb = new AppDb();
-            appDb.deleteAllBackups();
-            appDb.updateBackups(getApplication());
+        ThreadUtils.postOnBackgroundThread(() -> {
+            PowerManager.WakeLock wakeLock = CpuUtils.getPartialWakeLock("appDbUpdater");
+            try {
+                wakeLock.acquire();
+                AppDb appDb = new AppDb();
+                appDb.deleteAllApplications();
+                appDb.deleteAllBackups();
+                appDb.loadInstalledOrBackedUpApplications(getApplication());
+            } finally {
+                CpuUtils.releaseWakeLock(wakeLock);
+            }
         });
     }
 
@@ -132,7 +133,7 @@ public class MainPreferencesViewModel extends AndroidViewModel implements Ops.Ad
     }
 
     public void applyAllRules() {
-        mExecutor.submit(() -> {
+        ThreadUtils.postOnBackgroundThread(() -> {
             synchronized (mRulesLock) {
                 // TODO: 13/8/22 Synchronise in ComponentsBlocker instead of here
                 ComponentsBlocker.applyAllRules(getApplication(), UserHandleHidden.myUserId());
@@ -141,9 +142,9 @@ public class MainPreferencesViewModel extends AndroidViewModel implements Ops.Ad
     }
 
     public void removeAllRules() {
-        mExecutor.submit(() -> {
+        ThreadUtils.postOnBackgroundThread(() -> {
             int[] userHandles = Users.getUsersIds();
-            List<String> packages = ComponentUtils.getAllPackagesWithRules();
+            List<String> packages = ComponentUtils.getAllPackagesWithRules(getApplication());
             for (int userHandle : userHandles) {
                 for (String packageName : packages) {
                     ComponentUtils.removeAllRules(packageName, userHandle);
@@ -158,7 +159,7 @@ public class MainPreferencesViewModel extends AndroidViewModel implements Ops.Ad
     }
 
     public void loadStorageVolumes() {
-        mExecutor.submit(() -> mStorageVolumesLiveData.postValue(StorageUtils.getAllStorageLocations(getApplication(), false)));
+        ThreadUtils.postOnBackgroundThread(() -> mStorageVolumesLiveData.postValue(StorageUtils.getAllStorageLocations(getApplication())));
     }
 
     public LiveData<String> getSigningKeySha256HashLiveData() {
@@ -219,7 +220,7 @@ public class MainPreferencesViewModel extends AndroidViewModel implements Ops.Ad
     @Override
     public void connectAdb(int port) {
         mExecutor.submit(() -> {
-            int status = Ops.connectAdb(port, Ops.STATUS_FAILURE);
+            int status = Ops.connectAdb(getApplication(), port, Ops.STATUS_FAILURE);
             mModeOfOpsStatus.postValue(status);
         });
     }

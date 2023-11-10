@@ -4,6 +4,7 @@ package io.github.muntashirakon.widget;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
 import android.view.ViewGroup;
 import android.widget.ImageView;
@@ -22,6 +23,7 @@ import com.google.android.material.shape.ShapeAppearanceModel;
 import com.google.android.material.shape.Shapeable;
 
 import io.github.muntashirakon.ui.R;
+import io.github.muntashirakon.view.AutoCompleteTextViewCompat;
 
 import static com.google.android.material.theme.overlay.MaterialThemeOverlay.wrap;
 
@@ -39,7 +41,7 @@ public class SearchView extends androidx.appcompat.widget.SearchView implements 
     }
 
     public SearchView(@NonNull Context context, @Nullable AttributeSet attrs) {
-        this(context, attrs, R.attr.searchViewStyle);
+        this(context, attrs, androidx.appcompat.R.attr.searchViewStyle);
     }
 
     public SearchView(@NonNull Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
@@ -51,9 +53,9 @@ public class SearchView extends androidx.appcompat.widget.SearchView implements 
         super(wrap(context, attrs, defStyleAttr, defStyleRes), attrs, defStyleAttr);
 
         context = getContext();
-        mCloseButton = findViewById(R.id.search_close_btn);
-        mSearchSrcTextView = findViewById(R.id.search_src_text);
-        mSearchEditFrame = findViewById(R.id.search_edit_frame);
+        mCloseButton = findViewById(com.google.android.material.R.id.search_close_btn);
+        mSearchSrcTextView = findViewById(com.google.android.material.R.id.search_src_text);
+        mSearchEditFrame = findViewById(com.google.android.material.R.id.search_edit_frame);
         mElevation = getElevation();
 
         final TintTypedArray a = ThemeEnforcement.obtainTintedStyledAttributes(
@@ -64,6 +66,16 @@ public class SearchView extends androidx.appcompat.widget.SearchView implements 
 
         mCloseButton.setImageTintList(MaterialResources.getColorStateList(
                 context, a, R.styleable.SearchView_closeIconTint));
+
+        int popupBackgroundResource = a.getResourceId(R.styleable.SearchView_android_popupBackground, 0);
+        if (popupBackgroundResource != 0) {
+            mSearchSrcTextView.setDropDownBackgroundResource(popupBackgroundResource);
+        }
+
+        Drawable popupListSelector = a.getDrawable(R.styleable.SearchView_android_dropDownSelector);
+        if (popupListSelector != null) {
+            AutoCompleteTextViewCompat.setListSelector(mSearchSrcTextView, popupListSelector);
+        }
 
         int frameMarginHorizontal = a.getDimensionPixelSize(R.styleable.SearchView_frameMarginHorizontal, 0);
 

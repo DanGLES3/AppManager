@@ -2,18 +2,20 @@
 
 package io.github.muntashirakon.AppManager.uri;
 
+import static org.xmlpull.v1.XmlPullParser.END_DOCUMENT;
+import static org.xmlpull.v1.XmlPullParser.START_TAG;
+
 import android.net.Uri;
 import android.os.RemoteException;
 import android.os.UserHandleHidden;
-import android.util.Xml;
+import android.system.ErrnoException;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
-import org.xmlpull.v1.XmlSerializer;
 
+import java.io.BufferedInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -26,25 +28,19 @@ import java.util.StringTokenizer;
 
 import io.github.muntashirakon.AppManager.logs.Log;
 import io.github.muntashirakon.AppManager.misc.OsEnvironment;
-import io.github.muntashirakon.AppManager.runner.Runner;
+import io.github.muntashirakon.compat.xml.TypedXmlPullParser;
+import io.github.muntashirakon.compat.xml.TypedXmlSerializer;
+import io.github.muntashirakon.compat.xml.Xml;
 import io.github.muntashirakon.io.AtomicExtendedFile;
+import io.github.muntashirakon.io.ExtendedFile;
 import io.github.muntashirakon.io.Paths;
-
-import static com.android.internal.util.XmlUtils.readBooleanAttribute;
-import static com.android.internal.util.XmlUtils.readIntAttribute;
-import static com.android.internal.util.XmlUtils.readLongAttribute;
-import static com.android.internal.util.XmlUtils.writeBooleanAttribute;
-import static com.android.internal.util.XmlUtils.writeIntAttribute;
-import static com.android.internal.util.XmlUtils.writeLongAttribute;
-import static org.xmlpull.v1.XmlPullParser.END_DOCUMENT;
-import static org.xmlpull.v1.XmlPullParser.START_TAG;
 
 public class UriManager {
     public static final String TAG = "UriManager";
 
     private final AtomicExtendedFile mGrantFile;
 
-    private final HashMap<String, ArrayList<UriGrant>> uriGrantsHashMap = new HashMap<>();
+    private final HashMap<String, ArrayList<UriGrant>> mUriGrantsHashMap = new HashMap<>();
 
     /**
      * XML constants used in {@link #mGrantFile}
@@ -70,26 +66,27 @@ public class UriManager {
     @Nullable
     public ArrayList<UriGrant> getGrantedUris(String packageName) {
         synchronized (this) {
-            return uriGrantsHashMap.get(packageName);
+            return mUriGrantsHashMap.get(packageName);
         }
     }
 
     public void grantUri(@NonNull UriGrant uriGrant) {
         synchronized (this) {
-            ArrayList<UriGrant> uriGrants = uriGrantsHashMap.get(uriGrant.targetPkg);
+            ArrayList<UriGrant> uriGrants = mUriGrantsHashMap.get(uriGrant.targetPkg);
             if (uriGrants == null) {
                 uriGrants = new ArrayList<>();
-                uriGrantsHashMap.put(uriGrant.targetPkg, uriGrants);
+                mUriGrantsHashMap.put(uriGrant.targetPkg, uriGrants);
             }
             uriGrants.add(uriGrant);
         }
     }
 
+    @SuppressWarnings("OctalInteger")
     public void writeGrantedUriPermissions() {
         // Snapshot permissions so we can persist without lock
         List<UriGrant> persist = new ArrayList<>();
         synchronized (this) {
-            for (List<UriGrant> uriGrants : uriGrantsHashMap.values()) {
+            for (List<UriGrant> uriGrants : mUriGrantsHashMap.values()) {
                 persist.addAll(uriGrants);
             }
         }
@@ -97,28 +94,30 @@ public class UriManager {
         FileOutputStream fos = null;
         try {
             fos = mGrantFile.startWrite();
-            XmlSerializer out = Xml.newSerializer();
-            out.setOutput(fos, "utf-8");
+            TypedXmlSerializer out = Xml.resolveSerializer(fos);
             out.startDocument(null, true);
             out.startTag(null, TAG_URI_GRANTS);
             for (UriGrant perm : persist) {
                 out.startTag(null, TAG_URI_GRANT);
-                writeIntAttribute(out, ATTR_SOURCE_USER_ID, perm.sourceUserId);
-                writeIntAttribute(out, ATTR_TARGET_USER_ID, perm.targetUserId);
-                out.attribute(null, ATTR_SOURCE_PKG, perm.sourcePkg);
-                out.attribute(null, ATTR_TARGET_PKG, perm.targetPkg);
+                out.attributeInt(null, ATTR_SOURCE_USER_ID, perm.sourceUserId);
+                out.attributeInt(null, ATTR_TARGET_USER_ID, perm.targetUserId);
+                out.attributeInterned(null, ATTR_SOURCE_PKG, perm.sourcePkg);
+                out.attributeInterned(null, ATTR_TARGET_PKG, perm.targetPkg);
                 out.attribute(null, ATTR_URI, String.valueOf(perm.uri));
-                writeBooleanAttribute(out, ATTR_PREFIX, perm.prefix);
-                writeIntAttribute(out, ATTR_MODE_FLAGS, perm.modeFlags);
-                writeLongAttribute(out, ATTR_CREATED_TIME, perm.createdTime);
+                out.attributeBoolean(null, ATTR_PREFIX, perm.prefix);
+                out.attributeInt(null, ATTR_MODE_FLAGS, perm.modeFlags);
+                out.attributeLong(null, ATTR_CREATED_TIME, perm.createdTime);
                 out.endTag(null, TAG_URI_GRANT);
             }
             out.endTag(null, TAG_URI_GRANTS);
             out.endDocument();
             mGrantFile.finishWrite(fos);
-            Runner.runCommand(new String[]{"chmod", "600", mGrantFile.getBaseFile().getAbsolutePath()});
-            Runner.runCommand(new String[]{"chown", "1000:1000", mGrantFile.getBaseFile().getAbsolutePath()});
-            Runner.runCommand(new String[]{"restorecon", mGrantFile.getBaseFile().getAbsolutePath()});
+            ExtendedFile file = mGrantFile.getBaseFile();
+            file.setMode(0600);
+            file.setUidGid(1000, 1000);
+            file.restoreSelinuxContext();
+        } catch (ErrnoException e) {
+            Log.e(TAG, "Failed to change file permissions.", e);
         } catch (IOException e) {
             Log.e(TAG, "Failed writing Uri grants", e);
             mGrantFile.failWrite(fos);
@@ -127,10 +126,8 @@ public class UriManager {
 
     private void readGrantedUriPermissions() {
         final long now = System.currentTimeMillis();
-        try (InputStream fis = mGrantFile.openRead()) {
-            final XmlPullParser in = Xml.newPullParser();
-            in.setInput(fis, null);
-
+        try (InputStream is = new BufferedInputStream(mGrantFile.openRead())) {
+            final TypedXmlPullParser in = Xml.resolvePullParser(is);
             int type;
             while ((type = in.next()) != END_DOCUMENT) {
                 final String tag = in.getName();
@@ -138,29 +135,30 @@ public class UriManager {
                     if (TAG_URI_GRANT.equals(tag)) {
                         final int sourceUserId;
                         final int targetUserId;
-                        final int userHandle = readIntAttribute(in, ATTR_USER_HANDLE, UserHandleHidden.USER_NULL);
+                        final int userHandle = in.getAttributeInt(null, ATTR_USER_HANDLE,
+                                UserHandleHidden.USER_NULL);
                         if (userHandle != UserHandleHidden.USER_NULL) {
                             // For backwards compatibility.
                             sourceUserId = userHandle;
                             targetUserId = userHandle;
                         } else {
-                            sourceUserId = readIntAttribute(in, ATTR_SOURCE_USER_ID);
-                            targetUserId = readIntAttribute(in, ATTR_TARGET_USER_ID);
+                            sourceUserId = in.getAttributeInt(null, ATTR_SOURCE_USER_ID);
+                            targetUserId = in.getAttributeInt(null, ATTR_TARGET_USER_ID);
                         }
                         final String sourcePkg = in.getAttributeValue(null, ATTR_SOURCE_PKG);
                         final String targetPkg = in.getAttributeValue(null, ATTR_TARGET_PKG);
                         final Uri uri = Uri.parse(in.getAttributeValue(null, ATTR_URI));
-                        final boolean prefix = readBooleanAttribute(in, ATTR_PREFIX);
-                        final int modeFlags = readIntAttribute(in, ATTR_MODE_FLAGS);
-                        final long createdTime = readLongAttribute(in, ATTR_CREATED_TIME, now);
+                        final boolean prefix = in.getAttributeBoolean(null, ATTR_PREFIX, false);
+                        final int modeFlags = in.getAttributeInt(null, ATTR_MODE_FLAGS);
+                        final long createdTime = in.getAttributeLong(null, ATTR_CREATED_TIME, now);
 
                         UriGrant uriGrant = new UriGrant(sourceUserId, targetUserId, userHandle,
                                 sourcePkg, targetPkg, uri, prefix, modeFlags, createdTime);
                         synchronized (this) {
-                            ArrayList<UriGrant> uriGrants = uriGrantsHashMap.get(targetPkg);
+                            ArrayList<UriGrant> uriGrants = mUriGrantsHashMap.get(targetPkg);
                             if (uriGrants == null) {
                                 uriGrants = new ArrayList<>();
-                                uriGrantsHashMap.put(targetPkg, uriGrants);
+                                mUriGrantsHashMap.put(targetPkg, uriGrants);
                             }
                             uriGrants.add(uriGrant);
                         }

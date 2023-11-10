@@ -2,7 +2,6 @@
 
 package io.github.muntashirakon.AppManager.sharedpref;
 
-import android.annotation.SuppressLint;
 import android.app.Dialog;
 import android.os.Bundle;
 import android.os.Parcel;
@@ -10,15 +9,14 @@ import android.os.Parcelable;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.IntDef;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.os.BundleCompat;
 import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.FragmentActivity;
 
@@ -31,6 +29,8 @@ import java.lang.annotation.RetentionPolicy;
 import java.util.Set;
 
 import io.github.muntashirakon.AppManager.R;
+import io.github.muntashirakon.adapters.SelectedArrayAdapter;
+import io.github.muntashirakon.widget.MaterialSpinner;
 
 public class EditPrefItemFragment extends DialogFragment {
     public static final String TAG = EditPrefItemFragment.class.getSimpleName();
@@ -112,35 +112,27 @@ public class EditPrefItemFragment extends DialogFragment {
     private final ViewGroup[] mLayoutTypes = new ViewGroup[6];
     private final TextView[] mValues = new TextView[6];
     @Type
-    private int currentType;
+    private int mCurrentType;
 
     @NonNull
     @Override
     public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
         FragmentActivity activity = requireActivity();
         Bundle args = requireArguments();
-        PrefItem prefItem = args.getParcelable(ARG_PREF_ITEM);
+        PrefItem prefItem = BundleCompat.getParcelable(args, ARG_PREF_ITEM, PrefItem.class);
         @Mode int mode = args.getInt(ARG_MODE);
 
         LayoutInflater inflater = LayoutInflater.from(activity);
         if (inflater == null) return super.onCreateDialog(savedInstanceState);
-        @SuppressLint("InflateParams")
         View view = inflater.inflate(R.layout.dialog_edit_pref_item, null);
-        Spinner spinner = view.findViewById(R.id.type_selector_spinner);
-        ArrayAdapter<CharSequence> spinnerAdapter = ArrayAdapter.createFromResource(activity, R.array.shared_pref_types,
-                R.layout.item_checked_text_view);
+        MaterialSpinner spinner = view.findViewById(R.id.type_selector_spinner);
+        ArrayAdapter<CharSequence> spinnerAdapter = SelectedArrayAdapter.createFromResource(activity,
+                R.array.shared_pref_types, io.github.muntashirakon.ui.R.layout.auto_complete_dropdown_item);
         spinner.setAdapter(spinnerAdapter);
-        spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                for (ViewGroup layout : mLayoutTypes) layout.setVisibility(View.GONE);
-                mLayoutTypes[position].setVisibility(View.VISIBLE);
-                currentType = position;
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-            }
+        spinner.setOnItemClickListener((parent, view1, position, id) -> {
+            for (ViewGroup layout : mLayoutTypes) layout.setVisibility(View.GONE);
+            mLayoutTypes[position].setVisibility(View.VISIBLE);
+            mCurrentType = position;
         });
         // Set layouts
         mLayoutTypes[TYPE_BOOLEAN] = view.findViewById(R.id.layout_bool);
@@ -167,32 +159,32 @@ public class EditPrefItemFragment extends DialogFragment {
             }
             // Key value
             if (keyValue instanceof Boolean) {
-                currentType = TYPE_BOOLEAN;
+                mCurrentType = TYPE_BOOLEAN;
                 mLayoutTypes[TYPE_BOOLEAN].setVisibility(View.VISIBLE);
                 ((MaterialSwitch) mValues[TYPE_BOOLEAN]).setChecked((Boolean) keyValue);
                 spinner.setSelection(TYPE_BOOLEAN);
             } else if (keyValue instanceof Float) {
-                currentType = TYPE_FLOAT;
+                mCurrentType = TYPE_FLOAT;
                 mLayoutTypes[TYPE_FLOAT].setVisibility(View.VISIBLE);
                 mValues[TYPE_FLOAT].setText(keyValue.toString());
                 spinner.setSelection(TYPE_FLOAT);
             } else if (keyValue instanceof Integer) {
-                currentType = TYPE_INTEGER;
+                mCurrentType = TYPE_INTEGER;
                 mLayoutTypes[TYPE_INTEGER].setVisibility(View.VISIBLE);
                 mValues[TYPE_INTEGER].setText(keyValue.toString());
                 spinner.setSelection(TYPE_INTEGER);
             } else if (keyValue instanceof Long) {
-                currentType = TYPE_LONG;
+                mCurrentType = TYPE_LONG;
                 mLayoutTypes[TYPE_LONG].setVisibility(View.VISIBLE);
                 mValues[TYPE_LONG].setText(keyValue.toString());
                 spinner.setSelection(TYPE_LONG);
             } else if (keyValue instanceof String) {
-                currentType = TYPE_STRING;
+                mCurrentType = TYPE_STRING;
                 mLayoutTypes[TYPE_STRING].setVisibility(View.VISIBLE);
                 mValues[TYPE_STRING].setText((String) keyValue);
                 spinner.setSelection(TYPE_STRING);
             } else if (keyValue instanceof Set) {
-                currentType = TYPE_SET;
+                mCurrentType = TYPE_SET;
                 mLayoutTypes[TYPE_SET].setVisibility(View.VISIBLE);
                 //noinspection unchecked
                 mValues[TYPE_SET].setText(SharedPrefsUtil.flattenToString((Set<String>) keyValue));
@@ -202,7 +194,7 @@ public class EditPrefItemFragment extends DialogFragment {
         mInterfaceCommunicator = (InterfaceCommunicator) activity;
         MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(activity);
         builder.setView(view)
-                .setPositiveButton(mode == MODE_CREATE ? R.string.add_item : R.string.done, (dialog, which) -> {
+                .setPositiveButton(mode == MODE_CREATE ? R.string.add : R.string.done, (dialog, which) -> {
                     PrefItem newPrefItem;
                     if (prefItem != null) newPrefItem = prefItem;
                     else {
@@ -215,24 +207,24 @@ public class EditPrefItemFragment extends DialogFragment {
                     }
 
                     try {
-                        switch (currentType) {
+                        switch (mCurrentType) {
                             case TYPE_BOOLEAN:
-                                newPrefItem.keyValue = ((MaterialSwitch) mValues[currentType]).isChecked();
+                                newPrefItem.keyValue = ((MaterialSwitch) mValues[mCurrentType]).isChecked();
                                 break;
                             case TYPE_FLOAT:
-                                newPrefItem.keyValue = Float.valueOf(mValues[currentType].getText().toString());
+                                newPrefItem.keyValue = Float.valueOf(mValues[mCurrentType].getText().toString());
                                 break;
                             case TYPE_INTEGER:
-                                newPrefItem.keyValue = Integer.valueOf(mValues[currentType].getText().toString());
+                                newPrefItem.keyValue = Integer.valueOf(mValues[mCurrentType].getText().toString());
                                 break;
                             case TYPE_LONG:
-                                newPrefItem.keyValue = Long.valueOf(mValues[currentType].getText().toString());
+                                newPrefItem.keyValue = Long.valueOf(mValues[mCurrentType].getText().toString());
                                 break;
                             case TYPE_STRING:
-                                newPrefItem.keyValue = mValues[currentType].getText().toString();
+                                newPrefItem.keyValue = mValues[mCurrentType].getText().toString();
                                 break;
                             case TYPE_SET:
-                                newPrefItem.keyValue = SharedPrefsUtil.unflattenToSet(mValues[currentType].getText().toString());
+                                newPrefItem.keyValue = SharedPrefsUtil.unflattenToSet(mValues[mCurrentType].getText().toString());
                                 break;
                         }
                     } catch (Exception e) {

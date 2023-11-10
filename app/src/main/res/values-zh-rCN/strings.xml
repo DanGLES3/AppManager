@@ -29,7 +29,7 @@
     <string name="declared_permission">自定义权限</string>
     <string name="shared_libs">共享库</string>
     <string name="group">群组</string>
-    <string name="uses_feature">属性</string>
+    <string name="uses_feature">功能声明</string>
     <string name="no_feature">无</string>
     <string name="sort_by_shared_user_id">共享的用户ID</string>
     <string name="shared_user_id">共享的用户ID</string>
@@ -76,22 +76,18 @@
     <string name="user_id">用户 ID</string>
     <string name="main_activity">主活动</string>
     <string name="empty_package_name">包名为空</string>
-    <string name="instructions">说明</string>
     <string name="error_creating_shortcut">无法创建快捷方式</string>
     <string name="error_verbose_pin_shortcut">当前启动器尚不支持 “PinShortcut”。无法创建快捷方式。</string>
     <string name="starting_activity">启动活动: <xliff:g id="activity_name" example=".main.MainActivity">%1$s</xliff:g></string>
     <string name="create_shortcut">创建快捷方式</string>
-    <string name="edit_shortcut">编辑快捷方式</string>
     <string name="shortcut_name">快捷方式名称</string>
     <string name="package_name">应用包名</string>
     <string name="class_name">类名</string>
-    <string name="error_invalid_icon_resource">无效的图标</string>
-    <string name="error_invalid_icon_format">无效图标格式</string>
     <string name="icon_picker">选择图标</string>
     <string name="license">许可协议</string>
     <string name="third_party">第三方库和图标</string>
     <string name="credits">鸣谢</string>
-    <string name="credits_message">感谢下列开源项目作者：
+    <string name="credits_message">致谢下列项目作者：
 \n- The Android Open Source Project
 \n- <a href="https://github.com/zhaobozhen/libraries">Absinthe\'s libraries</a>
 \n- <a href="https://github.com/butzist/ActivityLauncher">Activity Launcher</a>
@@ -101,6 +97,7 @@
 \n- <a href="https://github.com/gabrielemariotti/changeloglib">ChangeLog Library</a>
 \n- <a href="https://bitbucket.org/oF2pks/fdroid-classyshark3xodus">ClassySharkAndroid</a>
 \n- <a href="https://github.com/billthefarmer/editor">Editor</a>
+\n- <a href="https://github.com/Raival-e/File-Explorer">File Explorer</a>
 \n- <a href="https://github.com/nex3z/FlowLayout">FlowLayout</a>
 \n- <a href="https://github.com/k3b/intent-intercept">Intent Intercept</a>
 \n- <a href="https://github.com/YarikSOffice/lingver">Lingver</a>
@@ -112,8 +109,8 @@
 \n- <a href="https://github.com/open-keychain/open-keychain">Open Keychain</a>
 \n- <a href="https://github.com/Aefyr/SAI">SAI</a>
 \n- <a href="https://github.com/RikkaApps/Shizuku">Shizuku</a>
-\n- <a href="https://github.com/tuyafeng/Watt">Watt</a>
-\n原始图标作者：<a href="https://github.com/Atrate">Atrate</a>. </string>
+\n- <a href="https://github.com/eclipse/tm4e">tm4e</a>
+\n- <a href="https://github.com/tuyafeng/Watt">Watt</a> </string>
     <string name="word_wrap">自动换行</string>
     <string name="class_viewer">类查看器</string>
     <string name="toggle_class_listing">切换类列表</string>
@@ -125,7 +122,7 @@
         <item quantity="other"><xliff:g id="last_update_date" example="20/10/2020">%1$s</xliff:g> <xliff:g id="day_no" example="5">%2$d</xliff:g> 天</item>
     </plurals>
     <string name="no_shared_libs">无共享库</string>
-    <string name="no_tracker_class">无跟踪器类</string>
+    <string name="no_tracker_class">无追踪器类</string>
     <string name="app_usage">应用使用情况</string>
     <string name="usage_weekly">每周</string>
     <string name="usage_today">今天</string>
@@ -152,15 +149,15 @@
     <string name="dev_protected_data_dir">受设备保护的数据目录</string>
     <string name="native_library_dir">原生 JNI 库目录</string>
     <string name="process_name">进程名称</string>
-    <string name="no_code">没有代码</string>
+    <string name="no_code">无代码</string>
     <string name="requested_large_heap">大堆内存(Large heap)</string>
-    <string name="updated_app">更新</string>
+    <string name="updated_app">已更新</string>
     <string name="debuggable">可调试</string>
     <string name="test_only">仅测试</string>
-    <string name="shared_prefs">共享首选项</string>
+    <string name="shared_prefs">共享首选项(Shared Prefs)</string>
     <string name="databases">数据库</string>
     <string name="save">保存</string>
-    <string name="discard">忽略</string>
+    <string name="discard">放弃</string>
     <string name="delete">刪除</string>
     <string name="deleted_successfully">已删除</string>
     <string name="deletion_failed">刪除失败</string>
@@ -169,19 +166,19 @@
     <string name="string_value">字符串</string>
     <string name="long_integer_value">长整数值</string>
     <string name="integer_value">整数值</string>
-    <string name="decimal_value">十进制/值</string>
+    <string name="decimal_value">浮点数/十进制数</string>
     <string name="boolean_value">布尔值</string>
     <string name="key_name">键名</string>
     <string name="select_type">选择一个类型</string>
     <string name="add_item">新增项目</string>
     <string name="done">已完成</string>
-    <string name="type_boolean">正确/错误</string>
-    <string name="type_float">十进制数</string>
-    <string name="type_int">整数</string>
-    <string name="type_long">长整数</string>
-    <string name="type_string">字符</string>
-    <string name="error_evaluating_input">无法评估输入</string>
-    <string name="key_name_cannot_be_null">名称不能为空</string>
+    <string name="type_boolean">布尔值(Boolean)</string>
+    <string name="type_float">浮点数(Decimal Number/Float)</string>
+    <string name="type_int">整型(Integer)</string>
+    <string name="type_long">长整型(Long integer)</string>
+    <string name="type_string">字符串(Characters/String)</string>
+    <string name="error_evaluating_input">无法验证输入</string>
+    <string name="key_name_cannot_be_null">键名不能为空</string>
     <string name="disabled_app">已禁用</string>
     <string name="no_usage_in_this_time_range">在此时间范围内没有使用</string>
     <string name="no_content">没有内容</string>
@@ -193,8 +190,6 @@
     <string name="stopped">已停止</string>
     <string name="disable">禁用</string>
     <string name="enable">启用</string>
-    <string name="failed_to_disable">无法禁用 <xliff:g id="app_name" example="App Manager">%1$s</xliff:g>.</string>
-    <string name="failed_to_enable">无法启用 <xliff:g id="app_name" example="App Manager">%1$s</xliff:g>.</string>
     <string name="force_stop">强行停止</string>
     <string name="failed_to_stop">无法停用 <xliff:g id="app_name" example="App Manager">%1$s</xliff:g>.</string>
     <string name="storage_and_cache">存储和缓存</string>
@@ -212,7 +207,6 @@
     <string name="app_settings">设置</string>
     <string name="usage_yesterday">昨天</string>
     <string name="exodus_link">\u03b5xodus 链接</string>
-    <string name="sort_by_disabled_app">已禁用</string>
     <string name="sort_by_blocked_components">已拦截组件优先</string>
     <string name="external_data_dir">外部资料目录</string>
     <string name="external_multiple_data_dir">外部数据目录 <xliff:g id="dir_no" example="1">%1$d</xliff:g></string>
@@ -233,7 +227,6 @@
         <item quantity="other">无法导入 %1$d 个文件。</item>
     </plurals>
     <string name="apk_updater">APK 更新器</string>
-    <string name="store">Aurora Store</string>
     <string name="running_apps">正在运行的应用</string>
     <string name="kill_process">终止</string>
     <string name="disable_background_run">防止后台操作</string>
@@ -246,9 +239,6 @@
     <string name="export_blocking_rules">导出屏蔽规则</string>
     <plurals name="alert_failed_to_clear_data">
         <item quantity="other">无法清除数据从%1$d个应用</item>
-    </plurals>
-    <plurals name="alert_failed_to_disable">
-        <item quantity="other">无法禁用%1$d个应用</item>
     </plurals>
     <plurals name="alert_failed_to_uninstall">
         <item quantity="other">无法卸载%1$d个应用</item>
@@ -291,10 +281,10 @@
     <string name="pref_about_msg">应用程序管理器版本、许可、致谢等。</string>
     <string name="version">版本</string>
     <string name="sort_by_wifi_data">Wi-Fi 数据</string>
-    <string name="block_trackers">屏蔽所有跟踪器</string>
+    <string name="block_trackers">屏蔽所有追踪器</string>
     <string name="sort_by_component_name">组件名称</string>
     <string name="reset_to_default">重置为默认值</string>
-    <string name="deny_dangerous_app_ops">拒绝危险的应用程序</string>
+    <string name="deny_dangerous_app_ops">拒绝危险的AppOps权限</string>
     <string name="sort_by_app_ops_names">AppOps 名称</string>
     <string name="sort_by_denied_app_ops">优先拒绝</string>
     <string name="sort_by_app_ops_values">AppOps 值</string>
@@ -309,14 +299,14 @@
     </plurals>
     <string name="failed_to_grant_permission">无法授予权限</string>
     <string name="failed_to_revoke_permission">无法拒绝权限</string>
-    <string name="failed_to_reset_app_ops">无法重置应用操作</string>
+    <string name="failed_to_reset_app_ops">无法重置 App ops 权限</string>
     <string name="failed_to_deny_dangerous_perms">无法拒绝所有危险权限</string>
-    <string name="failed_to_deny_dangerous_app_ops">无法拒绝所有危险 App Ops</string>
+    <string name="failed_to_deny_dangerous_app_ops">无法撤消所有危险的 app ops 权限</string>
     <string name="launch_app">启动</string>
     <string name="never_ask">从不询问</string>
     <string name="one_click_ops">一键操作</string>
     <string name="changelog">更新日志</string>
-    <string name="external_apk_no_app_op">外部 APK 没有任何应用程序操作</string>
+    <string name="external_apk_no_app_op">外部 APK 没有任何 AppOps 权限</string>
     <string name="manifest_viewer">清单查看器</string>
     <plurals name="no_of_trackers">
         <item quantity="other">%1$d个跟踪器</item>
@@ -325,23 +315,22 @@
     <string name="update">升级</string>
     <string name="source_code">源代码</string>
     <string name="pref_import_existing">导入现有规则</string>
-    <string name="pref_import_existing_msg">将被其他应用禁用的组件添加到应用管理器。 使用此工具时要小心，因为可能有许多误报。 只选择您确定的应用。</string>
+    <string name="pref_import_existing_msg">将被其他应用禁用的组件添加到 App Manager.。使用此工具时要小心，因为可能有许多误报。 请只选择您确定的应用。</string>
     <string name="clear_cache">清除缓存</string>
-    <string name="block_unblock_trackers_description">拦截或取消屏蔽所有已安装应用的广告和跟踪组件</string>
+    <string name="block_unblock_trackers_description">禁用或解禁所有已安装应用的广告和跟踪组件</string>
     <string name="block_components_dots">屏蔽组件…</string>
-    <string name="block_components_description">拦截给定特征码识别出的所有部件</string>
     <string name="deny_app_ops_description">设置由常数值标识的应用操作模式，如 <tt>63</tt> 或 <tt> RUN_IN_BACKGROUND</tt></string>
     <string name="clear_data_from_uninstalled_apps">清除已卸载应用的数据</string>
     <string name="clear_data_from_uninstalled_apps_description">清除使用 <tt> DONT_DELETE_DATA </tt>标志卸载的应用中的数据</string>
     <string name="clear_app_cache">清除缓存</string>
     <string name="clear_app_cache_description">清除所有应用程序的缓存</string>
-    <string name="no_tracker_found">没有发现跟踪器</string>
+    <string name="no_tracker_found">没有发现追踪器</string>
     <string name="failed_packages">错误的软件包</string>
     <string name="input_signatures">输入签名</string>
     <string name="input_signatures_description">用空格隔开输入的签名，如<tt>com.facebook org.app2 com.app3</tt>等。</string>
     <string name="filtered_packages">已过滤的软件包</string>
-    <string name="input_app_ops">输入应用操作</string>
-    <string name="input_app_ops_description">用空格隔开输入的应用操作名称和/或常数，如 <tt>WAKE_LOCK 63 72 CAMERA</tt> 等。</string>
+    <string name="input_app_ops">输入 AppOps 权限</string>
+    <string name="input_app_ops_description">用空格隔开输入的AppOps称和/或常数，如 <tt>WAKE_LOCK 63 72 CAMERA</tt> 等。</string>
     <string name="only_works_in_root_or_adb_mode">仅在 root 或 ADB 模式下工作</string>
     <string name="failed_to_parse_some_numbers">无法解析某些数字</string>
     <plurals name="no_of_splits">
@@ -354,9 +343,8 @@
     <string name="filter_system_apps">系统应用</string>
     <string name="filter_apps_with_rules">被阻止</string>
     <string name="select_all">全选</string>
-    <string name="filter_disabled_apps">已停用</string>
     <string name="installed_version">已安装版本</string>
-    <string name="trackers">跟踪器</string>
+    <string name="trackers">追踪器</string>
     <string name="components">组件</string>
     <string name="features">特性</string>
     <string name="whats_new">更新内容</string>
@@ -381,15 +369,15 @@
         <item quantity="other">无法删除%1$d个备份</item>
     </plurals>
     <plurals name="alert_failed_to_unblock_trackers">
-        <item quantity="other">无法解封来自%1$d个应用的跟踪器</item>
+        <item quantity="other">无法解除来自 %1$d 个应用的跟踪器</item>
     </plurals>
     <plurals name="alert_failed_to_block_components">
         <item quantity="other">无法拦截%1$d个应用的组件</item>
     </plurals>
     <string name="apply_to_system_apps">应用到系统应用</string>
     <string name="apply_to_system_apps_question">也应用于系统应用？如果不确定，请选择“否”。</string>
-    <string name="no">取消</string>
-    <string name="yes">确定</string>
+    <string name="no">否</string>
+    <string name="yes">是</string>
     <string name="skip_signature_checks">跳过签名检查</string>
     <string name="clear_data_message">您确定要清除此应用的数据吗？</string>
     <string name="clear">清除</string>
@@ -412,28 +400,28 @@
     <string name="installer_error_conflict">无法安装这个应用，因为一个已安装的应用程序的包名和它一样</string>
     <string name="installer_error_incompatible">该应用与此设备不兼容</string>
     <string name="installer_error_bad_apks">无效的 APK 文件</string>
-    <string name="installer_error_storage">没有足够的存储空间安装应用程序</string>
+    <string name="installer_error_storage">没有足够的存储空间安装该应用</string>
     <string name="installer_error_generic">安装错误</string>
-    <string name="installer_error_lidl_rom">你的 ROM 与无 root 安装程序不兼容。</string>
+    <string name="installer_error_lidl_rom">您的ROM与无root安装程序不兼容。</string>
     <string name="failed_to_fetch_package_info">无法获取软件包信息</string>
     <string name="batch_ops">批量操作</string>
     <string name="operation_running">运行中的操作……</string>
     <string name="full_stop_tap_to_see_details">. 点按查看详情.</string>
     <string name="try_again">再试一次</string>
-    <string name="install_app_message">安装应用？</string>
+    <string name="install_app_message">你想要安装该应用吗？</string>
     <string name="reinstall">重新安装</string>
     <string name="unblock_trackers">取消屏蔽跟踪器</string>
     <string name="package_installer">软件包安装程序</string>
     <string name="install_in_progress">正在安装…</string>
-    <string name="installer_error_security">无法访问 APK 文件</string>
+    <string name="installer_error_security">无法访问APK文件</string>
     <string name="installer_error_session_create">无法创建安装程序会话</string>
     <string name="installer_error_session_write">无法写入安装程序会话</string>
     <string name="installer_error_session_commit">不能提交APK文件</string>
     <string name="installer_error_session_abandon">无法中断安装包会话</string>
     <string name="backup_apk_files">APK 文件</string>
-    <string name="backup_obb_media">OBB 和媒体文件</string>
-    <string name="failed_to_extract_obb_files">无法提取 OBB 文件</string>
-    <string name="obb_files_extracted_successfully">已提取 OBB 文件</string>
+    <string name="backup_obb_media">OBB和媒体文件</string>
+    <string name="failed_to_extract_obb_files">无法提取OBB文件</string>
+    <string name="obb_files_extracted_successfully">已提取OBB文件</string>
     <string name="backup_multiple">备份多个应用</string>
     <string name="backup_all_users">所有用户</string>
     <string name="pref_app_language">语言</string>
@@ -449,13 +437,10 @@
     <string name="orientation_portrait">竖屏</string>
     <string name="orientation_landscape">横屏</string>
     <string name="orientation_unspecified">未指定</string>
-    <string name="launch_mode_single_task">单任务</string>
+    <string name="launch_mode_single_task">单个任务</string>
     <string name="launch_mode_single_instance">单实例</string>
     <string name="base_apk">基础 APK</string>
     <string name="split_feature_name">特性: <xliff:g id="feature_name" example="Visualizer">%1$s</xliff:g></string>
-    <plurals name="alert_failed_to_enable">
-        <item quantity="other">无法启用%1$d个应用</item>
-    </plurals>
     <string name="unknown_split_for_feature"><xliff:g id="split_name" example="some_split">%1$s</xliff:g> 用于特性 <xliff:g id="feature_name" example="Visualizer">%2$s</xliff:g></string>
     <string name="density_split_for_feature"><xliff:g id="split_name" example="xxdpi">%1$s</xliff:g> (<xliff:g id="dpi_no" example="480">%2$d</xliff:g> DPI) 资源, 用于特性 <xliff:g id="feature_name" example="Visualizer">%3$s</xliff:g></string>
     <string name="density_split_for_base_apk"><xliff:g id="split_name" example="xxdpi">%1$s</xliff:g> (<xliff:g id="dpi_no" example="480">%2$d</xliff:g> DPI) 资源, 用于基础APK</string>
@@ -495,12 +480,11 @@
     <string name="state_sleeping">沉睡中</string>
     <string name="navigation_wheel">滚轮</string>
     <plurals name="backup_exists_are_you_sure">
-        <item quantity="other">超过一个应用已存在备份。你确定吗？</item>
+        <item quantity="other">已完成多个应用程序的备份。你确定吗？</item>
     </plurals>
     <string name="navigation_no_nav">无导航</string>
     <string name="state_wake_kill">唤醒杀死</string>
     <string name="profiles">配置</string>
-    <string name="presets">预设</string>
     <string name="no_profiles">无配置</string>
     <string name="keystore">密钥库</string>
     <string name="routine_ops">常规操作权限</string>
@@ -579,7 +563,7 @@
     <plurals name="missing_signatures">
         <item quantity="other">%1$d 个签名缺失</item>
     </plurals>
-    <string name="orientation_behind">与在活动堆栈下的活动相同方向</string>
+    <string name="orientation_behind">与 activity 堆栈中紧接其后的 activity 的方向相同</string>
     <string name="filter_running_apps">运行中</string>
     <string name="select_apk">选择 APK</string>
     <string name="send_crash_report">发送崩溃报告</string>
@@ -599,10 +583,8 @@
     <string name="pref_encryption_msg">加密备份。</string>
     <string name="encryption">加密</string>
     <string name="select_user">选择用户</string>
-    <string name="pref_show_users_in_installer_msg">安装外部应用程序之前，显示要选择的用户列表。需要 root 或 ADB。</string>
-    <string name="pref_show_users_in_installer">在安装器中显示用户</string>
     <string name="failed_to_duplicate_profile">无法复制配置文件</string>
-    <string name="keyboard_no_keys">无按键</string>
+    <string name="keyboard_no_keys">无键盘</string>
     <string name="send_selected">发送选中的应用</string>
     <string name="enabled">已启用</string>
     <string name="choose">选择</string>
@@ -616,7 +598,6 @@
     <string name="profile_clear_data_msg">清理应用程序的数据</string>
     <string name="profile_clear_cache_msg">清理应用程序的缓存</string>
     <string name="profile_force_stop_msg">强行停止应用</string>
-    <string name="profile_disable_msg">基于状态值禁用/启用应用程序</string>
     <string name="allow_routine_ops_msg">允许在例行操作中使用该配置文件</string>
     <string name="profile_state">配置文件状态</string>
     <string name="allow_routine_ops">允许例行操作</string>
@@ -663,9 +644,9 @@
     <string name="pref_backup_android_keystore">备份带 Android 密钥库的应用程序</string>
     <string name="keep_data_and_app_signing_signatures">保留数据和签名</string>
     <string name="this_action_cannot_be_undone">此操作无法被撤销。</string>
-    <string name="orientation_sensor_portrait">纵向显示</string>
+    <string name="orientation_sensor_portrait">传感器控制</string>
     <string name="orientation_sensor_landscape">横向显示</string>
-    <string name="orientation_full_sensor">全部传感器</string>
+    <string name="orientation_full_sensor">所有传感器</string>
     <string name="orientation_full_user">全部用户</string>
     <string name="set_app_op_mode">设置应用程序操作模式</string>
     <string name="magisk_hide_enabled">MagiskHide</string>
@@ -712,15 +693,15 @@
     <string name="patch_level">安全补丁级别</string>
     <string name="backup_skip_signature_checks_description">还原校验和验证失败或具有与先前备份不同的 APK 签名的备份。</string>
     <string name="backup_multiple_description">使用一个单独<i>命名的</i>备份，而不是基本备份。</string>
-    <string name="backup_rules_description">备份 App Manager 内配置的规则。</string>
-    <string name="backup_extras_description">备份应用权限、节电和数据使用选项、MagiskHide 状态、SSAID 等。</string>
+    <string name="backup_rules_description">备份 App Manager 内配置的规则。<font fgcolor="#ff0000">取决于权限，并非所有规则都可以在还原期间被重新应用。</font> </string>
+    <string name="backup_extras_description">备份应用权限、节电和数据使用选项、MagiskHide 状态、SSAID 等。<font fgcolor="#ff0000">取决于权限，并非所有提取的应用都可以被还原。</font>。 </string>
     <string name="backup_extras">附加</string>
     <string name="backup_cache_description">备份<b>缓存</b>、<b>no_cache</b> 和 <b>no_backup</b> 文件夹。</string>
     <string name="backup_obb_media_description">备份 OBB 和媒体文件夹。</string>
     <string name="backup_external_data_description">备份外部数据文件夹。</string>
     <string name="backup_internal_data_description">备份数据文件夹。如果选中，将默认备份内部数据文件夹。</string>
-    <string name="backup_apk_files_description">仅备份来自源目录的 APK 文件。要让该选项工作，必须选中 <b>源目录</b>。</string>
-    <string name="selinux">SELinux 上下文</string>
+    <string name="backup_apk_files_description">仅备份来自源目录的 APK 文件，包括 splits。</string>
+    <string name="selinux">SELinux</string>
     <string name="window_size">窗口尺寸</string>
     <string name="refresh_rate">刷新率</string>
     <string name="scaling_factor">缩放系数</string>
@@ -793,15 +774,15 @@
     <string name="ssaid">SSAID</string>
     <string name="type_uri">URI</string>
     <string name="type_string_array_list">字符串列表</string>
-    <string name="type_string_array">字符串阵列</string>
-    <string name="type_float_array_list">十进制数列表</string>
-    <string name="type_float_array">十进制数阵列</string>
-    <string name="type_long_array_list">长整数列表</string>
-    <string name="type_long_array">长整数阵列</string>
-    <string name="type_int_array_list">整数列表</string>
-    <string name="type_int_array">整数阵列</string>
-    <string name="type_component_name">组件名</string>
-    <string name="type_null">无值</string>
+    <string name="type_string_array">字符串数组</string>
+    <string name="type_float_array_list">浮点数列表</string>
+    <string name="type_float_array">浮点数数组</string>
+    <string name="type_long_array_list">长整型列表</string>
+    <string name="type_long_array">长整型数组</string>
+    <string name="type_int_array_list">整型列表</string>
+    <string name="type_int_array">整型数组</string>
+    <string name="type_component_name">组件名(Component Name)</string>
+    <string name="type_null">空(null)</string>
     <string name="user_with_id">用户：<xliff:g id="user_id" example="0">%1$d</xliff:g></string>
     <string name="installed_apps">已安装的应用</string>
     <string name="last_actions">上次操作</string>
@@ -851,10 +832,7 @@
     <string name="generate_key">生成</string>
     <string name="input_key">输入密钥 (以十六进制表示）</string>
     <string name="input_keystore_alias_pass_msg">轻按此处提供 %1$s 的密码</string>
-    <string name="source_code_links">GitHub 地址: https://github.com/MuntashirAkon/AppManager
-\nGitLab 地址: https://gitlab.com/muntashir/AppManager
-\nRiseup 地址: https://0xacab.org/muntashir/AppManager
-\nCodeberg 地址: https://codeberg.org/muntashir/AppManager</string>
+    <string name="source_code_links"><a href="https://github.com/MuntashirAkon/AppManager">GitHub</a> • <a href="https://gitlab.com/muntashir/AppManager">GitLab</a> • <a href="https://0xacab.org/muntashir/AppManager">Riseup</a> • <a href="https://codeberg.org/muntashir/AppManager">Codeberg</a></string>
     <string name="pref_installer_msg">配置应用安装程序的行为。</string>
     <string name="filter_choice_tag">标签</string>
     <string name="filter_choice_pid">PID</string>
@@ -956,7 +934,6 @@
     <string name="orientation_right_to_left">从右至左</string>
     <string name="orientation_left_to_right">从左至右</string>
     <string name="orientation_follow_locale">遵照语言环境</string>
-    <string name="pref_layout_orientation">布局方向</string>
     <plurals name="file_deletion_confirmation">
         <item quantity="other">%d 个文件已被删除</item>
     </plurals>
@@ -976,13 +953,10 @@
     <string name="adb_connect_port_number_description">端口号位于 <b>IP地址&amp;端口</b>部分，这部分在<b>设备名称</b>部分的下方。</string>
     <string name="port_number">端口</string>
     <string name="adb_connect">连接</string>
-    <string name="wireless_debugging_not_supported">此平台不支持无线调试。</string>
     <string name="wireless_debugging">无线调试</string>
     <string name="unknown_net_policy">未知的 netpolicy (%1$s - %2$X)</string>
     <string name="failed_to_prevent_background_run">无法防止 %1$s 在后台运行</string>
-    <string name="app_signing_signature_mismatch_for_data_only_app">由于签名不匹配，无法安装应用程序。该应用程序已被卸载，但没有清除数据。</string>
-    <string name="community_links">Telegram 群: https://t.me/AppManagerChannel
-\nTwitter: https://twitter.com/AppManagerNews</string>
+    <string name="community_links"><a href="https://matrix.to/#/#appmanager:matrix.org">Matrix</a> • <a href="https://t.me/AppManagerChannel">Telegram</a> • <a href="https://twitter.com/AppManagerNews">Twitter</a></string>
     <string name="community">社区</string>
     <plurals name="alert_failed_to_import_backups">
         <item quantity="other">无法导入 %1$d 个备份</item>
@@ -1000,7 +974,6 @@
     <string name="permission_flags">权限标志位</string>
     <string name="pref_selected_users_msg">限制 App Manager 仅与选定的用户一起工作。</string>
     <string name="pref_selected_users">选中的用户</string>
-    <string name="enable_disable">启用/禁用</string>
     <string name="error_with_details">错误: %s</string>
     <string name="files">文件</string>
     <string name="storage">存储</string>
@@ -1171,4 +1144,184 @@
     <string name="am_command"><tt>am</tt>命令</string>
     <string name="pref_sign_apk_no_signing_key">无签名秘钥</string>
     <string name="pref_sign_apk_error_signing_key_not_added">签署 APK 文件需要有效的签名秘钥。</string>
+    <string name="pref_advanced_pref">用户、APK 名称格式、并行执行等。</string>
+    <string name="hide_app_description">这种方法只推荐日常使用。一个隐藏的应用看起来像被卸载了。但如果重新安装或更新，该应用会重新出现。</string>
+    <string name="failed_to_freeze">无法冻结 <xliff:g id="app_name" example="App Manager">%1$s</xliff:g>。</string>
+    <string name="failed_to_unfreeze">无法解冻 <xliff:g id="app_name" example="App Manager">%1$s</xliff:g>。</string>
+    <string name="freeze_unfreeze">冻结/解冻</string>
+    <string name="profile_freeze_msg">根据状态冻结或解冻应用</string>
+    <string name="pref_default_freezing_method">默认冻结方式</string>
+    <string name="pref_default_freezing_method_description">没有选择冻结方式选项时默认使用的方式。</string>
+    <string name="suspend_app">暂停</string>
+    <string name="hide_app">隐藏</string>
+    <plurals name="alert_failed_to_freeze">
+        <item quantity="other">无法冻结 %1$d 个应用</item>
+    </plurals>
+    <plurals name="alert_failed_to_unfreeze">
+        <item quantity="other">无法解冻 %1$d 个应用</item>
+    </plurals>
+    <string name="suspend_app_description">这是最弱的冻结方式。被暂停的应用仍可出现在启动器中，但图标会变灰且无法被启动。</string>
+    <string name="disable_app_description">推荐的冻结方式。它会禁用应用及其所有部件，但所有快捷方式会丢失。</string>
+    <string name="sort_by_frozen_app">先冻结</string>
+    <string name="filter_frozen_apps">冻结应用</string>
+    <string name="pref_appearance_description">主题、方向、功能等。</string>
+    <string name="pref_privacy">隐私</string>
+    <string name="pref_privacy_description">屏幕锁、授权等。</string>
+    <string name="user_manual">用户手册</string>
+    <string name="get_help">获取帮助</string>
+    <string name="pref_version_changelog">版本/变更日志</string>
+    <string name="file_open_with">打开方式</string>
+    <string name="file_change_open_with">更改打开方式</string>
+    <string name="file_accessed_date">访问日期</string>
+    <string name="file_properties">属性</string>
+    <string name="file_cut">剪切</string>
+    <string name="fm_always_open_with">始终打开</string>
+    <string name="fm_open_with_for_this_file_only">仅对此文件</string>
+    <string name="file_open_as">打开为…</string>
+    <string name="file_open_with_os_default_dialog">使用操作系统默认对话框打开</string>
+    <string name="open_as_text">文本</string>
+    <string name="open_as_video">视频</string>
+    <string name="open_as_archive">压缩文件</string>
+    <string name="open_as_folder">文件夹</string>
+    <string name="confirm_file_deletion">确定，删除</string>
+    <string name="on_unfreeze_open_application">解冻后打开应用</string>
+    <string name="on_open_application_no_recents">不要在“最近”中显示启动过的应用</string>
+    <string name="tap_to_freeze_app">轻按冻结</string>
+    <string name="waiting_for_the_phone_to_be_locked">等待手机锁定…</string>
+    <string name="file_shortcut_target_file">目标文件</string>
+    <string name="open_as_other">其他</string>
+    <string name="action_stop_service">停止</string>
+    <string name="file_modification_date">更改日期</string>
+    <string name="file_open_with_custom_activity">自定义</string>
+    <string name="open_as_image">图片</string>
+    <string name="freeze_on_phone_locked">手机锁定时自动冻结应用</string>
+    <string name="delete_filename">删除 %s</string>
+    <string name="file_creation_date">创建日期</string>
+    <string name="sort_by_data_usage">数据使用</string>
+    <string name="filter_apps_with_keystore">使用密钥库</string>
+    <string name="filter_apps_with_saf">使用 SAF</string>
+    <string name="filter_apps_with_ssaid">使用 SSAID</string>
+    <string name="action_continue">继续</string>
+    <string name="install_for_another_user">为...安装</string>
+    <string name="confirm_uninstallation">确认卸载</string>
+    <string name="grant_required_permission">授予所需权限</string>
+    <string name="grant_overlay_permission_message">允许 App Manager 在所有其他窗口之上显示悬浮窗</string>
+    <string name="grant_accessibility_permission_for_tracking_window_contents">允许 App Manager 使用辅助功能来跟踪前台窗口的内容。</string>
+    <string name="class_hierarchy">层次结构</string>
+    <string name="title_ui_tracker">UI 跟踪器</string>
+    <string name="title_terminal_emulator">终端</string>
+    <string name="title_labs_activity">实验室</string>
+    <string name="optimize_option_compile_layouts">编译布局资源</string>
+    <string name="optimize_option_check_profiles">在 DEX 优化期间考虑配置文件数据</string>
+    <string name="optimize_option_force_compilation">即使不必要也强制编译</string>
+    <string name="optimize_option_force_dexopt">立即执行DEX优化</string>
+    <string name="title_perform_runtime_optimization_to_apps">进行运行时优化</string>
+    <string name="action_run">运行</string>
+    <plurals name="alert_failed_to_optimize_apps">
+        <item quantity="other">无法优化%1$d 应用</item>
+    </plurals>
+    <string name="export_app_list_select_format">选择导出应用列表的格式</string>
+    <string name="optimize_option_clear_profile_data">清除之前的配置文件数据</string>
+    <string name="select_a_dex2oat_compiler_filter"><tt>dex2oat</tt> 编译器筛选器</string>
+    <string name="summary_perform_runtime_optimization_to_apps">优化DEX和（在Android 10和更高版本）布局，以提高应用的性能。</string>
+    <string name="action_optimize_app">优化</string>
+    <string name="batch_ops_runtime_optimization">运行时优化</string>
+    <string name="app_manager_build_expired">需要更新</string>
+    <string name="app_manager_build_expired_message">为了确保设备和数据的安全，你正在使用的App Manager的版本已经结束支持了。请更新至最新版本才可继续使用，若无更新，请立即卸载。</string>
+    <string name="app_manager_build_expiring_soon_warning">该版本的App Manager即将过期，请立即更新到最新版本。</string>
+    <string name="renamed_successfully">已重命名</string>
+    <string name="selinux_context">SELinux 上下文</string>
+    <string name="unix_file_permissions">模式</string>
+    <string name="file_group_id">组（GID）</string>
+    <string name="file_owner_id">所有者 (UID)</string>
+    <string name="calculating_file_size">计算中…</string>
+    <string name="sort_by_filename">名称</string>
+    <string name="sort_by_last_modified">最后更改</string>
+    <string name="sort_by_file_size">文件大小</string>
+    <string name="sort_by_file_type">文件类型</string>
+    <string name="option_display_dot_files">显示.开头文件</string>
+    <string name="option_display_folders_on_top">文件夹置顶</string>
+    <string name="export_app_list">导出应用列表</string>
+    <string name="export_option_xml">XML</string>
+    <string name="export_option_markdown">Markdown 格式</string>
+    <string name="adb_incomplete_usb_debugging_title">不完整的 USB 调试</string>
+    <string name="funding_campaign_dialog_message">我们正在限时为应用程序管理器开展 <b> 筹资活动 </b>。访问 <a href="https://opencollective.com/app-manager#category-ABOUT">opencollective.com/app-manager</a> 以了解有关该活动的更多信息。此通知不会再次显示，但您可以在整个活动期间的“设置”页面中找到它。</string>
+    <string name="app_can_write_and_execute_in_same_place">应用程序违反了<a href="https://en.wikipedia.org/wiki/W%5EX">W^X策略</a>，并且能够在同一目录或内存的同一部分中写入和执行。这允许通过修改应用程序中嵌入的可执行文件或从Internet下载来执行任意可执行文件。除非这是应用程序的预期行为（如终端模拟器），建议找到针对SDK 29（Android 10）和更高版本的应用程序的更新版本，或找到替代方案。</string>
+    <string name="adb_incomplete_usb_debugging_message">看起来USB调试配置不正确。请阅读 <a href="https://muntashirakon.github.io/AppManager/#subsec:enable-usb-debugging"> 文档 </a> 了解其他步骤。如果您已经知道步骤，请单击“打开”以打开开发人员选项，或单击“关闭”以继续使用无root模式。</string>
+    <string name="funding_campaign_text">我们正为 App Manager 举办一个限时的<b>筹款活动</b>。<a href="https://opencollective.com/app-manager#category-ABOUT">了解更多……</a></string>
+    <string name="title_domains_supported_by_the_app">支持的域名</string>
+    <string name="app_info_tag_open_links">打开链接</string>
+    <string name="source_stamp_verified_and_identified_to_be_from_source">已验证并查明 SourceStamp 来自 <xliff:g id="source" example="Google Play">%1$s</xliff:g>。</string>
+    <string name="pref_zip_align">对齐APK文件</string>
+    <string name="read_only_file_warning">更改不能被写入至此文件，可能由于其位于 App Manager 无写入权限的卷中，需要存到另一个地方吗\?</string>
+    <string name="line_separator">行分隔符</string>
+    <string name="pref_layout_direction">布局方向</string>
+    <string name="block_unblock_components_dots">禁用/解禁组件…</string>
+    <string name="unblock_components_dots">解禁组件…</string>
+    <string name="block_unblock_components_description">禁用或解禁具有特定签名的所有组件</string>
+    <string name="title_code_editor">代码编辑器</string>
+    <plurals name="alert_failed_to_unblock_components">
+        <item quantity="other">无法解除对%1$d 应用的组件禁用</item>
+    </plurals>
+    <string name="redo">重做</string>
+    <string name="read_only_file">只读文件</string>
+    <string name="pref_zip_align_msg">对齐APK文件可以减少其内存的使用，因为APK可被直接访问，而无需复制至内存(RAM)中。若<tt>extractNativeLibs</tt> 被设置为<tt>true</tt> 时，此步为必须的。</string>
+    <string name="search_option_whole_word">匹配全字</string>
+    <plurals name="search_results">
+        <item quantity="other">%d 结果</item>
+    </plurals>
+    <string name="search_option_regex">正则表达式</string>
+    <string name="replacement_text">替换</string>
+    <string name="action_replace_all">全部替换</string>
+    <string name="search_option_match_case">匹配大小写</string>
+    <string name="uninstall_app_again_message">在未清除数据和签名的情况下卸载了此应用，需要彻底卸载它吗？</string>
+    <string name="uninstall_app">卸载%1$s</string>
+    <string name="debloat_list_type">列表</string>
+    <string name="debloat_removal_type">类型</string>
+    <string name="debloater_title">预装卸载器</string>
+    <string name="system_app_put_back">放回(Put back)</string>
+    <string name="debloat_list_oem">OEM(厂商)</string>
+    <string name="debloat_list_carrier">Carrier/ISP(运营商)</string>
+    <string name="debloat_list_google">Google(谷歌)</string>
+    <string name="debloat_list_aosp">AOSP(Android原生)</string>
+    <string name="debloat_list_misc">杂项</string>
+    <string name="debloat_list_pending">待定</string>
+    <string name="debloat_removal_safe">安全</string>
+    <string name="debloat_removal_replace">替换</string>
+    <string name="debloat_removal_caution">留意</string>
+    <string name="static_shared_library">静态共享库</string>
+    <string name="filter_force_stopped_apps">停止了的应用</string>
+    <plurals name="folder_count">
+        <item quantity="other">%d 个文件夹</item>
+    </plurals>
+    <plurals name="file_count">
+        <item quantity="other">%d 个文件</item>
+    </plurals>
+    <string name="empty_folder">空</string>
+    <string name="go_to_path">转至…</string>
+    <string name="copy_this_path">复制路径</string>
+    <string name="title_audio_player">音频播放器</string>
+    <string name="restoring_app">正在恢复 %1$s…</string>
+    <string name="symbolic_link">符号链接</string>
+    <string name="create_new_folder">新建文件夹</string>
+    <string name="create_new_file">新建文件</string>
+    <string name="invalid_target_path">无效路径</string>
+    <string name="conflict_detected_while_copying_message">此位置中已存在名为“%1$s”的项目。你想换掉它吗？</string>
+    <string name="moved_successfully">已移动</string>
+    <string name="title_change_selinux_context">更改SELinux上下文</string>
+    <string name="warning_working_on_system_mode">警告：在系统上运行，而不是在ADB模式下运行。</string>
+    <string name="backing_up_app">正在备份 %1$s…</string>
+    <string name="installing_package">正在安装 %1$s…</string>
+    <string name="enter_target_path">目标路径</string>
+    <string name="title_confirm_deletion">确认删除</string>
+    <string name="copy_these_paths">复制路径</string>
+    <string name="failed_to_copy_specified_file">无法复制“%1$s”。</string>
+    <string name="failed_to_delete_specified_file_after_copying">复制“%1$s”后无法将其删除，可能是权限不足。</string>
+    <string name="pref_send_notifications_to_connected_devices">向联网的设备发送通知</string>
+    <string name="symbolic_link_not_supported">此文件夹不支持创建符号链接。</string>
+    <string name="copied_successfully">已复制。</string>
+    <string name="pref_installer_force_dexopt_description">安装应用程序后立即执行DEX优化，无需等待系统在系统空闲时执行此操作。</string>
+    <string name="create_new_symbolic_link">新建符号链接</string>
+    <string name="pref_send_notification_to_connected_devices_msg">设置是否向可穿戴设备等联网设备发送通知。</string>
+    <string name="change_mode">更改模式</string>
 </resources>

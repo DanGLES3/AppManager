@@ -9,8 +9,8 @@ import android.content.pm.PackageManager;
 import android.content.pm.ServiceInfo;
 import android.os.Bundle;
 import android.text.TextUtils;
-
 import android.widget.Button;
+
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.IntentSenderRequest;
 import androidx.activity.result.contract.ActivityResultContracts;
@@ -19,8 +19,6 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.FragmentActivity;
-
-import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
 import org.openintents.openpgp.IOpenPgpService2;
 import org.openintents.openpgp.OpenPgpError;
@@ -33,26 +31,26 @@ import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import io.github.muntashirakon.AppManager.AppManager;
 import io.github.muntashirakon.AppManager.R;
+import io.github.muntashirakon.AppManager.intercept.IntentCompat;
 import io.github.muntashirakon.AppManager.logs.Log;
-import io.github.muntashirakon.AppManager.utils.AppPref;
-import io.github.muntashirakon.AppManager.utils.ArrayUtils;
+import io.github.muntashirakon.AppManager.settings.Prefs;
+import io.github.muntashirakon.dialog.SearchableSingleChoiceDialogBuilder;
 
 public class OpenPgpKeySelectionDialogFragment extends DialogFragment {
     public static final String TAG = "OpenPgpKeySelectionDialogFragment";
 
     private String mOpenPgpProvider;
     private OpenPgpServiceConnection mServiceConnection;
-    private AlertDialog dialog;
-    private FragmentActivity activity;
-    private final ActivityResultLauncher<IntentSenderRequest> keyIdResultLauncher = registerForActivityResult(
+    private AlertDialog mDialog;
+    private FragmentActivity mActivity;
+    private final ActivityResultLauncher<IntentSenderRequest> mKeyIdResultLauncher = registerForActivityResult(
             new ActivityResultContracts.StartIntentSenderForResult(), result -> {
                 if (result.getData() != null) {
                     getUserId(result.getData());
                 }
             });
-    private final ExecutorService executor = Executors.newSingleThreadExecutor(runnable -> {
+    private final ExecutorService mExecutor = Executors.newSingleThreadExecutor(runnable -> {
         Thread thread = new Thread(runnable);
         thread.setDaemon(true);
         return thread;
@@ -61,38 +59,39 @@ public class OpenPgpKeySelectionDialogFragment extends DialogFragment {
     @NonNull
     @Override
     public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
-        activity = requireActivity();
-        mOpenPgpProvider = (String) AppPref.get(AppPref.PrefKey.PREF_OPEN_PGP_PACKAGE_STR);
-        List<ServiceInfo> serviceInfoList = OpenPgpUtils.getPgpClientServices(activity);
+        mActivity = requireActivity();
+        mOpenPgpProvider = Prefs.Encryption.getOpenPgpProvider();
+        List<ServiceInfo> serviceInfoList = OpenPgpUtils.getPgpClientServices(mActivity);
         CharSequence[] packageLabels = new String[serviceInfoList.size()];
         String[] packageNames = new String[serviceInfoList.size()];
         ServiceInfo serviceInfo;
-        PackageManager pm = activity.getPackageManager();
+        PackageManager pm = mActivity.getPackageManager();
         for (int i = 0; i < packageLabels.length; ++i) {
             serviceInfo = serviceInfoList.get(i);
             packageLabels[i] = serviceInfo.loadLabel(pm);
             packageNames[i] = serviceInfo.packageName;
         }
-        int choice = ArrayUtils.indexOf(packageNames, mOpenPgpProvider);
-        dialog = new MaterialAlertDialogBuilder(activity)
+        mDialog = new SearchableSingleChoiceDialogBuilder<>(mActivity, packageNames, packageLabels)
                 .setTitle(R.string.open_pgp_provider)
-                .setSingleChoiceItems(packageLabels, choice, (dialog, which) -> {
-                    mOpenPgpProvider = packageNames[which];
-                    AppPref.set(AppPref.PrefKey.PREF_OPEN_PGP_PACKAGE_STR, mOpenPgpProvider);
-                })
+                .setSelection(mOpenPgpProvider)
                 .setNegativeButton(R.string.cancel, null)
-                .setPositiveButton(R.string.ok, null)
+                .setPositiveButton(R.string.save, (dialog1, which, selectedItem) -> {
+                    if (selectedItem != null) {
+                        mOpenPgpProvider = selectedItem;
+                        Prefs.Encryption.setOpenPgpProvider(mOpenPgpProvider);
+                    }
+                })
                 .create();
-        dialog.setOnShowListener(dialog1 -> {
+        mDialog.setOnShowListener(dialog1 -> {
             Button positiveButton = ((AlertDialog) dialog1).getButton(AlertDialog.BUTTON_POSITIVE);
             positiveButton.setOnClickListener(v -> chooseKey());
         });
-        return dialog;
+        return mDialog;
     }
 
     private void chooseKey() {
         // Bind to service
-        mServiceConnection = new OpenPgpServiceConnection(AppManager.getContext(), mOpenPgpProvider,
+        mServiceConnection = new OpenPgpServiceConnection(requireContext(), mOpenPgpProvider,
                 new OpenPgpServiceConnection.OnBound() {
                     @Override
                     public void onBound(IOpenPgpService2 service) {
@@ -111,36 +110,36 @@ public class OpenPgpKeySelectionDialogFragment extends DialogFragment {
     private void getUserId(@NonNull Intent data) {
         data.setAction(OpenPgpApi.ACTION_GET_KEY_IDS);
         data.putExtra(OpenPgpApi.EXTRA_USER_IDS, new String[]{});
-        OpenPgpApi api = new OpenPgpApi(activity, mServiceConnection.getService());
-        api.executeApiAsync(executor, data, null, null, result -> {
+        OpenPgpApi api = new OpenPgpApi(mActivity, mServiceConnection.getService());
+        api.executeApiAsync(mExecutor, data, null, null, result -> {
             switch (result.getIntExtra(OpenPgpApi.RESULT_CODE, OpenPgpApi.RESULT_CODE_ERROR)) {
                 case OpenPgpApi.RESULT_CODE_SUCCESS: {
                     long[] keyIds = result.getLongArrayExtra(OpenPgpApi.EXTRA_KEY_IDS);
                     if (keyIds == null || keyIds.length == 0) {
                         // Remove encryption
-                        AppPref.set(AppPref.PrefKey.PREF_OPEN_PGP_USER_ID_STR, "");
-                        AppPref.set(AppPref.PrefKey.PREF_OPEN_PGP_PACKAGE_STR, "");
+                        Prefs.Encryption.setOpenPgpProvider("");
+                        Prefs.Encryption.setOpenPgpKeyIds("");
                     } else {
                         String[] keyIdsStr = new String[keyIds.length];
                         for (int i = 0; i < keyIds.length; ++i) {
                             keyIdsStr[i] = String.valueOf(keyIds[i]);
                         }
-                        AppPref.set(AppPref.PrefKey.PREF_OPEN_PGP_USER_ID_STR, TextUtils.join(",", keyIdsStr));
+                        Prefs.Encryption.setOpenPgpKeyIds(TextUtils.join(",", keyIdsStr));
                     }
-                    dialog.dismiss();
+                    mDialog.dismiss();
                     break;
                 }
                 case OpenPgpApi.RESULT_CODE_USER_INTERACTION_REQUIRED: {
-                    PendingIntent pi = Objects.requireNonNull(result.getParcelableExtra(OpenPgpApi.RESULT_INTENT));
-                    keyIdResultLauncher.launch(new IntentSenderRequest.Builder(pi).build());
+                    PendingIntent pi = Objects.requireNonNull(IntentCompat.getParcelableExtra(result, OpenPgpApi.RESULT_INTENT, PendingIntent.class));
+                    mKeyIdResultLauncher.launch(new IntentSenderRequest.Builder(pi).build());
                     break;
                 }
                 case OpenPgpApi.RESULT_CODE_ERROR: {
-                    OpenPgpError error = result.getParcelableExtra(OpenPgpApi.RESULT_ERROR);
+                    OpenPgpError error = IntentCompat.getParcelableExtra(result, OpenPgpApi.RESULT_ERROR, OpenPgpError.class);
                     if (error != null) {
-                        Log.e(OpenPgpApi.TAG, "RESULT_CODE_ERROR: " + error.getMessage());
+                        Log.e(OpenPgpApi.TAG, "RESULT_CODE_ERROR: %s", error.getMessage());
                     }
-                    dialog.dismiss();
+                    mDialog.dismiss();
                     break;
                 }
             }

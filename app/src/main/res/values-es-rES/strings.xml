@@ -95,7 +95,6 @@
     <string name="sort_by_last_used">Último uso</string>
     <string name="external_data_dir">Directorio de datos externos</string>
     <string name="sort_by_blocked_components">Bloqueadas primero</string>
-    <string name="sort_by_disabled_app">Desactivadas primero</string>
     <string name="exodus_link">Enlace de εxodus</string>
     <string name="usage_yesterday">Ayer</string>
     <string name="app_settings">Configuración</string>
@@ -143,7 +142,7 @@
     <string name="no_code">Sin código</string>
     <string name="process_name">Nombre del proceso</string>
     <string name="native_library_dir">Directorio de la biblioteca nativa JNI</string>
-    <string name="dev_protected_data_dir">Directorio de datos protegido por el dispositivo</string>
+    <string name="dev_protected_data_dir">Directorio de datos protegido por dispositivo</string>
     <string name="search">Buscar</string>
     <string name="menu_apply_rules">Aplicar reglas</string>
     <string name="menu_remove_rules">Quitar reglas</string>
@@ -205,17 +204,13 @@
     <string name="third_party">Bibliotecas e iconos de terceros</string>
     <string name="license">Licencia</string>
     <string name="icon_picker">Selector de iconos</string>
-    <string name="error_invalid_icon_format">Formato de icono no válido</string>
-    <string name="error_invalid_icon_resource">Recurso de icono no válido</string>
     <string name="class_name">Nombre de la Clase</string>
     <string name="package_name">Nombre del paquete</string>
     <string name="shortcut_name">Nombre del atajo (shortcut)</string>
-    <string name="edit_shortcut">Editar atajo (shortcut)</string>
     <string name="create_shortcut">Crear un atajo (shortcut)</string>
     <string name="starting_activity">Inicio de la actividad: <xliff:g id="activity_name" example=".main.MainActivity">%1$s</xliff:g></string>
     <string name="error_verbose_pin_shortcut">El iniciador actual no admite PinShortcut. No se puede crear el atajo.</string>
     <string name="error_creating_shortcut">Error al crear un atajo (shortcut)</string>
-    <string name="instructions">Instrucciones</string>
     <string name="empty_package_name">Nombre del paquete vacío</string>
     <string name="main_activity">Actividad Principal</string>
     <string name="user_id">ID de usuario</string>
@@ -336,7 +331,6 @@
     <string name="components">Componentes</string>
     <string name="trackers">Rastreadores</string>
     <string name="installed_version">Versión instalada</string>
-    <string name="filter_disabled_apps">Aplicaciones desactivadas</string>
     <string name="select_all">Seleccionar todo</string>
     <string name="filter_apps_with_rules">Aplicaciones con reglas</string>
     <string name="filter_system_apps">Aplicaciones del sistema</string>
@@ -355,7 +349,6 @@
     <string name="clear_app_cache">Vaciar antememoria de aplicación</string>
     <string name="clear_data_from_uninstalled_apps">Limpiar datos de aplicaciones desinstaladas</string>
     <string name="deny_app_ops_description">Establecer un modo para las operaciones de las aplicaciones identificadas por los valores constantes, es decir, <tt>63</tt> o <tt>RUN_IN_BACKGROUND</tt></string>
-    <string name="block_components_description">Bloquear todos los componentes identificados por las firmas dadas</string>
     <string name="block_components_dots">Bloquear componentes…</string>
     <string name="block_unblock_trackers_description">Bloquear o desbloquear componentes de anuncios o rastreo en todas las aplicaciones instaladas</string>
     <string name="clear_cache">Vaciar antememoria</string>
@@ -500,7 +493,6 @@
     <string name="input_permissions_description">Permisos de acceso con espacios, p. ej. <tt>com.permission.GET_ACCOUNTS android.permission.ACCESS_MEDIA_LOCATION</tt> etc. Usa <tt>*</tt> para solicitar todos los permisos.</string>
     <string name="input_permissions">Permisos de entrada</string>
     <string name="profile_clear_cache_msg">Vacía la antememoria de las aplicaciones</string>
-    <string name="profile_disable_msg">Desactiva o activa las aplicaciones en función del estado</string>
     <string name="allow_routine_ops_msg">Permitir que el perfil se utilice en las operaciones de rutinarias</string>
     <string name="profile_state">Estado del perfil</string>
     <string name="allow_routine_ops">Permitir ops rutinarias</string>
@@ -514,8 +506,6 @@
     <string name="pref_encryption_msg">Cifrado para los respaldos.</string>
     <string name="encryption">Cifrado</string>
     <string name="select_user">Seleccionar usuario</string>
-    <string name="pref_show_users_in_installer_msg">Mostrar una lista de usuarios a seleccionar antes de instalar una aplicación externa. Requiere root o ADB.</string>
-    <string name="pref_show_users_in_installer">Mostrar a los usuarios en el instalador</string>
     <string name="failed_to_duplicate_profile">No se pudo duplicar el perfil</string>
     <string name="duplicate">Duplicar</string>
     <string name="new_profile">Perfil nuevo</string>
@@ -582,7 +572,6 @@
     <string name="apply_now">Aplicar ahora…</string>
     <string name="keystore">Almacén de claves</string>
     <string name="no_profiles">Sin perfiles</string>
-    <string name="presets">Preajustes</string>
     <string name="profiles">Perfiles</string>
     <string name="open_pgp_provider">Proveedor de OpenPGP</string>
     <string name="systemless_app">Aplicación no de sistema</string>
@@ -653,11 +642,6 @@
         <item quantity="many">Clases %1$d</item>
         <item quantity="other">Clases %1$d</item>
     </plurals>
-    <plurals name="alert_failed_to_enable">
-        <item quantity="one">No se ha podido activar la aplicación %1$d</item>
-        <item quantity="many">No se han podido activar %1$d aplicaciones</item>
-        <item quantity="other">No se han podido activar %1$d aplicaciones</item>
-    </plurals>
     <string name="input_app_ops">Introducir app ops</string>
     <string name="clear_data_from_uninstalled_apps_description">Limpiar datos desde las aplicaciones que son desinstaladas con <tt>DONT_DELETE_DATA</tt> flag</string>
     <string name="ago">hace</string>
@@ -671,19 +655,11 @@
         <item quantity="many">No se han podido desinstalar %1$d aplicaciones</item>
         <item quantity="other">No se han podido desinstalar %1$d aplicaciones</item>
     </plurals>
-    <plurals name="alert_failed_to_disable">
-        <item quantity="one">No se pudo deshabilitar %1$d app</item>
-        <item quantity="many">No se han podido desactivar %1$d aplicaciones</item>
-        <item quantity="other">No se han podido desactivar %1$d aplicaciones</item>
-    </plurals>
-    <string name="store">Tienda</string>
     <string name="apk_updater">Actualizador APK</string>
     <string name="external_multiple_data_dir">Directorio de datos externos <xliff:g id="dir_no" example="1">%1$d</xliff:g></string>
     <string name="failed_to_disable_op">No se pudo deshabilitar la app op solicitada</string>
     <string name="failed_to_enable_op">No se pudo activar la app op solicitada</string>
     <string name="failed_to_stop">No se pudo detener <xliff:g id="app_name" example="App Manager">%1$s</xliff:g>.</string>
-    <string name="failed_to_enable">No se pudo activar <xliff:g id="app_name" example="App Manager">%1$s</xliff:g>.</string>
-    <string name="failed_to_disable">No se pudo desactivar <xliff:g id="app_name" example="App Manager">%1$s</xliff:g>.</string>
     <string name="failed_to_uninstall">No se pudo desinstalar <xliff:g id="app_name" example="App Manager">%1$s</xliff:g>.</string>
     <string name="type_long">Entero largo</string>
     <string name="type_int">Entero</string>
@@ -858,7 +834,7 @@
     <string name="type_int_array">Matriz de enteros</string>
     <string name="type_component_name">Nombre del componente</string>
     <string name="type_null">Sin valor</string>
-    <string name="screen_lock_msg">Bloquee App Manager usando el bloqueo de pantalla de Android</string>
+    <string name="screen_lock_msg">Bloquear App Manager usando Android bloqueo de pantalla</string>
     <string name="screen_lock">Bloqueo de pantalla</string>
     <string name="unlock_app_manager">Desbloquear gestor de aplicaciones</string>
     <string name="sd_card">Tarjeta SD</string>
@@ -927,7 +903,6 @@
     <string name="orientation_follow_locale">Según la conf. regional</string>
     <string name="orientation_right_to_left">De derecha a izquierda</string>
     <string name="orientation_left_to_right">De izquierda a derecha</string>
-    <string name="pref_layout_orientation">Orientación de disposición</string>
     <string name="confirm_import_keystore">¿Confirma que quiere reemplazar el almacén de claves actual\? Esta acción no puede deshacerse.</string>
     <string name="import_keystore">Importar almacén de claves</string>
     <string name="pref_import_export_keystore">Importar/exportar almacén de claves</string>
@@ -949,10 +924,7 @@
     <string name="restart_log_viewer_to_see_changes">Reinicie la ventana del visor de registros para ver los cambios.</string>
     <string name="pref_log_viewer_msg">Configure la manera en que se muestran los registros.</string>
     <string name="log_viewer">Visor de registros</string>
-    <string name="source_code_links">"GitHub: https://github.com/MuntashirAkon/AppManager  
-\nGitLab: https://gitlab.com/muntashir/AppManager  
-\nRiseup: https://0xacab.org/muntashir/AppManager  
-\nCodeberg: https://codeberg.org/muntashir/AppManager"</string>
+    <string name="source_code_links"><a href="https://github.com/MuntashirAkon/AppManager">GitHub</a> - <a href="https://gitlab.com/muntashir/AppManager">GitLab</a> - <a href="https://0xacab.org/muntashir/AppManager">Riseup</a> - <a href="https://codeberg.org/muntashir/AppManager">Codeberg</a></string>
     <string name="new_alias_password">Contraseña de alias nuevo</string>
     <string name="bouncy_castle_keystore">Almacén de claves Bouncy Castle (BKS)</string>
     <string name="invalid_rsa_key_size">El tamaño de la clave no es válido para el cifrado RSA. Este puede ser de 1024, 2048 o 4096 bits.</string>
@@ -1033,7 +1005,6 @@
     <string name="netpolicy_reject_wifi_data">Rechazar datos wifi</string>
     <string name="netpolicy_disable_network_access">Desactivar acceso a redes</string>
     <string name="wireless_debugging">Depuración inalámbrica</string>
-    <string name="wireless_debugging_not_supported">Esta plataforma no admite la depuración inalámbrica.</string>
     <string name="adb_connect">Conectar</string>
     <string name="port_number">Puerto</string>
     <string name="adb_connect_port_number_description">El número de puerto se localiza en la sección <b>Dirección IP y puerto</b>, justo por debajo de la sección <b>Nombre de dispositivo</b>.</string>
@@ -1041,7 +1012,6 @@
     <string name="port_number_invalid">Número de puerto no válido.</string>
     <string name="unknown_net_policy">Directiva de red desconocida (%1$s - %2$X)</string>
     <string name="pref_buffer_title">Buffer de registros</string>
-    <string name="app_signing_signature_mismatch_for_data_only_app">No se pudo instalar la aplicación a causa de una discrepancia en las firmas. Se desinstaló sin vaciarle los datos.</string>
     <string name="failed">Fallido</string>
     <string name="pref_filter_pattern_title">Filtrar etiquetas</string>
     <string name="pref_filter_pattern_summary">Filtrar las siguientes etiquetas seleccionadas de los registros.</string>
@@ -1050,10 +1020,7 @@
     <string name="import_from_oab">Importar desde OAndBackup</string>
     <string name="pref_import_backups_msg">Importe copias de respaldo desde OAndBackup, Swift Backup (3.0–3.2) o Titanium Backup.</string>
     <string name="pref_import_backups">Importar copias de respaldo</string>
-    <string name="community_links">Telegram: 
-\nhttps://t.me/AppManagerChannel
-\nTwitter: 
-\nhttps://twitter.com/AppManagerNews</string>
+    <string name="community_links"><a href="https://t.me/AppManagerChannel">Canal de Telegram</a> - <a href="https://twitter.com/AppManagerNews">Twitter</a></string>
     <string name="community">Comunidad</string>
     <plurals name="alert_failed_to_import_backups">
         <item quantity="one">No se ha podido importar la copia de seguridad %1$d</item>
@@ -1070,7 +1037,6 @@
     <string name="pref_selected_users">Usuarios seleccionados</string>
     <string name="pref_selected_users_msg">Restringe App Manager para que funcione sólo con los usuarios seleccionados.</string>
     <string name="permission_flags">Marcas de permiso</string>
-    <string name="enable_disable">Activar/desactivar</string>
     <string name="error_with_details">Error: %s</string>
     <string name="saved_filters">Filtros guardados</string>
     <string name="notice">Aviso</string>
@@ -1249,4 +1215,125 @@
     <string name="changelog_type_fix">Corregir</string>
     <string name="changelog_type_improve">Mejorar</string>
     <string name="am_command"><tt>comando am</tt></string>
+    <string name="failed_to_unfreeze">No se pudo descongelar <xliff:g id="app_name" example="App Manager">%1$s</xliff:g>.</string>
+    <string name="freeze_unfreeze">Congelar/descongelar</string>
+    <string name="profile_freeze_msg">Congela o descongela las aplicaciones en función de su estado</string>
+    <string name="pref_default_freezing_method">Método de congelación por defecto</string>
+    <string name="pref_default_freezing_method_description">Método que se utilizará por defecto en los lugares en los que no hay opción de seleccionar un método de congelación.</string>
+    <string name="suspend_app">Suspender</string>
+    <string name="hide_app">Ocultar</string>
+    <plurals name="alert_failed_to_freeze">
+        <item quantity="one">No se pudo congelar la aplicación %1$d</item>
+        <item quantity="many">No se pudieron congelar %1$d aplicaciones</item>
+        <item quantity="other">No se pudieron congelar %1$d aplicaciones</item>
+    </plurals>
+    <string name="suspend_app_description">Este es el método de congelación más débil. Una aplicación suspendida puede seguir apareciendo en el lanzador, pero aparecerá en gris y no se podrá iniciar.</string>
+    <string name="disable_app_description">Método de congelación recomendado. Deshabilita la aplicación y todos sus componentes, pero se perderán todos los accesos directos.</string>
+    <string name="hide_app_description">Este método solo se recomienda para el uso diario. Una aplicación oculta aparece como si estuviera desinstalada. Pero la aplicación podría reaparecer si está instalada o actualizada.</string>
+    <string name="sort_by_frozen_app">Congelado primero</string>
+    <string name="filter_frozen_apps">Aplicaciones congeladas</string>
+    <string name="pref_appearance_description">Tema, orientación, características, etc.</string>
+    <string name="pref_privacy">Privacidad</string>
+    <string name="pref_advanced_pref">Usuarios, formato del nombre del APK, ejecución paralela, etc.</string>
+    <string name="pref_version_changelog">Versión/registro de cambios</string>
+    <string name="failed_to_freeze">No se ha podido congelar <xliff:g id="app_name" example="App Manager">%1$s</xliff:g>.</string>
+    <string name="user_manual">Manual de usuario</string>
+    <string name="get_help">Consigue ayuda</string>
+    <plurals name="alert_failed_to_unfreeze">
+        <item quantity="one">No se pudo descongelar la aplicación %1$d</item>
+        <item quantity="many">No se pudieron descongelar %1$d aplicaciones</item>
+        <item quantity="other">No se pudieron descongelar %1$d aplicaciones</item>
+    </plurals>
+    <string name="pref_privacy_description">Bloqueo de pantalla, autorización, etc.</string>
+    <string name="file_creation_date">Creado</string>
+    <string name="file_modification_date">Modificado</string>
+    <string name="file_open_with">Abrir con</string>
+    <string name="file_accessed_date">Accesado</string>
+    <string name="file_change_open_with">Cambie abrir con</string>
+    <string name="file_shortcut_target_file">Documento objectivo</string>
+    <string name="file_properties">Propiedades</string>
+    <string name="file_cut">Cortar</string>
+    <string name="fm_always_open_with">Siempre abierto</string>
+    <string name="fm_open_with_for_this_file_only">Solo abierto para este documento</string>
+    <string name="file_open_as">Abrir como…</string>
+    <string name="open_as_text">Texto</string>
+    <string name="open_as_image">Imagen</string>
+    <string name="open_as_video">Video</string>
+    <string name="open_as_archive">Archivo</string>
+    <string name="open_as_folder">Carpeta</string>
+    <string name="open_as_other">Otro</string>
+    <string name="action_stop_service">Parar</string>
+    <string name="delete_filename">Eliminar %s</string>
+    <string name="confirm_file_deletion">Sí, eliminar</string>
+    <string name="on_open_application_no_recents">No mostrar aplicaciones en recientes</string>
+    <string name="file_open_with_custom_activity">Personalizar</string>
+    <string name="on_unfreeze_open_application">Abrir aplicaciones despues de descongelar</string>
+    <string name="file_open_with_os_default_dialog">Abrir con dialogo por defecto del Sistema Operativo</string>
+    <string name="freeze_on_phone_locked">Congelar automáticamente la aplicación cuando el teléfono está bloqueado</string>
+    <string name="tap_to_freeze_app">Tocar para congelar</string>
+    <string name="waiting_for_the_phone_to_be_locked">Esperando a que el teléfono se bloquee…</string>
+    <string name="app_can_write_and_execute_in_same_place">La aplicación infringe la <a href="https://es.wikipedia.org/wiki/W%5EX"> Politica W^X</a> y es capaz de escribir y ejecutar en el mismo directorio o en la misma parte de memoria. Esto permite la ejecución de ejecutables arbitrarios, ya sea modificando los ejecutables integrados en la aplicación o descargándolos de Internet. A menos que este sea el comportamiento previsto de la aplicación (p. ej., emuladores de terminal), se recomienda buscar una versión más reciente de la aplicación que apunte al SDK 29 (Android 10) y versiones posteriores, o buscar alternativas.</string>
+    <string name="sort_by_filename">Nombre</string>
+    <string name="file_owner_id">Propio (UID)</string>
+    <string name="calculating_file_size">Calculando…</string>
+    <string name="sort_by_file_size">Tamaño del archivo</string>
+    <string name="export_app_list_select_format">Seleccione el formato para exportar la lista de aplicaciones</string>
+    <string name="file_group_id">Grupo (GID)</string>
+    <string name="option_display_dot_files">Archivos de respaldo</string>
+    <string name="option_display_folders_on_top">Carpetas en la parte superior</string>
+    <string name="sort_by_last_modified">Última modificación</string>
+    <string name="sort_by_file_type">Tipo de archivo</string>
+    <string name="export_app_list">Exportar lista de aplicaciones</string>
+    <string name="export_option_xml">XML</string>
+    <string name="funding_campaign_text">Estamos ejecutando una <b>campaña de financiación</b> para App Manager por un período limitado. <a href="https://opencollective.com/app-manager#category-ABOUT">más información...</a></string>
+    <string name="adb_incomplete_usb_debugging_message">Parece que la depuración de USB no está configurada correctamente. Lea <a href="https://muntashirakon.github.io/AppManager/#subsec:enable-usb-debugging">la documentación</a> para conocer los pasos adicionales. Si ya conoce los pasos, haga clic en \"Abrir\" para abrir las opciones de desarrollador, o haga clic en \"Cerrar\" para continuar usando el Root.</string>
+    <string name="funding_campaign_dialog_message">Nosotros estamos ejecutando una <b>campaña de financiación</b> para App Manager por un período limitado. Visita <a href="https://opencollective.com/app-manager#category-ABOUT">opencollective.com/app-manager</a> para saber más sobre la campaña. Este aviso no se volverá a mostrar, pero puede encontrarlo en la página Configuración durante toda la campaña.</string>
+    <string name="title_ui_tracker">Rastreador de interfaz de usuario</string>
+    <string name="title_terminal_emulator">Terminal</string>
+    <string name="class_hierarchy">Jerarquía</string>
+    <string name="title_labs_activity">Laboratorios</string>
+    <string name="export_option_markdown">Reducción</string>
+    <string name="adb_incomplete_usb_debugging_title">Depuración USB incompleta</string>
+    <string name="sort_by_data_usage">Uso de datos</string>
+    <string name="filter_apps_with_keystore">Con almacén de claves</string>
+    <string name="filter_apps_with_saf">Con SAF</string>
+    <string name="filter_apps_with_ssaid">Con SSAID</string>
+    <string name="action_continue">Continuar</string>
+    <string name="install_for_another_user">Instalar para…</string>
+    <string name="confirm_uninstallation">Confirmar desinstalación</string>
+    <string name="grant_required_permission">Otorgar el permiso requerido</string>
+    <string name="grant_overlay_permission_message">Permitir que App Manager muestre una ventana flotante</string>
+    <string name="grant_accessibility_permission_for_tracking_window_contents">Permita que App Manager utilice la función de accesibilidad para rastrear el contenido de la ventana principal.</string>
+    <string name="app_manager_build_expired">Actualización requerida</string>
+    <string name="app_manager_build_expired_message">Para garantizar la seguridad de su dispositivo y sus datos, se retiró la versión de App Manager que estába utilizando. Tienes que actualizarlo a la última versión para seguir usándolo, o desinstalarlo si no hay actualización disponible.</string>
+    <string name="app_manager_build_expiring_soon_warning">Esta versión de App Manager caducará muy pronto. Actualícelo a la última versión.</string>
+    <string name="renamed_successfully">Renombrado</string>
+    <string name="selinux_context">contexto de SELinux</string>
+    <string name="unix_file_permissions">Modo</string>
+    <string name="select_a_dex2oat_compiler_filter"><tt>dex2oat</tt> filtro del compilador</string>
+    <string name="optimize_option_compile_layouts">Compilar los recursos de diseño</string>
+    <string name="optimize_option_clear_profile_data">Borrar datos de perfil anteriores</string>
+    <string name="optimize_option_check_profiles">Considere datos de perfil durante la optimización DEX</string>
+    <string name="optimize_option_force_compilation">Forzar la compilacion aunque no sea necesario</string>
+    <string name="optimize_option_force_dexopt">Realizar inmediatamente la optimización DEX</string>
+    <string name="title_perform_runtime_optimization_to_apps">Realizar optimización del tiempo de ejecución</string>
+    <string name="action_run">Iniciar</string>
+    <string name="summary_perform_runtime_optimization_to_apps">Optimice DEX y diseños (en Android 10 y versiones posteriores) para mejorar el rendimiento de las aplicaciones.</string>
+    <string name="action_optimize_app">Optimización</string>
+    <string name="batch_ops_runtime_optimization">Optimización del tiempo de ejecución</string>
+    <plurals name="alert_failed_to_optimize_apps">
+        <item quantity="one">No se han podido optimizar %1$d aplicacion</item>
+        <item quantity="many">No se han podido optimizar %1$d aplicaciones</item>
+        <item quantity="other">No se han podido optimizar %1$d aplicaciones</item>
+    </plurals>
+    <string name="app_info_tag_open_links">Open links</string>
+    <string name="title_domains_supported_by_the_app">Dominios soportados</string>
+    <string name="block_unblock_components_dots">Bloquear/desbloquear componentes…</string>
+    <string name="unblock_components_dots">Desbloquear componentes…</string>
+    <string name="block_unblock_components_description">Bloquear o desbloquear todos los componentes identificados por las firmas dadas</string>
+    <plurals name="alert_failed_to_unblock_components">
+        <item quantity="one">"No se pudo desbloquear  los componentes para %1$d app"</item>
+        <item quantity="many">No se pudieron desbloquear los componentes para %1$d app</item>
+        <item quantity="other"/>
+    </plurals>
 </resources>

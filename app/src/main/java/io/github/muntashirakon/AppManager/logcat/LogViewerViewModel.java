@@ -2,11 +2,8 @@
 
 package io.github.muntashirakon.AppManager.logcat;
 
-import android.Manifest;
 import android.app.Application;
 import android.net.Uri;
-import android.os.RemoteException;
-import android.os.UserHandleHidden;
 
 import androidx.annotation.AnyThread;
 import androidx.annotation.NonNull;
@@ -33,8 +30,6 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 import io.github.muntashirakon.AppManager.R;
-import io.github.muntashirakon.AppManager.backup.BackupFiles;
-import io.github.muntashirakon.AppManager.compat.PermissionCompat;
 import io.github.muntashirakon.AppManager.db.AppsDb;
 import io.github.muntashirakon.AppManager.db.entity.LogFilter;
 import io.github.muntashirakon.AppManager.logcat.helper.BuildHelper;
@@ -46,13 +41,13 @@ import io.github.muntashirakon.AppManager.logcat.struct.SavedLog;
 import io.github.muntashirakon.AppManager.logcat.struct.SendLogDetails;
 import io.github.muntashirakon.AppManager.logs.Log;
 import io.github.muntashirakon.AppManager.runner.Runner;
-import io.github.muntashirakon.AppManager.settings.Ops;
-import io.github.muntashirakon.AppManager.utils.AppPref;
-import io.github.muntashirakon.AppManager.utils.FileUtils;
+import io.github.muntashirakon.AppManager.self.filecache.FileCache;
+import io.github.muntashirakon.AppManager.settings.Prefs;
 import io.github.muntashirakon.AppManager.utils.MultithreadedExecutor;
-import io.github.muntashirakon.AppManager.utils.PermissionUtils;
-import io.github.muntashirakon.AppManager.utils.UiThreadHandler;
+import io.github.muntashirakon.AppManager.utils.ThreadUtils;
+import io.github.muntashirakon.io.IoUtils;
 import io.github.muntashirakon.io.Path;
+import io.github.muntashirakon.io.Paths;
 
 // Copyright 2022 Muntashir Al-Islam
 public class LogViewerViewModel extends AndroidViewModel {
@@ -80,36 +75,18 @@ public class LogViewerViewModel extends AndroidViewModel {
     private final MutableLiveData<List<LogFilter>> mLogFiltersLiveData = new MutableLiveData<>();
     private final MutableLiveData<Path> mLogSavedLiveData = new MutableLiveData<>();
     private final MutableLiveData<SendLogDetails> mLogToBeSentLiveData = new MutableLiveData<>();
-    private final List<Path> mTemporaryFiles = new LinkedList<>();
     private final MultithreadedExecutor mExecutor = MultithreadedExecutor.getNewInstance();
 
     public LogViewerViewModel(@NonNull Application application) {
         super(application);
-        mFilterPattern = Pattern.compile(AppPref.getString(AppPref.PrefKey.PREF_LOG_VIEWER_FILTER_PATTERN_STR));
+        mFilterPattern = Pattern.compile(Prefs.LogViewer.getFilterPattern());
     }
 
     @Override
     protected void onCleared() {
         killLogcatReaderInternal();
         mExecutor.shutdown();
-        for (Path path : mTemporaryFiles) {
-            path.delete();
-        }
         super.onCleared();
-    }
-
-    @AnyThread
-    public void grantReadLogsPermission() {
-        if (!PermissionUtils.hasPermission(getApplication(), Manifest.permission.READ_LOGS) && Ops.isPrivileged()) {
-            mExecutor.submit(() -> {
-                try {
-                    PermissionCompat.grantPermission(getApplication().getPackageName(), Manifest.permission.READ_LOGS,
-                            UserHandleHidden.myUserId());
-                } catch (RemoteException e) {
-                    Log.d(TAG, e.toString());
-                }
-            });
-        }
     }
 
     public LiveData<Boolean> observeLoggingFinished() {
@@ -151,11 +128,11 @@ public class LogViewerViewModel extends AndroidViewModel {
             try {
                 mReader = LogcatReaderLoader.create(true).loadReader();
 
-                int maxLines = AppPref.getInt(AppPref.PrefKey.PREF_LOG_VIEWER_DISPLAY_LIMIT_INT);
+                int maxLines = Prefs.LogViewer.getDisplayLimit();
 
                 String line;
                 LinkedList<LogLine> initialLines = new LinkedList<>();
-                while ((line = mReader.readLine()) != null && !Thread.currentThread().isInterrupted()) {
+                while ((line = mReader.readLine()) != null && !ThreadUtils.isInterrupted()) {
                     if (mPaused) {
                         synchronized (mLock) {
                             if (mPaused) {
@@ -220,7 +197,7 @@ public class LogViewerViewModel extends AndroidViewModel {
             LogLinesAvailableInterface i = logLinesAvailableInterface.get();
             List<LogLine> logLines1 = new ArrayList<>(logLines);
             if (i != null) {
-                UiThreadHandler.run(() -> i.onNewLogsAvailable(logLines1));
+                ThreadUtils.postOnMainThread(() -> i.onNewLogsAvailable(logLines1));
             }
         }
     }
@@ -280,7 +257,7 @@ public class LogViewerViewModel extends AndroidViewModel {
         if (!mKilled) {
             synchronized (mLock) {
                 if (!mKilled && mReader != null) {
-                    mReader.killQuietly(mExecutor);
+                    mReader.killQuietly();
                     mKilled = true;
                 }
             }
@@ -291,7 +268,7 @@ public class LogViewerViewModel extends AndroidViewModel {
     public void openLogsFromFile(Uri filename, @Nullable WeakReference<LogLinesAvailableInterface> logLinesAvailableInterface) {
         mExecutor.submit(() -> {
             // remove any lines at the beginning if necessary
-            final int maxLines = AppPref.getInt(AppPref.PrefKey.PREF_LOG_VIEWER_DISPLAY_LIMIT_INT);
+            final int maxLines = Prefs.LogViewer.getDisplayLimit();
             SavedLog savedLog;
             savedLog = SaveLogHelper.openLog(filename, maxLines);
             List<String> lines = savedLog.getLogLines();
@@ -337,7 +314,7 @@ public class LogViewerViewModel extends AndroidViewModel {
             }
             try (OutputStream output = path.openOutputStream()) {
                 try (InputStream input = sendLogDetails.getAttachment().openInputStream()) {
-                    FileUtils.copy(input, output);
+                    IoUtils.copy(input, output, -1, null);
                 }
                 mLogSavedLiveData.postValue(path);
             } catch (IOException e) {
@@ -359,7 +336,7 @@ public class LogViewerViewModel extends AndroidViewModel {
             }
             String dmesg = null;
             if (includeDmesg) {
-                Runner.Result result = Runner.runCommand("dmesg");
+                Runner.Result result = Runner.runCommand(new String[]{"dmesg"});
                 if (result.isSuccessful()) {
                     dmesg = result.getOutput();
                     if (dmesg.length() == 0) {
@@ -383,39 +360,36 @@ public class LogViewerViewModel extends AndroidViewModel {
             } else if (exportCount == 1) {
                 Path tempFile;
                 if (!logLines.isEmpty()) {
-                    tempFile = SaveLogHelper.saveTemporaryFile(SaveLogHelper.TEMP_LOG_FILENAME, null, logLines);
+                    tempFile = SaveLogHelper.saveTemporaryFile("log", null, logLines);
                 } else if (dmesg != null) {
-                    tempFile = SaveLogHelper.saveTemporaryFile(SaveLogHelper.TEMP_DMESG_FILENAME, dmesg, null);
-                } else {
-                    tempFile = SaveLogHelper.saveTemporaryFile(SaveLogHelper.TEMP_DEVICE_INFO_FILENAME, deviceInfo, null);
+                    tempFile = SaveLogHelper.saveTemporaryFile("txt", dmesg, null);
+                } else { // Device info
+                    tempFile = SaveLogHelper.saveTemporaryFile("txt", deviceInfo, null);
                 }
                 sendLogDetails.setAttachmentType("text/plain");
                 sendLogDetails.setAttachment(tempFile);
-                mTemporaryFiles.add(tempFile);
             } else { // Multiple attachments, make zip first
                 try {
-                    String filename = SaveLogHelper.createZipFilename(true);
-                    Path zipFile = BackupFiles.getTemporaryDirectory().createNewFile(filename, null);
+                    Path zipFile = Paths.get(FileCache.getGlobalFileCache().createCachedFile("zip"));
                     try (ZipOutputStream output = new ZipOutputStream(new BufferedOutputStream(zipFile.openOutputStream(), 0x1000))) {
                         if (!logLines.isEmpty()) {
-                            output.putNextEntry(new ZipEntry(SaveLogHelper.TEMP_LOG_FILENAME));
+                            output.putNextEntry(new ZipEntry(SaveLogHelper.LOG_FILENAME));
                             for (String logLine : logLines) {
                                 output.write(logLine.getBytes(StandardCharsets.UTF_8));
                                 output.write("\n".getBytes(StandardCharsets.UTF_8));
                             }
                         }
                         if (deviceInfo != null) {
-                            output.putNextEntry(new ZipEntry(SaveLogHelper.TEMP_DEVICE_INFO_FILENAME));
+                            output.putNextEntry(new ZipEntry(SaveLogHelper.DEVICE_INFO_FILENAME));
                             output.write(deviceInfo.getBytes(StandardCharsets.UTF_8));
                         }
                         if (dmesg != null) {
-                            output.putNextEntry(new ZipEntry(SaveLogHelper.TEMP_DMESG_FILENAME));
+                            output.putNextEntry(new ZipEntry(SaveLogHelper.DMESG_FILENAME));
                             output.write(dmesg.getBytes(StandardCharsets.UTF_8));
                         }
                     }
                     sendLogDetails.setAttachmentType("application/zip");
                     sendLogDetails.setAttachment(zipFile);
-                    mTemporaryFiles.add(zipFile);
                 } catch (Throwable th) {
                     th.printStackTrace();
                     sendLogDetails.setAttachmentType(null);

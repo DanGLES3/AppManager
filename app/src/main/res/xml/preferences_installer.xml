@@ -3,12 +3,6 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <SwitchPreferenceCompat
-        app:key="installer_display_users"
-        app:title="@string/pref_show_users_in_installer"
-        app:summary="@string/pref_show_users_in_installer_msg"
-        app:iconSpaceReserved="false" />
-
-    <SwitchPreferenceCompat
         app:key="installer_sign_apk"
         app:title="@string/pref_sign_apk"
         app:summary="@string/pref_sign_apk_msg"
@@ -30,6 +24,12 @@
         app:key="installer_block_trackers"
         app:title="@string/block_trackers"
         app:summary="@string/pref_block_trackers_msg"
+        app:iconSpaceReserved="false" />
+
+    <SwitchPreferenceCompat
+        app:key="installer_force_dex_opt"
+        app:title="@string/optimize_option_force_dexopt"
+        app:summary="@string/pref_installer_force_dexopt_description"
         app:iconSpaceReserved="false" />
 
     <SwitchPreferenceCompat

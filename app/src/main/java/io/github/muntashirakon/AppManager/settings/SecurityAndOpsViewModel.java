@@ -55,7 +55,7 @@ public class SecurityAndOpsViewModel extends AndroidViewModel implements Ops.Adb
         mExecutor.submit(() -> {
             // Migration
             long thisVersion = BuildConfig.VERSION_CODE;
-            long lastVersion = (long) AppPref.get(AppPref.PrefKey.PREF_LAST_VERSION_CODE_LONG);
+            long lastVersion = AppPref.getLong(AppPref.PrefKey.PREF_LAST_VERSION_CODE_LONG);
             if (lastVersion == 0) {
                 // First version: set this as the last version
                 AppPref.set(AppPref.PrefKey.PREF_LAST_VERSION_CODE_LONG, (long) BuildConfig.VERSION_CODE);
@@ -94,7 +94,7 @@ public class SecurityAndOpsViewModel extends AndroidViewModel implements Ops.Adb
     public void connectAdb(int port) {
         mExecutor.submit(() -> {
             Log.d(TAG, "Before Ops::connectAdb");
-            int status = Ops.connectAdb(port, Ops.STATUS_FAILURE);
+            int status = Ops.connectAdb(getApplication(), port, Ops.STATUS_FAILURE);
             Log.d(TAG, "After Ops::connectAdb");
             mAuthenticationStatus.postValue(status);
         });

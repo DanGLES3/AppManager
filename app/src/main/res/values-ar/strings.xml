@@ -54,10 +54,11 @@
 \n- مكتبة سجل التغيير <a href="https://github.com/gabrielemariotti/changeloglib"> </a>
 \n- <a href="https://bitbucket.org/oF2pks/fdroid-classyshark3xodus"> ClassySharkAndroid </a>
 \n- محرر <a href="https://github.com/billthefarmer/editor"> </a>
+\n- <a href="https://github.com/Raival-e/File-Explorer"> مستكشف الملفات </a>
 \n- <a href="https://github.com/nex3z/FlowLayout"> FlowLayout </a>
 \n- <a href="https://github.com/k3b/intent-intercept"> اعتراض النية </a>
 \n- <a href="https://github.com/YarikSOffice/lingver"> Lingver </a>
-\n- <a href="https://github.com/topjohnwu/Magisk"> ماجيسك </a>
+\n- <a href="https://github.com/topjohnwu/Magisk"> Magisk </a>
 \n- <a href="https://github.com/zhanghai/MaterialFiles"> ملفات المواد </a>
 \n- <a href="https://github.com/pluscubed/matlog"> MatLog </a>
 \n- <a href="https://github.com/matrix-org/matrix-android-sdk"> Matrix Android SDK </a>
@@ -65,23 +66,19 @@
 \n- <a href="https://github.com/open-keychain/open-keychain"> Open Keychain </a>
 \n- <a href="https://github.com/Aefyr/SAI"> SAI </a>
 \n- <a href="https://github.com/RikkaApps/Shizuku"> شيزوكو </a>
-\n- <a href="https://github.com/tuyafeng/Watt"> واط </a>
-\nمصدر الشعار الأصلي: <a href="https://github.com/Atrate"> Atrate </a>. </string>
+\n- <a href="https://github.com/eclipse/tm4e"> tm4e </a>
+\n- <a href="https://github.com/tuyafeng/Watt"> واط </a> </string>
     <string name="credits">الإشادات</string>
     <string name="third_party">مكتبات وأيقونات الطرف الثالث</string>
     <string name="license">الرخصة</string>
     <string name="icon_picker">منتقي الأيقونات</string>
-    <string name="error_invalid_icon_resource">مصدر الايقونه غير صالح</string>
-    <string name="error_invalid_icon_format">تنسيق الايقونه غير صالح</string>
     <string name="class_name">اسم الفصل</string>
     <string name="package_name">اسم الحزمة</string>
     <string name="shortcut_name">اسم الاختصار</string>
-    <string name="edit_shortcut">تحرير الاختصار</string>
     <string name="create_shortcut">إنشاء اختصار</string>
     <string name="starting_activity">بدء النشاط: <xliff:g id="activity_name" example=".main.MainActivity"> %1$s </xliff:g></string>
     <string name="error_verbose_pin_shortcut">المشغل الحالي لا يدعم تدبيس الإختصار. تعذر إنشاء الاختصار.</string>
     <string name="error_creating_shortcut">خطأ في إنشاء الاختصار</string>
-    <string name="instructions">التعليمات</string>
     <string name="empty_package_name">اسم الحزمة فارغ</string>
     <string name="main_activity">النشاط الرئيسي</string>
     <string name="user_id">معرف المستخدم</string>
@@ -149,14 +146,12 @@
     <string name="no_receivers">لا يوجد مستقبلات</string>
     <string name="receivers">المستقبلات</string>
     <string name="no_activities">لا توجد أنشطة</string>
-    <string name="refresh">تحديث</string>
+    <string name="refresh">حدِّث</string>
     <string name="no_app_ops">لا توجد عمليات تطبيق</string>
     <string name="app_size">التطبيق</string>
     <string name="storage_and_cache">التخزين وذاكرة التخزين المؤقت</string>
     <string name="failed_to_stop">لا يمكن ايقافه <xliff:g id="app_name" example="App Manager">%1$s</xliff:g>.</string>
     <string name="force_stop">إيقاف إجباري</string>
-    <string name="failed_to_enable">تعذر تمكين التطبيق <xliff:g id="app_name" example="App Manager"> %1$s </xliff:g>.</string>
-    <string name="failed_to_disable">تعذر التعطيل <xliff:g id="app_name" example="App Manager"> %1$s </xliff:g>.</string>
     <string name="enable">تفعيل</string>
     <string name="disable">تعطيل</string>
     <string name="stopped">متوقف</string>
@@ -285,9 +280,8 @@
     <string name="components">المكونات</string>
     <string name="trackers">المقتعقبون</string>
     <string name="installed_version">النسخة المُثبتة</string>
-    <string name="filter_disabled_apps">التطبيقات المعطلة</string>
     <string name="select_all">اختر الكل</string>
-    <string name="filter_apps_with_rules">التطبيقات ذات القواعد</string>
+    <string name="filter_apps_with_rules">مع القواعد</string>
     <string name="filter_system_apps">تطبيقات النظام</string>
     <string name="filter_user_apps">تطبيقات المستخدم</string>
     <string name="filter">عامل التصفية</string>
@@ -307,15 +301,11 @@
     <string name="clear_data_from_uninstalled_apps_description">امسح البيانات من التطبيقات التي تم إلغاء تثبيتها بعلامة <tt> DONT_DELETE_DATA </tt></string>
     <string name="clear_data_from_uninstalled_apps">مسح البيانات من التطبيقات التي تم إلغاء تثبيتها</string>
     <string name="deny_app_ops_description">قم بتعيين وضع لعمليات التطبيق التي تحددها القيم الثابتة، أي <tt>63</tt> أو <tt>RUN_IN_BACKGROUND</tt></string>
-    <string name="block_components_description">حظر كافة المكونات التي تم تعريفها بواسطة التواقيع المحددة</string>
     <string name="block_components_dots">حجب المكونات…</string>
     <string name="block_unblock_trackers_description">حظر أو إلغاء حظر الإعلانات ومكونات التتبع في جميع التطبيقات المثبتة</string>
     <string name="clear_cache">مسح التخزين المؤقت</string>
     <string name="pref_import_existing">استيراد القواعد الموجودة</string>
-    <string name="source_code_links">جيثب: https://github.com/MuntashirAkon/AppManager
-\nجيت لاب: https://gitlab.com/muntashir/AppManager
-\nالنهوض: https://0xacab.org/muntashir/AppManager
-\nكودبرغ: https://codeberg.org/muntashir/AppManager</string>
+    <string name="source_code_links"><a href="https://github.com/MuntashirAkon/AppManager"> GitHub</a> • <a href="https://gitlab.com/muntashir/AppManager"> GitLab</a> • <a href="https://0xacab.org/muntashir/AppManager"> Riseup</a> • <a href="https://codeberg.org/muntashir/AppManager"> Codeberg</a></string>
     <string name="source_code">الشفرة المصدرية</string>
     <string name="update">تحديث</string>
     <string name="install">تثبيت</string>
@@ -324,7 +314,7 @@
     <string name="changelog">سجل التغييرات</string>
     <string name="one_click_ops">عمليات بضغطة واحدة</string>
     <string name="never_ask">لا تسأل أبدا</string>
-    <string name="launch_app">تشغيل</string>
+    <string name="launch_app">تشغيل التطبيق</string>
     <string name="failed_to_deny_dangerous_app_ops">لا يمكن إلغاء جميع عمليات التطبيق الخطرة</string>
     <string name="failed_to_deny_dangerous_perms">تعذر إبطال كافة الأذونات الخطيرة</string>
     <string name="failed_to_reset_app_ops">تعذر إعادة تعيين عمليات التطبيق</string>
@@ -335,7 +325,7 @@
     <string name="deny_dangerous_permissions">رفض الأذونات الخطيرة</string>
     <string name="sort_by_denied_permissions">المرفوضة أولا</string>
     <string name="sort_by_dangerous_permissions">الخطيرة أولا</string>
-    <string name="sort_by_permission_names">اسم الصلاحية</string>
+    <string name="sort_by_permission_names">اسم الإذن</string>
     <string name="sort_by_app_ops_values">قيمة عمليات التطبيق</string>
     <string name="sort_by_denied_app_ops">المرفوضة أولا</string>
     <string name="sort_by_app_ops_names">اسم عمليات التطبيق</string>
@@ -386,7 +376,6 @@
     <string name="disable_background_run">منع التشغيل في الخلفية</string>
     <string name="kill_process">قتل</string>
     <string name="running_apps">التطبيقات المشغلة</string>
-    <string name="store">متجر التطبيقات</string>
     <string name="apk_updater">محدث APK</string>
     <string name="the_export_was_successful">تمت عملية التصدير</string>
     <string name="the_import_was_successful">تمَّت عملية الإستيراد</string>
@@ -401,7 +390,6 @@
     <string name="external_multiple_data_dir">مسار البيانات الخارجي <xliff:g id="dir_no" example="1">%1$d</xliff:g></string>
     <string name="external_data_dir">مسار البيانات الخارجية</string>
     <string name="sort_by_blocked_components">المحظورة أولاً</string>
-    <string name="sort_by_disabled_app">المعطلة أولا</string>
     <string name="exodus_link">رابط εxodus</string>
     <string name="usage_yesterday">في الامس</string>
     <string name="app_settings">اﻹعدادات</string>
@@ -441,7 +429,7 @@
     <string name="install_location_internal_only">الداخلية فقط</string>
     <string name="install_location">موقع التثبيت</string>
     <string name="installer">المثبت</string>
-    <string name="comment">تعليق</string>
+    <string name="comment">ملاحظة</string>
     <string name="close">إغلاق</string>
     <string name="no_root">لا يوجد جذر</string>
     <string name="root">الجذر</string>
@@ -454,12 +442,11 @@
     <string name="input_permissions">أذونات الإدخال</string>
     <string name="options">الخيارات</string>
     <string name="off">غير مفعّل</string>
-    <string name="on">تشغيل</string>
+    <string name="on">يعمل</string>
     <string name="profile_state_msg">حالة تشغيل/إيقاف مخصصة لملف التعريف هذا</string>
     <string name="profile_block_trackers_msg">حظر برمجيات التتبع في التطبيقات</string>
     <string name="profile_clear_data_msg">مسح بيانات التطبيقات</string>
     <string name="profile_clear_cache_msg">مسح ذاكرة التخزين المؤقت للتطبيقات</string>
-    <string name="profile_disable_msg">تعطيل التطبيقات أو تمكينها استنادا إلى الحالة</string>
     <string name="allow_routine_ops_msg">السماح باستخدام ملف التعريف في العمليات الروتينية</string>
     <string name="profile_state">حالة الملف الشخصي</string>
     <string name="allow_routine_ops">السماح بالعمليات الروتينية</string>
@@ -472,8 +459,6 @@
     <string name="pref_encryption_msg">تشفير النسخ الاحتياطية.</string>
     <string name="encryption">التشفير</string>
     <string name="select_user">اختر المستخدم</string>
-    <string name="pref_show_users_in_installer_msg">اعرض قائمة بالمستخدمين المراد تحديدهم قبل تثبيت تطبيق خارجي. يتطلب الجذر أو ADB.</string>
-    <string name="pref_show_users_in_installer">إظهار المستخدمين في المثبت</string>
     <string name="failed_to_duplicate_profile">تعذر تكرار ملف التعريف</string>
     <string name="duplicate">مكرره</string>
     <string name="new_profile">ملف تعريف جديد</string>
@@ -695,14 +680,6 @@
         <item quantity="many">تعذر استعادة %1$d تطبيق</item>
         <item quantity="other">تعذر استعادة %1$d تطبيق</item>
     </plurals>
-    <plurals name="alert_failed_to_enable">
-        <item quantity="zero">تعذر تمكين %1$d تطبيق</item>
-        <item quantity="one">تعذر تمكين %1$d تطبيق</item>
-        <item quantity="two">تعذر تمكين %1$d تطبيق</item>
-        <item quantity="few">تعذر تمكين %1$d تطبيقات</item>
-        <item quantity="many">تعذر تمكين %1$d تطبيقات</item>
-        <item quantity="other">تعذر تمكين %1$d تطبيق</item>
-    </plurals>
     <plurals name="backup_exists_are_you_sure">
         <item quantity="zero">النسخة الاحتياطية موجودة بالفعل. هل أنت متأكد؟</item>
         <item quantity="one">النسخة الاحتياطية موجودة بالفعل. هل أنت متأكد؟</item>
@@ -751,7 +728,6 @@
         <item quantity="many">تم التحقق مع تحذير %d</item>
         <item quantity="other">تم التحقق مع تحذير %d</item>
     </plurals>
-    <string name="presets">الإعدادات المسبقة</string>
     <string name="verified_using_unreliable_hash">تم التحقق باستخدام تجزئة غير موثوقة</string>
     <plurals name="alert_failed_to_backup">
         <item quantity="zero">تعذر نسخ تطبيق %1$d احتياطيًا</item>
@@ -869,14 +845,6 @@
         <item quantity="many">تعذر إلغاء تثبيت %1$d التطبيقات</item>
         <item quantity="other">تعذر إلغاء تثبيت %1$d التطبيق</item>
     </plurals>
-    <plurals name="alert_failed_to_disable">
-        <item quantity="zero">تعذر تعطيل %1$d تطبيق</item>
-        <item quantity="one">تعذر تعطيل %1$d تطبيق</item>
-        <item quantity="two">تعذر تعطيل %1$d تطبيق</item>
-        <item quantity="few">تعذر تعطيل %1$d تطبيقات</item>
-        <item quantity="many">تعذر تعطيل %1$d تطبيق</item>
-        <item quantity="other">تعذر تعطيل %1$d تطبيق</item>
-    </plurals>
     <plurals name="alert_failed_to_clear_data">
         <item quantity="zero">تعذر مسح البيانات من %1$d تطبيق</item>
         <item quantity="one">تعذر مسح البيانات من %1$d تطبيق</item>
@@ -937,8 +905,8 @@
     <string name="backup_obb_media_description">النسخ الاحتياطي لمجلدات OBB والوسائط.</string>
     <string name="backup_cache_description">نسخ <b> ذاكرة التخزين المؤقت</b>، <b>no_cache</b> و <b>no_backup</b> المجلدات.</string>
     <string name="backup_extras">إضافية</string>
-    <string name="backup_extras_description">نسخ أذونات التطبيق احتياطيًا ، وخيارات توفير البطارية واستخدام البيانات ، وحالة MagiskHide ، و SSAID ، وما إلى ذلك.</string>
-    <string name="backup_rules_description">قواعد النسخ الاحتياطي التي تم تكوينها داخل مدير التطبيقات.</string>
+    <string name="backup_extras_description">قم بعمل نسخة احتياطية من أذونات التطبيق ، وتوفير البطارية وخيارات استخدام البيانات ، وحالة MagiskHide ، و SSAID ، وما إلى ذلك. <font fgcolor="#ff0000"> اعتمادا على الأذونات ، لا يمكن استعادة جميع الإضافات. </font> </string>
+    <string name="backup_rules_description">قواعد النسخ الاحتياطي التي تم تكوينها داخل مدير التطبيقات. <font fgcolor="#ff0000"> اعتمادًا على الأذونات ، لا يمكن إعادة تطبيق جميع القواعد أثناء الاستعادة. </font> </string>
     <string name="backup_multiple_description">قم بإنشاء نسخة احتياطية منفصلة <i> باسم </i> بدلاً من النسخة الاحتياطية الأساسية.</string>
     <string name="patch_level">مستوى التصحيح</string>
     <string name="selinux">امان لينكس المحسن</string>
@@ -1079,7 +1047,6 @@
     <string name="pref_filter_pattern_title">تصفية العلامات</string>
     <string name="record_log">تسجيل السجل</string>
     <string name="base_backup">النسخ الاحتياطي الأساسي</string>
-    <string name="pref_layout_orientation">اتجاه التخطيط</string>
     <string name="orientation_follow_locale">اتبع اللغة</string>
     <string name="orientation_left_to_right">من اليسار إلى اليمين</string>
     <string name="orientation_right_to_left">من اليمين الى اليسار</string>
@@ -1145,13 +1112,10 @@
     <string name="adb_connect_port_number_description">يوجد رقم المنفذ أسفل قسم <b>عنوان IP &amp; المنفذ</b> أسفل قسم <b>اسم الجهاز</b> مباشرةً.</string>
     <string name="port_number">المنفذ</string>
     <string name="adb_connect">اتصال</string>
-    <string name="wireless_debugging_not_supported">التصحيح اللاسلكي غير مدعوم في هذا النظام الأساسي.</string>
     <string name="wireless_debugging">التصحيح اللاسلكي</string>
     <string name="unknown_net_policy">سياسة شبكة غير معروفة (%1$s - %2$X)</string>
     <string name="failed_to_prevent_background_run">تعذر منع %1$s من العمل في الخلفية</string>
-    <string name="app_signing_signature_mismatch_for_data_only_app">تعذر تثبيت التطبيق بسبب عدم تطابق التوقيع. تم إلغاء تثبيت التطبيق دون مسح بياناته.</string>
-    <string name="community_links">تيلجرام: https://t.me/AppManagerChannel
-\nتويتر: https://twitter.com/AppManagerNews</string>
+    <string name="community_links"><a href="https://matrix.to/#/#appmanager:matrix.org"> ماتريكس </a> • <a href="https://t.me/AppManagerChannel"> تيليجرام </a> • <a href="https://twitter.com/AppManagerNews"> تويتر </a></string>
     <string name="community">المجتمع</string>
     <plurals name="alert_failed_to_import_backups">
         <item quantity="zero">تعذر استيراد %1$d نسخة احتياطية</item>
@@ -1174,7 +1138,6 @@
     <string name="permission_flags">إشارات الصلاحيات</string>
     <string name="pref_selected_users_msg">تقييد مدير التطبيقات للعمل مع المستخدمين المحددين فقط.</string>
     <string name="pref_selected_users">المستخدمون المحددون</string>
-    <string name="enable_disable">تمكين/تعطيل</string>
     <string name="error_with_details">خطأ: %s</string>
     <string name="files">الملفات</string>
     <string name="storage">التخزين</string>
@@ -1222,7 +1185,7 @@
     <string name="explore">استكشف</string>
     <string name="system_partition">جذر أندرويد</string>
     <string name="exit_confirmation">تأكيد الخروج</string>
-    <string name="replace">استبدال</string>
+    <string name="replace">تبديل</string>
     <string name="rename">إعادة تسمية</string>
     <string name="java">جافا</string>
     <string name="smali">سمالي</string>
@@ -1353,11 +1316,260 @@
     <string name="pref_reload_apps_msg">أعد تحميل قائمة التطبيقات المخزنة في قاعدة بيانات مدير التطبيقات في حالة حدوث سلوك غير متوقع.</string>
     <string name="changelog_type_new">جديد</string>
     <string name="changelog_type_fix">اصلاح</string>
-    <string name="changelog_type_improve">تحسين</string>
+    <string name="changelog_type_improve">حسن</string>
     <string name="unsupported_split_apk">غير مدعوم</string>
     <string name="view_changelog">اكتشف الجديد في هذا الإصدار</string>
     <string name="sort_by_total_size">الحجم الإجمالي</string>
     <string name="am_command">الأمر <tt>am</tt></string>
     <string name="pref_sign_apk_error_signing_key_not_added">مطلوب مفتاح توقيع صالح لتوقيع ملف APK.</string>
     <string name="pref_sign_apk_no_signing_key">لا يوجد مفتاح توقيع</string>
+    <string name="failed_to_unfreeze">لا يمكن فك التجميد <xliff:g id="app_name" example="App Manager">%1$s</xliff:g>.</string>
+    <string name="freeze_unfreeze">تجميد/فك التجميد</string>
+    <string name="profile_freeze_msg">التجميد أو فك التجميد علي حسب حالة التطبيق</string>
+    <string name="pref_default_freezing_method">طريقة التجميد الافتراضية</string>
+    <string name="suspend_app">سكون</string>
+    <string name="hide_app">اخفاء</string>
+    <plurals name="alert_failed_to_freeze">
+        <item quantity="zero">تعذر تجميد تطبيق %1$d</item>
+        <item quantity="one">تعذر تجميد تطبيق %1$d</item>
+        <item quantity="two">تعذر تجميد تطبيق %1$d</item>
+        <item quantity="few">تعذر تجميد التطبيقات %1$d</item>
+        <item quantity="many">تعذر تجميد التطبيقات %1$d</item>
+        <item quantity="other">تعذر تجميد تطبيق %1$d</item>
+    </plurals>
+    <plurals name="alert_failed_to_unfreeze">
+        <item quantity="zero">تعذر إلغاء تجميد تطبيق %1$d</item>
+        <item quantity="one">تعذر إلغاء تجميد تطبيق %1$d</item>
+        <item quantity="two">تعذر إلغاء تجميد تطبيق %1$d</item>
+        <item quantity="few">تعذر إلغاء تجميد التطبيقات %1$d</item>
+        <item quantity="many">تعذر إلغاء تجميد تطبيق %1$d</item>
+        <item quantity="other">تعذر إلغاء تجميد تطبيق %1$d</item>
+    </plurals>
+    <string name="suspend_app_description">هذه هي أضعف طريقة تجميد. قد يستمر ظهور تطبيق معلق في المشغل ولكنه سيكون رماديا ولا يمكن تشغيله.</string>
+    <string name="disable_app_description">طريقة التجميد الموصى بها. يقوم بتعطيل التطبيق وجميع مكوناته ، ولكن ستفقد جميع الاختصارات.</string>
+    <string name="failed_to_freeze">لا يمكن التجميد <xliff:g id="app_name" example="App Manager">%1$s</xliff:g>.</string>
+    <string name="sort_by_frozen_app">المجمدة أولا</string>
+    <string name="pref_appearance_description">السمة ، الاتجاه ، الميزات ، إلخ.</string>
+    <string name="pref_privacy">الخصوصية</string>
+    <string name="pref_privacy_description">قفل الشاشة والترخيص وما إلى ذلك.</string>
+    <string name="hide_app_description">هذه الطريقة موصى بها فقط للاستخدام اليومي. يظهر التطبيق المخفي كما لو تم إلغاء تثبيته. ولكن قد يظهر التطبيق مرة أخرى إذا تمت إعادة تثبيته أو تحديثه.</string>
+    <string name="filter_frozen_apps">التطبيقات المجمدة</string>
+    <string name="get_help">احصل على مساعدة</string>
+    <string name="user_manual">دليل المستخدم</string>
+    <string name="pref_advanced_pref">المستخدمون ، تنسيق اسم APK ، التنفيذ المتوازي ، إلخ.</string>
+    <string name="pref_default_freezing_method_description">طريقة يتم استخدامها بشكل افتراضي في الأماكن التي لا يوجد فيها خيار لتحديد طريقة التجميد.</string>
+    <string name="pref_version_changelog">الإصدار/سجل التغيير</string>
+    <string name="file_change_open_with">التغيير مفتوح في</string>
+    <string name="file_properties">الخصائص</string>
+    <string name="file_cut">قُصَّ</string>
+    <string name="fm_always_open_with">فتح دائما</string>
+    <string name="file_creation_date">تم إنشائه</string>
+    <string name="file_modification_date">تم تعديله</string>
+    <string name="file_accessed_date">تم الوصول إليه</string>
+    <string name="file_open_as">افتح ك…</string>
+    <string name="file_open_with_custom_activity">مُخصّص</string>
+    <string name="file_open_with_os_default_dialog">فتح باستخدام مربع الحوار الافتراضي لنظام التشغيل</string>
+    <string name="open_as_text">النص</string>
+    <string name="open_as_image">صورة</string>
+    <string name="open_as_video">الفيديو</string>
+    <string name="open_as_archive">أرشيف</string>
+    <string name="open_as_folder">المجلد</string>
+    <string name="open_as_other">أخرى</string>
+    <string name="delete_filename">حذف %s</string>
+    <string name="confirm_file_deletion">نعم ، احذف</string>
+    <string name="on_unfreeze_open_application">افتح التطبيق بعد إلغاء التجميد</string>
+    <string name="on_open_application_no_recents">عدم إظهار التطبيق الذي تم إطلاقه في قائمة المهام</string>
+    <string name="freeze_on_phone_locked">تجميد التطبيق تلقائيا عندما يكون الهاتف مقفلا</string>
+    <string name="tap_to_freeze_app">انقر للتجميد</string>
+    <string name="waiting_for_the_phone_to_be_locked">في انتظار قفل الهاتف …</string>
+    <string name="action_stop_service">إيقاف</string>
+    <string name="file_shortcut_target_file">الملف المستهدف</string>
+    <string name="file_open_with">فتح بواسطة</string>
+    <string name="fm_open_with_for_this_file_only">فقط لهذا الملف</string>
+    <string name="sort_by_data_usage">استخدام البيانات</string>
+    <string name="filter_apps_with_keystore">مع تخزين المفاتيح</string>
+    <string name="filter_apps_with_saf">مع SAF</string>
+    <string name="filter_apps_with_ssaid">مع SSAID</string>
+    <string name="action_continue">أستمرار</string>
+    <string name="install_for_another_user">التثبيت لـ …</string>
+    <string name="confirm_uninstallation">تأكيد إلغاء التثبيت</string>
+    <string name="grant_required_permission">الحصول على إذن</string>
+    <string name="grant_overlay_permission_message">السماح لمدير التطبيقات بعرض نافذة عائمة أعلى جميع النوافذ الأخرى</string>
+    <string name="grant_accessibility_permission_for_tracking_window_contents">اسمح لمدير التطبيقات باستخدام ميزة إمكانية الوصول لتتبع محتويات النافذة البادئة.</string>
+    <string name="class_hierarchy">تَسَلسُل</string>
+    <string name="title_ui_tracker">متقفي واجهة المستخدم</string>
+    <string name="title_terminal_emulator">الطرفية</string>
+    <string name="title_labs_activity">المختبرات</string>
+    <string name="app_can_write_and_execute_in_same_place">ينتهك التطبيق <a href="https://en.wikipedia.org/wiki/W%5EX"> سياسة W ^ X </a> ويمكنه الكتابة والتنفيذ في نفس الدليل أو في نفس الجزء من الذاكرة. يتيح ذلك تنفيذ الملفات التنفيذية التعسفية إما عن طريق تعديل الملفات التنفيذية المضمنة داخل التطبيق أو عن طريق تنزيلها من الإنترنت. ما لم يكن هذا هو السلوك المقصود للتطبيق (مثل المحاكيات الطرفية) ، يوصى بالعثور على إصدار أحدث من التطبيق يستهدف SDK 29 (Android 10) والإصدارات الأحدث ، أو البحث عن بدائل.</string>
+    <string name="app_manager_build_expired_message">لضمان سلامة جهازك وبياناتك ، تم إيقاف إصدار App Manager الذي تستخدمه. يجب عليك تحديثه إلى أحدث إصدار لمتابعة استخدامه ، أو إلغاء تثبيته في حالة عدم توفر تحديث.</string>
+    <string name="app_manager_build_expiring_soon_warning">ستنتهي صلاحية هذا الإصدار من App Manager قريبا جدا. يرجى تحديثه إلى أحدث إصدار.</string>
+    <string name="renamed_successfully">أعيدت تسميته</string>
+    <string name="selinux_context">سياق SELinux</string>
+    <string name="unix_file_permissions">الوضع</string>
+    <string name="file_group_id">مجموعة (GID)</string>
+    <string name="app_manager_build_expired">تحتاج إلى تحديث</string>
+    <string name="file_owner_id">المالك (UID)</string>
+    <string name="calculating_file_size">تُجرى عملية الحساب…</string>
+    <string name="sort_by_filename">الاسم</string>
+    <string name="sort_by_last_modified">آخر تعديل</string>
+    <string name="sort_by_file_size">حجم الملف</string>
+    <string name="sort_by_file_type">نوع الملف</string>
+    <string name="option_display_dot_files">ملفات نقطية</string>
+    <string name="option_display_folders_on_top">المجلدات في الأعلى</string>
+    <string name="export_app_list">تصدير قائمة التطبيقات</string>
+    <string name="export_app_list_select_format">حدد تنسيقا لتصدير قائمة التطبيقات</string>
+    <string name="export_option_xml">ملف XML</string>
+    <string name="export_option_markdown">ماركداون</string>
+    <string name="funding_campaign_dialog_message">نحن ندير حملة تمويل <b> </b> لمدير التطبيقات لفترة محدودة. قم بزيارة <a href="https://opencollective.com/app-manager#category-ABOUT"> opencollective.com/app-manager </a> لمعرفة المزيد عن الحملة. لن يتم عرض هذا الإشعار مرة أخرى ، ولكن يمكنك العثور عليه في صفحة الإعدادات أثناء الحملة بأكملها.</string>
+    <string name="funding_campaign_text">نحن ندير حملة تمويل <b> </b> لمدير التطبيقات لفترة محدودة. <a href="https://opencollective.com/app-manager#category-ABOUT"> تعرف على المزيد... </a></string>
+    <string name="adb_incomplete_usb_debugging_title">تصحيح أخطاء USB غير مكتمل</string>
+    <string name="adb_incomplete_usb_debugging_message">يبدو أن تصحيح أخطاء USB لم يتم تكوينه بشكل صحيح. يرجى قراءة <a href="https://muntashirakon.github.io/AppManager/#subsec:enable-usb-debugging"> الوثائق </a> للحصول على خطوات إضافية. إذا كنت تعرف الخطوات بالفعل ، فالرجاء النقر فوق \"فتح\" لفتح خيارات المطور ، أو النقر فوق \"إغلاق\" لمواصلة استخدام وضع عدم الجذر.</string>
+    <string name="select_a_dex2oat_compiler_filter"><tt> dex2oat </tt> فلتر المجمع</string>
+    <string name="optimize_option_compile_layouts">تجميع موارد التصميم</string>
+    <string name="optimize_option_clear_profile_data">محو بيانات الملف الشخصي السابقة</string>
+    <string name="optimize_option_check_profiles">ضع في اعتبارك بيانات الملف الشخصي أثناء تحسين ديكس</string>
+    <string name="optimize_option_force_compilation">فرض التجميع حتى عندما لا يكون مطلوبا</string>
+    <string name="optimize_option_force_dexopt">إجراء تحسين ديكس على الفور</string>
+    <string name="title_perform_runtime_optimization_to_apps">إجراء تحسين وقت التشغيل</string>
+    <string name="action_run">شغِّل</string>
+    <string name="summary_perform_runtime_optimization_to_apps">قم بتحسين تخطيطات ديكس و (في اندرويد 10 والإصدارات الأحدث) لتحسين أداء التطبيقات.</string>
+    <string name="action_optimize_app">تحسين</string>
+    <string name="batch_ops_runtime_optimization">تحسين وقت التشغيل</string>
+    <plurals name="alert_failed_to_optimize_apps">
+        <item quantity="zero">تعذر تحسين التطبيق %1$d</item>
+        <item quantity="one">تعذر تحسين التطبيق %1$d</item>
+        <item quantity="two">تعذر تحسين التطبيق %1$d</item>
+        <item quantity="few">تعذر تحسين التطبيقات %1$d</item>
+        <item quantity="many">تعذر تحسين التطبيقات %1$d</item>
+        <item quantity="other">تعذر تحسين التطبيق %1$d</item>
+    </plurals>
+    <string name="title_domains_supported_by_the_app">النطاقات المدعومة</string>
+    <string name="source_stamp_verified_and_identified_to_be_from_source">تم التحقق من SourceStamp وتحديده على أنه من <xliff:g id="source" example="Google Play"> %1$s </xliff:g>.</string>
+    <string name="app_info_tag_open_links">افتح الروابط</string>
+    <string name="block_unblock_components_dots">حظر / إلغاء حظر المكونات …</string>
+    <string name="unblock_components_dots">إلغاء حظر المكونات…</string>
+    <string name="pref_layout_direction">اتجاه التخطيط</string>
+    <string name="title_code_editor">محرر التعليمات البرمجية</string>
+    <string name="read_only_file">ملف للقراءة فقط</string>
+    <string name="read_only_file_warning">لا يمكن كتابة التغييرات في الملف، ربما لأنه موجود في وحدة تخزين ليس لدى App Manager إذن للكتابة إليها. هل تريد حفظه في مكان مختلف؟</string>
+    <string name="replacement_text">استبدال</string>
+    <string name="action_replace_all">استبدل الكل</string>
+    <string name="search_option_match_case">مطابقة الحالة</string>
+    <string name="search_option_regex">قيمة السجل</string>
+    <plurals name="search_results">
+        <item quantity="zero">%d النتائج</item>
+        <item quantity="one">%d الناتج</item>
+        <item quantity="two">%d النتيجتين</item>
+        <item quantity="few">%d النتائج</item>
+        <item quantity="many">%d النتائج</item>
+        <item quantity="other">%d النتائج</item>
+    </plurals>
+    <string name="debloat_list_type">القائمة</string>
+    <string name="debloat_removal_type">النوع</string>
+    <string name="system_app_put_back">ارجاع</string>
+    <string name="debloater_title">المنظف</string>
+    <string name="debloat_list_aosp">تطبيقات اندرويد مفتوحة المصدر</string>
+    <string name="debloat_list_oem">برمجيات المصنع</string>
+    <string name="debloat_list_carrier">الناقل / مزود خدمة الإنترنت</string>
+    <string name="debloat_list_google">جوجل</string>
+    <string name="debloat_list_misc">المنوعات</string>
+    <string name="debloat_list_pending">معلَّقة</string>
+    <string name="debloat_removal_safe">آمن</string>
+    <string name="debloat_removal_replace">تبديل</string>
+    <string name="debloat_removal_caution">الحذر</string>
+    <string name="static_shared_library">المكتبة المشتركة الثابتة</string>
+    <string name="pref_zip_align">محاذاة ملفات APK</string>
+    <string name="block_unblock_components_description">حظر أو إلغاء حظر جميع المكونات المحددة بواسطة التوقيعات المحددة</string>
+    <string name="pref_zip_align_msg">تؤدي محاذاة ملف APK إلى تقليل استخدام الذاكرة حيث يمكن الوصول إلى الملفات الموجودة في حزمة التطبيق مباشرة دون نسخ البيانات إلى ذاكرة الوصول العشوائي. هذه الخطوة مطلوبة إذا تم ضبط <tt> extractNativeLibs </tt> الى قيمة <tt> صحيح </tt>.</string>
+    <string name="redo">إعادة</string>
+    <string name="line_separator">فاصل الأسطر</string>
+    <string name="uninstall_app_again_message">تم إلغاء تثبيت التطبيق بدون مسح البيانات والتوقيع. هل تريد إلغاء تثبيته بالكامل؟</string>
+    <string name="uninstall_app">إلغاء تثبيت %1$s</string>
+    <string name="search_option_whole_word">الكلمة كلها</string>
+    <plurals name="alert_failed_to_unblock_components">
+        <item quantity="zero">تعذر إلغاء حظر مكون التطبيق %1$d</item>
+        <item quantity="one">تعذر إلغاء حظر مكون التطبيق %1$d</item>
+        <item quantity="two">تعذر إلغاء حظر مكون التطبيقين %1$d</item>
+        <item quantity="few">تعذر إلغاء حظر مكونات التطبيقات %1$d</item>
+        <item quantity="many">تعذر إلغاء حظر مكونات التطبيقات %1$d</item>
+        <item quantity="other">تعذر إلغاء حظر مكونات تطبيقات %1$d</item>
+    </plurals>
+    <string name="empty_folder">فارغ</string>
+    <string name="title_audio_player">مشغل الصوت</string>
+    <string name="go_to_path">الانتقال إلى…</string>
+    <plurals name="file_count">
+        <item quantity="zero">%d ملف</item>
+        <item quantity="one">%d ملف</item>
+        <item quantity="two">%d ملفان</item>
+        <item quantity="few">%d ملفات</item>
+        <item quantity="many">%d ملفات</item>
+        <item quantity="other">%d ملفات</item>
+    </plurals>
+    <string name="copy_this_path">نسخ المسار</string>
+    <plurals name="folder_count">
+        <item quantity="zero">مجلد %d</item>
+        <item quantity="one">مجلد %d</item>
+        <item quantity="two">مجلدان %d</item>
+        <item quantity="few">مجلدات %d</item>
+        <item quantity="many">مجلدات %d</item>
+        <item quantity="other">مجلدات %d</item>
+    </plurals>
+    <string name="filter_force_stopped_apps">التطبيقات المتوقفة</string>
+    <string name="warning_working_on_system_mode">تحذير: العمل على النظام بدلا من وضع ADB.</string>
+    <string name="installing_package">جاري تثبيت %1$s…</string>
+    <string name="backing_up_app">النسخ الاحتياطي %1$s …</string>
+    <string name="restoring_app">استعادة %1$s …</string>
+    <string name="folder">المجلد</string>
+    <string name="symbolic_link">رابط رمزي</string>
+    <string name="create_new_symbolic_link">رابط رمزي جديد</string>
+    <string name="symbolic_link_not_supported">لا يدعم هذا المجلد إنشاء ارتباط رمزي.</string>
+    <string name="create_new_folder">مجلد جديد</string>
+    <string name="create_new_file">ملف جديد</string>
+    <string name="enter_symbolic_link_name">اسم الرابط</string>
+    <string name="enter_target_path">المسار الهدف</string>
+    <string name="invalid_target_path">مسار غير صالح</string>
+    <string name="copy_these_paths">نسخ المسار</string>
+    <string name="conflict_detected_while_copying">تم اكتشاف تعارض</string>
+    <string name="copy_keep_both_file">احتفظ بكليهما</string>
+    <string name="copied_successfully">نسخ.</string>
+    <string name="moved_successfully">تم النقل</string>
+    <string name="failed_to_delete_specified_file_after_copying">تعذر حذف \"%1$s\" بعد نسخه ، ربما بسبب عدم وجود صلاحيات كافية.</string>
+    <string name="change_group_gid">تغيير المجموعة (GID)</string>
+    <string name="change_mode">بدّل النمط</string>
+    <string name="pref_send_notifications_to_connected_devices">إرسال إشعارات إلى الأجهزة المتصلة</string>
+    <string name="pref_send_notification_to_connected_devices_msg">قم بتعيين ما إذا كنت تريد إرسال إشعارات إلى الأجهزة المتصلة مثل الأجهزة القابلة للارتداء.</string>
+    <string name="pref_installer_force_dexopt_description">قم بإجراء تحسين DEX بعد تثبيت التطبيق دون انتظار قيام النظام بذلك عندما يكون النظام في وضع الخمول.</string>
+    <string name="conflict_detected_while_copying_message">يوجد عنصر باسم \"%1$s\" بالفعل في هذا الموقع. هل تريد استبداله؟</string>
+    <string name="title_confirm_deletion">تأكيد الحذف</string>
+    <string name="failed_to_copy_specified_file">تعذر نسخ \"%1$s\".</string>
+    <string name="title_change_selinux_context">تغيير سياق SELinux</string>
+    <string name="apply_recursively">تطبيق على الملفات المرفقة</string>
+    <string name="change_owner_uid">تغيير المالك (UID)</string>
+    <string name="report_not_available">غير متاح</string>
+    <string name="installer_options">خيارات المثبت</string>
+    <string name="debloat_removal_safe_short_description">آمن للإزالة</string>
+    <string name="debloat_removal_caution_short_description">كن حذرا</string>
+    <string name="debloat_removal_replace_short_description">استبدله ببديل</string>
+    <string name="title_alternatives_to_bloatware">البدائل</string>
+    <string name="browse_files">تصفَّح</string>
+    <string name="pref_files_msg">تكوين مدير الملفات.</string>
+    <string name="pref_files_display_in_launcher">عرض \"الملفات\" في درج التطبيق</string>
+    <string name="pref_files_remember_last_path">تذكر آخر مسار تم فتحه وموقعه</string>
+    <string name="pref_files_remember_last_path_msg">عند تمكين هذا الخيار ، يؤدي فتح نافذة جديدة إلى فتح آخر مجلد مفتوح بدلا من المجلد الرئيسي.</string>
+    <string name="pref_set_home">تعيين الرئيسية</string>
+    <string name="xposed_module_info">معلومات وحدة Xposed</string>
+    <string name="title_description">الوصف</string>
+    <string name="module_name">اسم الوحدة</string>
+    <string name="app_manager_is_running">مدير التطبيقات قيد التشغيل</string>
+    <string name="tap_to_open_notification_settings">انقر للإخفاء</string>
+    <string name="app_manager_is_unlocked">مدير التطبيقات غير مؤمن</string>
+    <string name="action_lock_app">قفل</string>
+    <string name="pref_enable_persistent_session">تشغيل مدير التطبيقات في الخلفية</string>
+    <string name="pref_enable_persistent_session_msg">يؤدي تشغيل مدير التطبيقات في الخلفية إلى تقليل تأخير التجهيز. مفيد إذا كنت تستخدم مدير التطبيقات بشكل متكرر.</string>
+    <string name="pref_enable_auto_lock">تأمين تلقائي</string>
+    <string name="pref_enable_auto_lock_msg">قفل مدير التطبيقات عندما يكون الجهاز مقفلا.</string>
+    <string name="path_does_not_exist">\"%1$s\" غير موجود</string>
+    <string name="path_not_a_folder">\"%1$s\" ليس مجلدا</string>
+    <string name="scan_report_from_pithus">تقرير بيثوس</string>
+    <string name="action_checking">التحقق…</string>
 </resources>

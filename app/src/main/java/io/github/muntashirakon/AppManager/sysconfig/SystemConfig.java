@@ -8,6 +8,7 @@ import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Environment;
 import android.os.Process;
+import android.text.TextUtils;
 import android.util.ArrayMap;
 import android.util.SparseArray;
 import android.util.Xml;
@@ -16,9 +17,6 @@ import androidx.annotation.IntRange;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.WorkerThread;
-
-import com.android.internal.util.TextUtils;
-import com.android.internal.util.XmlUtils;
 
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
@@ -36,7 +34,9 @@ import io.github.muntashirakon.AppManager.logs.Log;
 import io.github.muntashirakon.AppManager.misc.OsEnvironment;
 import io.github.muntashirakon.AppManager.misc.SystemProperties;
 import io.github.muntashirakon.AppManager.utils.ArrayUtils;
-import io.github.muntashirakon.AppManager.utils.FileUtils;
+import io.github.muntashirakon.AppManager.utils.TextUtilsCompat;
+import io.github.muntashirakon.compat.xml.XmlUtils;
+import io.github.muntashirakon.io.IoUtils;
 import io.github.muntashirakon.io.Path;
 import io.github.muntashirakon.io.Paths;
 
@@ -627,7 +627,7 @@ public class SystemConfig {
     }
 
     private void readPermissionsFromXml(Path permFile, int permissionFlag) {
-        StringReader permReader = new StringReader(FileUtils.getFileContent(permFile));
+        StringReader permReader = new StringReader(permFile.getContentAsString());
         Log.i(TAG, "Reading permissions from " + permFile);
 
 //        final boolean lowRam = ActivityManager.isLowRamDeviceStatic();
@@ -1170,10 +1170,10 @@ public class SystemConfig {
                     }
                     break;
                     case SysConfigType.TYPE_NAMED_ACTOR: {
-                        String namespace = TextUtils.safeIntern(
+                        String namespace = TextUtilsCompat.safeIntern(
                                 parser.getAttributeValue(null, "namespace"));
                         String actorName = parser.getAttributeValue(null, "name");
-                        String pkgName = TextUtils.safeIntern(
+                        String pkgName = TextUtilsCompat.safeIntern(
                                 parser.getAttributeValue(null, "package"));
                         if (TextUtils.isEmpty(namespace)) {
                             Log.e(TAG, "<" + name + "> without namespace in " + permFile
@@ -1241,7 +1241,7 @@ public class SystemConfig {
         } catch (XmlPullParserException | IOException e) {
             Log.w(TAG, "Got exception parsing permissions.", e);
         } finally {
-            FileUtils.closeQuietly(permReader);
+            IoUtils.closeQuietly(permReader);
         }
 
         // Some devices can be field-converted to FBE, so offer to splice in

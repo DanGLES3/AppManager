@@ -4,7 +4,6 @@
     <string name="external_multiple_data_dir">دایرکتوری داده‌های خارجی <xliff:g id="dir_no" example="1">%1$d</xliff:g></string>
     <string name="external_data_dir">دایرکتوری داده های خارجی</string>
     <string name="sort_by_blocked_components">اول مسدود</string>
-    <string name="sort_by_disabled_app">اول غیرفعال</string>
     <string name="exodus_link">پیوند εxodus</string>
     <string name="usage_yesterday">دیروز</string>
     <string name="app_settings">تنظیمات</string>
@@ -22,8 +21,6 @@
     <string name="storage_and_cache">ذخیره سازی و حافظه پنهان</string>
     <string name="failed_to_stop">نتوانست <xliff:g id="app_name" example="App Manager">%1$s</xliff:g> را متوقف کند.</string>
     <string name="force_stop">توقف اجباری</string>
-    <string name="failed_to_enable">نمی توان <xliff:g id="app_name" example="App Manager"> %1$s </xliff:g> را فعال کرد.</string>
-    <string name="failed_to_disable">نتوانست<xliff:g id="app_name" example="App Manager">%1$s</xliff:g> را غیر‌فعال کند.</string>
     <string name="enable">فعال کن</string>
     <string name="disable">غیرفعال کردن</string>
     <string name="stopped">متوقف</string>
@@ -129,8 +126,8 @@
 \n- <a href="https://github.com/billthefarmer/editor">ویرایش کننده</a>
 \n- <a href="https://github.com/k3b/intent-intercept">رهگیری قصد</a>
 \n- <a href="https://github.com/zhanghai/MaterialFiles">فایل های مواد</a>
-\n- <a href="https://github.com/pluscubed/matlog">ورود تشک</a>
-\n- <a href="https://github.com/matrix-org/matrix-android-sdk">اندروید ماتری SDK</a>
+\n- <a href="https://github.com/pluscubed/matlog">لاگ تشک</a>
+\n- <a href="https://github.com/matrix-org/matrix-android-sdk">اندروید ماتریکس SDK</a>
 \n- <a href="https://github.com/jensstein/oandbackup">و بک آپ</a>
 \n- <a href="https://github.com/open-keychain/open-keychain">جاکلیدی را باز کنید</a>
 \n- <a href="https://github.com/Aefyr/SAI">نصب کننده اسپلیت</a>
@@ -141,17 +138,13 @@
     <string name="third_party">کتابخانه‌ها و آیکون های شخص سوم</string>
     <string name="license">لایسنس</string>
     <string name="icon_picker">انتخاب‌گر آیکون</string>
-    <string name="error_invalid_icon_format">فرمت آیکون نامعتبر</string>
-    <string name="error_invalid_icon_resource">منبع آیکون نامعتبر</string>
     <string name="class_name">نام کلاس</string>
     <string name="package_name">نام بسته</string>
     <string name="shortcut_name">نام میانبر</string>
-    <string name="edit_shortcut">ویرایش میانبر</string>
     <string name="create_shortcut">ساخت میانبر</string>
     <string name="starting_activity">شروع فعالیت:<xliff:g id="activity_name" example=".main.MainActivity">%1$s</xliff:g></string>
     <string name="error_verbose_pin_shortcut">راه انداز کنونی از PinShortcut پشتیبانی نمی‌کند. ایجاد میانبر امکان‌پذیر نیست.</string>
     <string name="error_creating_shortcut">خطا در ایجاد میانبر</string>
-    <string name="instructions">دستورالعمل‌ها</string>
     <string name="empty_package_name">نام بسته خالی</string>
     <string name="main_activity">فعالیت اصلی</string>
     <string name="user_id">شناسه کاربر</string>
@@ -179,51 +172,51 @@
     <string name="data_size">داده‌ها</string>
     <string name="about">درباره</string>
     <string name="data_usage_msg">مصرف دیتا</string>
-    <string name="data_transmitted">داده‌های منتقل شده</string>
-    <string name="data_received">داده دریافت‌شده</string>
-    <string name="sort_by_target_sdk">SDK هدف</string>
+    <string name="data_transmitted">داده‌ها منتقل شدند</string>
+    <string name="data_received">داده ها دریافت شدند</string>
+    <string name="sort_by_target_sdk">کیت نرم افزاری هدف</string>
     <string name="sort_by_domain">برنامه های کاربر در ابتدای لیست</string>
     <string name="sort_by_package_name">نام بسته</string>
     <string name="sort_by_app_label">برچسب برنامه</string>
     <string name="loading">درحال بارگذاری…</string>
     <string name="error">خطا</string>
-    <string name="manifest">اظهار‌نامه</string>
+    <string name="manifest">مانیفست</string>
     <string name="input_features">ویژگی های ورودی</string>
-    <string name="no_configurations">بدون پیکربندی</string>
+    <string name="no_configurations">پیکربندی موجود نیست</string>
     <string name="configurations">پیکربندی‌ها</string>
-    <string name="app_signing_no_signatures">بدون امضاهای معتبر</string>
+    <string name="app_signing_no_signatures">امضاهای معتبر موجود نیست</string>
     <string name="signatures">امضاها</string>
     <string name="sort_by_sha">امضا</string>
     <string name="shared_user_id">شناسه کاربر مشترک</string>
-    <string name="sort_by_shared_user_id">شناسه کاربر مشترک</string>
-    <string name="no_feature">بدون ویژگی</string>
-    <string name="uses_feature">از امکانات استفاده می کند</string>
+    <string name="sort_by_shared_user_id">شناسه کاربری مشترک</string>
+    <string name="no_feature">هیچ ویژگی موجود نیست</string>
+    <string name="uses_feature">از این ویژگی ها استفاده می کند</string>
     <string name="group">گروه</string>
-    <string name="shared_libs">کتاب‌خانه های مشترک</string>
+    <string name="shared_libs">کتابخانه های مشترک</string>
     <string name="declared_permission">مجوزها</string>
-    <string name="patterns_allowed">الگوها مجاز است</string>
-    <string name="write">بنویس</string>
-    <string name="read">بخوان</string>
+    <string name="patterns_allowed">الگوها مجاز هستند</string>
+    <string name="write">نوشتن</string>
+    <string name="read">خواندن</string>
     <string name="path_permissions">مجوزهای مسیر</string>
-    <string name="grant_uri_permission">اعطای دسترسی URI</string>
+    <string name="grant_uri_permission">مجوزهای URI را فعال کنید</string>
     <string name="flags">پرچم ها</string>
     <string name="soft_input">حالت ورودی نرم</string>
     <string name="orientation">جهت</string>
-    <string name="no_service">بدون خدمات</string>
-    <string name="service">سرویس‌ها</string>
+    <string name="no_service">سرویسی موجود نیست</string>
+    <string name="service">سرویس ها</string>
     <string name="authority">مسئول</string>
     <string name="sort_by_last_update">آخرین به‌روزرسانی</string>
-    <string name="task_affinity">قرابت وظیفه</string>
-    <string name="launch_mode">حالت راه‌اندازی</string>
-    <string name="no_providers">بدون ارائه دهنده</string>
+    <string name="task_affinity">ترکیب وظایف</string>
+    <string name="launch_mode">حالت اجرا</string>
+    <string name="no_providers">ارائه دهنده ای موجود نیست</string>
     <string name="providers">ارائه دهندگان</string>
-    <string name="no_receivers">بدون گیرنده</string>
+    <string name="no_receivers">گیرنده ای موجود نیست</string>
     <string name="receivers">گیرنده ها</string>
-    <string name="no_activities">بدون فعالیت</string>
-    <string name="refresh">نوسازی</string>
-    <string name="launch">راه‌اندازی</string>
+    <string name="no_activities">فعالیتی موجود نیست</string>
+    <string name="refresh">تازه سازی</string>
+    <string name="launch">اجرا</string>
     <string name="activities">فعالیت ها</string>
-    <string name="require_no_permission">مجوز لازم نیست</string>
+    <string name="require_no_permission">مجوزی لازم نیست</string>
     <string name="permissions">از مجوزها استفاده می کند</string>
     <string name="uninstall">حذف نصب</string>
     <string name="export_blocking_rules">قوانین مسدود سازی را صادر کن</string>
@@ -236,7 +229,6 @@
     <string name="disable_background_run">غیرفعال کردن جلوگیری از فعالیت پس‌زمینه</string>
     <string name="kill_process">بکش</string>
     <string name="running_apps">برنامه های در حال اجرا</string>
-    <string name="store">فروشگاه</string>
     <string name="apk_updater">به‌روزرسان APK</string>
     <plurals name="failed_to_import_files">
         <item quantity="one">نتوانست %1$d پرونده را وارد کند.</item>
@@ -269,10 +261,6 @@
     <plurals name="alert_failed_to_uninstall">
         <item quantity="one">نتوانست %1$d برنامه را پاک کند</item>
         <item quantity="other">نتوانست %1$d برنامه را پاک کند</item>
-    </plurals>
-    <plurals name="alert_failed_to_disable">
-        <item quantity="one">نتوانست %1$d برنامه را غیر فعال کند</item>
-        <item quantity="other">نتوانست %1$d برنامه را غیر فعال کند</item>
     </plurals>
     <plurals name="alert_failed_to_clear_data">
         <item quantity="one">نتوانست داده های %1$d برنامه را پاک کند</item>
@@ -357,7 +345,6 @@
     <string name="components">اجزاء</string>
     <string name="trackers">ردیاب‌ها</string>
     <string name="installed_version">نسخه نصب شده</string>
-    <string name="filter_disabled_apps">برنامه‌های غیرفعال شده</string>
     <string name="select_all">انتخاب همه</string>
     <string name="filter_apps_with_rules">برنامه‌های دارای قوانین</string>
     <string name="filter_system_apps">برنامه‌های سیستم</string>
@@ -381,7 +368,6 @@
     <string name="clear_app_cache_description">حافظه پنهان همه برنامه ها را پاک می کند</string>
     <string name="clear_app_cache">پاک کردن حافظه پنهان برنامه</string>
     <string name="clear_data_from_uninstalled_apps">داده برنامه های حذف‌نصب شده را پاک کن</string>
-    <string name="block_components_description">تمام اجزای شناسایی شده با امضاهای داده شده را مسدود کن</string>
     <string name="block_components_dots">مسدود کردن اجزا…</string>
     <string name="block_unblock_trackers_description">مسدود کردن یا رفع انسداد اجزای تبلیغات و ردیابی در همه برنامه های نصب شده</string>
     <string name="clear_cache">پاک کردن حافظه پنهان</string>
@@ -452,10 +438,6 @@
         <item quantity="one">فایل پشتیبان موجود است. آیا اطمینان دارید؟</item>
         <item quantity="other">پشتیبان‌گیری برای بیش از یک برنامه وجود دارد. بیش از یک برنامه از قبل یک نسخه پشتیبان دارد. آیا اطمینان دارید؟</item>
     </plurals>
-    <plurals name="alert_failed_to_enable">
-        <item quantity="one">نتوانست %1$d برنامه را فعال کند</item>
-        <item quantity="other">نتوانست %1$d برنامه را فعال کند</item>
-    </plurals>
     <plurals name="alert_failed_to_set_app_ops">
         <item quantity="one">نتوانست عملیات برنامه را برای %1$d برنامه تنظیم کند</item>
         <item quantity="other">نتوانست عملیات برنامه را برای %1$d برنامه تنظیم کند</item>
@@ -490,14 +472,13 @@
         <item quantity="other">نتوانست از %1$d برنامه پشتیبان بگیرد</item>
     </plurals>
     <string name="clear_data_from_uninstalled_apps_description">پاک کردن اطلاعات برنامه هایی که حذف نصب شده‌اند<tt> با عنوان </tt> اطلاعات را حذف نکنید</string>
-    <string name="app_signing_signatures">امضا</string>
+    <string name="app_signing_signatures">امضاها</string>
     <string name="apps">برنامه ها</string>
     <string name="valid">معتبر</string>
     <string name="install_location">محل نصب</string>
     <string name="kernel">هسته</string>
     <string name="security_providers">ارائه دهندگان امنیت</string>
-    <string name="profile_save_apk_msg">فایل های نصبی را ذخیره می‌کند در <tt>
-\nمدیریت کننده برنامه/ برنامه ها</tt></string>
+    <string name="profile_save_apk_msg">فایل های APK را ذخیره می‌کند در <tt> مدیر برنامه/ برنامه ها</tt></string>
     <string name="dsa_affine_y">نسبت مختصات y</string>
     <string name="root">روت</string>
     <string name="close">بستن</string>
@@ -523,7 +504,6 @@
     <string name="hidden">مخفی</string>
     <string name="pref_display_changes">نمایش تغییرات</string>
     <string name="netpolicy_reject_background_data">داده های پس زمینه را رد کنید</string>
-    <string name="wireless_debugging_not_supported">اشکال زدایی بی سیم در این پلتفرم پشتیبانی نمی شود.</string>
     <string name="adb_connect">متصل</string>
     <string name="added_to_queue">به صف اضافه شد</string>
     <string name="help_uses_permissions_tab">برای <b>اعطا</b> یا <b>لغو</b> روی یک مورد کلیک کنید. فقط مجوزهای <b>خطرناک</b> و <b>توسعه</b> ممکن است اعطا یا لغو شوند.</string>
@@ -563,7 +543,6 @@
     <string name="obb_files_extracted_successfully">فایل های دیتا استخراج شدند</string>
     <string name="process_state">دولت: <xliff:g id="process_state" example="Sleeping">%1$s</xliff:g></string>
     <string name="input_backup_name">نام فایل پشتیبان</string>
-    <string name="presets">تنظیمات از پیش تعیین شده</string>
     <string name="filter_apps">برنامه ها</string>
     <string name="sort_by_process_id">مشخصات روند</string>
     <string name="sort_by_process_name">نام روند</string>
@@ -631,7 +610,7 @@
     <string name="vendor">فروشنده</string>
     <string name="memory">حافظه</string>
     <string name="battery_capacity">ظرفیت</string>
-    <string name="users">کابران</string>
+    <string name="users">کاربران</string>
     <string name="cpu">پردازنده</string>
     <string name="graphics">گرافیک</string>
     <string name="security">امنیت</string>
@@ -718,7 +697,6 @@
     <string name="issued_date">داده های استخراج شده</string>
     <string name="only_install">فقط نصب</string>
     <string name="sys_config">پیکربندی سیستم</string>
-    <string name="pref_show_users_in_installer">نشان دادن کاربر در نصب کننده</string>
     <string name="select_user">انتخاب کاربر</string>
     <string name="encryption">رمزگذاری</string>
     <string name="aes">رمزگذاری پیشرفته</string>
@@ -729,7 +707,6 @@
     <string name="allow_routine_ops">عملیات روتین را مجاز کنید</string>
     <string name="profile_state">وضعیت حالت</string>
     <string name="allow_routine_ops_msg">اجازه دهید حالت در عملیات معمولی استفاده شود</string>
-    <string name="profile_disable_msg">برنامه های غیرفعال یا فعال بر اساس وضعیت</string>
     <string name="profile_force_stop_msg">توقف اجباری برنامه ها</string>
     <string name="profile_clear_cache_msg">پاک کردن حافظه کش برنامه ها</string>
     <string name="profile_clear_data_msg">پاک کردن داده های برنامه ها</string>
@@ -839,12 +816,10 @@
     <string name="netpolicy_reject_wifi_data">رد دادهای وای فای</string>
     <string name="notice">توجه</string>
     <string name="failed_to_prevent_background_run">نمی‌توان از اجرای %1$s در پس‌زمینه جلوگیری کرد</string>
-    <string name="app_signing_signature_mismatch_for_data_only_app">به دلیل عدم تطابق امضا، برنامه نصب نشد. برنامه بدون پاک کردن داده های آن حذف نصب شد.</string>
     <string name="second_degree_tracker_note">² پیشوند نشان می دهد که ردیاب ها در <a href="https://etip.exodus-privacy.eu.org/">لیست آماده به کار ETIP</a> i.e. آیا آنها ردیاب واقعی هستند هنوز در حال بررسی است.</string>
     <string name="failed_to_uninstall_app">حذف نصب ناموفق بود</string>
     <string name="community">انجمن</string>
-    <string name="community_links">تلگرام: https://t.me/AppManagerChannel
-\nتویتر: https://twitter.com/AppManagerNews</string>
+    <string name="community_links"><a href="https://t.me/AppManagerChannel">کانال تلگرام</a> • <a href="https://twitter.com/AppManagerNews">توییتر</a></string>
     <string name="input_app_ops_description_profile">نام‌های عملیات برنامه و/یا بقیه را با فاصله وارد کنید، به عنوان مثال.. <tt>قفل کردن دوربین ۶۳ ۷۲ </tt> و غیره. استفاده <tt>*</tt> برای درخواست برای همه عملیات برنامه های پیکربندی شده.</string>
     <string name="internal_data">داده های داخلی</string>
     <string name="installer_error_session_commit">نمی‌توان فایل‌های نصبی را اجرا کرد</string>
@@ -927,14 +902,12 @@
     <string name="trackers_unblocked_successfully">اکنون ردیاب ها رفع انسداد شده اند</string>
     <string name="gz_bz2_compressed">%1$s فشرده شد</string>
     <string name="import_keystore">وارد کردن کلید فروشگاه</string>
-    <string name="pref_layout_orientation">جهت چیدمان</string>
     <string name="orientation_follow_locale">داخلی را دنبال کنید</string>
     <string name="orientation_left_to_right">چپ به راست</string>
     <string name="pref_display_changes_msg">تغییرات نسخه، ردیاب ها، اجزا، مجوزها، امضاها، کیت نرم افزاری و غیره را به صورت کنترل شده نمایش دهید.</string>
     <string name="port_number_invalid">شماره درگاه اشتباه.</string>
-    <string name="paired_successfully">جفت شده.</string>
+    <string name="paired_successfully">جفت شد.</string>
     <string name="error_with_details">خطا:%s</string>
-    <string name="enable_disable">فعال/غیرفعال</string>
     <string name="storage">ذخیره سازی</string>
     <string name="files">فایل ها</string>
     <string name="keystore_password_info">رمز عبور فروشگاه کلید مدیریت برنامه در زیر آمده است. اگر می‌خواهید از فروشگاه کلید مدیریت برنامه پشتیبان‌گیری یا بازیابی کنید، لطفاً آن را در مکانی امن ذخیره کنید. <b>این پیام دیگر نمایش داده نخواهد شد.</b></string>
@@ -978,7 +951,7 @@
     <string name="port_number">درگاه</string>
     <string name="routine_ops">عملیات روتین</string>
     <string name="source_code_links">گیت هاب: https://github.com/MuntashirAkon/AppManager
-\nگیت لاب: https://gitlab.com/muntashir/AppManager
+\nگیت لب: https://gitlab.com/muntashir/AppManager
 \nریسویپ: https://0xacab.org/muntashir/AppManager
 \nپل کد: https://codeberg.org/muntashir/AppManager</string>
     <string name="locale_split_for_feature"><xliff:g id="split_name" example="English">%1$s</xliff:g>محل ویژگی <xliff:g id="feature_name" example="Visualizer">%2$s</xliff:g></string>
@@ -1016,7 +989,6 @@
     <string name="pref_sign_apk_msg">امضای فایل های برنامه قبل نصب آنها.</string>
     <string name="new_profile">حالت جدید</string>
     <string name="failed_to_duplicate_profile">حالت تکراری نمیشه</string>
-    <string name="pref_show_users_in_installer_msg">نمایش لیستی از کاربرانی که باید قبل از نصب یک برنامه خارجی, انتخاب کنید. نیاز به روت یا ADB دارد.</string>
     <string name="v3_scheme">طرح نسخه 3 (از اندروید 9)</string>
     <string name="uri">لینک</string>
     <string name="on">روشن</string>
@@ -1093,7 +1065,7 @@
     <string name="pref_default_blocking_method">روش پیش فرض مسدودسازی</string>
     <string name="search_type_contains">شامل</string>
     <string name="vt_uploading">VirusTotal: در حال بارگذاری…</string>
-    <string name="vt_success">VirusTotal: %1$d/%2$d</string>
+    <string name="vt_success">ویروس‌توتال: %1$d/%2$d</string>
     <string name="vt_scan_date">تاریخ اسکن: %1$s</string>
     <string name="vt_permalink">لینک دائمی به VirusTotal</string>
     <string name="vt_slowness_warning">با توجه به سرعت اینترنت و ترافیک سرور ممکن است کمی طول بکشد.</string>
@@ -1107,4 +1079,46 @@
     <string name="pref_intent_firewall_description">اجزاء را فقط با استفاده از فایروال Intent مسدود کنید. توصیه نمی شود زیرا برخی از برنامه های سیستم می توانند فایروال ها را دور بزنند.</string>
     <string name="intent_firewall_and_disable">IFW + غیرفعال کردن</string>
     <string name="pref_intent_firewall_and_disable_description">کامپوننت ها را با استفاده از فایروال Intent مسدود کنید و همچنین آنها را غیرفعال کنید. روش پیشنهادی برای کاربران با دسترسی روت.</string>
+    <string name="uses_play_app_signing">واردشدن به گوگل پلی</string>
+    <string name="parent_process_id">شناسه فرآیند والد</string>
+    <string name="threads">تعداد رشته‌‌ها</string>
+    <string name="cpu_percent">%% پردازنده</string>
+    <string name="process_id">شناسه فرایند</string>
+    <string name="virtual_memory">حافظه مجازی</string>
+    <string name="pref_vt_apikey_summary">اسکن فایل های APK از طریق VirusTotal را فعال کنید.</string>
+    <string name="scan_in_vt">آنالیز در VirusTotal</string>
+    <string name="commandline_args">آرگومان‌های خط فرمان</string>
+    <string name="search_type_regular_expressions">رجکس</string>
+    <string name="cpu_time">زمان پردازنده</string>
+    <string name="state">وضعیت پردازنده</string>
+    <string name="failed_to_change_app_op_mode">امکان تغییر حالت عملکرد برنامه وجود ندارد.</string>
+    <string name="failed_to_use_the_current_mode_of_operation">امکان استفاده از حالت عملکرد فعلی وجود ندارد. برای این جلسه به حالت غیر روت برگردید.</string>
+    <string name="priority">اولویت</string>
+    <string name="swap_chart_info">● %1$s استفاده شده ● %2$s آزاد</string>
+    <string name="binary_64_bit">64 بیت</string>
+    <string name="auth_manager_title">مدیر مجوز</string>
+    <string name="regenerate_auth_key">بازسازی کلید مجوز</string>
+    <string name="suspend_app">ساسپند</string>
+    <string name="hide_app">پنهان</string>
+    <string name="endianness_little_endian">اندیان کوچک</string>
+    <string name="endianness_big_endian">ادیان بزرگ</string>
+    <string name="save_and_exit">ذخیره و خروج</string>
+    <string name="vt_queued">VirusTotal: در صف</string>
+    <string name="binary_32_bit">32 بیت</string>
+    <string name="so_type_executable">قابل اجرا</string>
+    <string name="pref_saved_apk_name_format">فرمت نام APK ذخیره شد</string>
+    <string name="app_explorer">کاوشگر برنامه</string>
+    <string name="action_optimize_app">بهینه‌سازی</string>
+    <string name="app_info_tag_open_links">باز کردن پیوندها</string>
+    <string name="title_domains_supported_by_the_app">دامنه های پشتیبانی شده</string>
+    <string name="so_type_shared_library">کتابخانه اشتراک گذاری شده</string>
+    <string name="batch_ops_runtime_optimization">زمان اجرای بهینه سازی</string>
+    <string name="action_run">اجرا</string>
+    <string name="hidden_api_enf_policy_warn">هشدار (دسترسی کامل به API مخفی اما هشدار صادر می کند)</string>
+    <string name="memory_chart_info">● %1$s برنامه‌ها ● %2$s ذخیره شده ● %3$s بافرها ● %4$s رایگان</string>
+    <string name="sort_by_installation_date">تاریخ نصب</string>
+    <string name="swap">تعویض</string>
+    <string name="hidden_api_enforcement_policy">خط مشی اجرای مخفی API</string>
+    <string name="hidden_api_enf_default_policy">پیش فرض (بر اساس نوع برنامه)</string>
+    <string name="hidden_api_enf_policy_none">هیچکدام (دسترسی کامل به API مخفی)</string>
 </resources>

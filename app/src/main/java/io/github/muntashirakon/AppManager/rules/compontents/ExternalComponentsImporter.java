@@ -2,8 +2,9 @@
 
 package io.github.muntashirakon.AppManager.rules.compontents;
 
+import static io.github.muntashirakon.AppManager.compat.PackageManagerCompat.MATCH_DISABLED_COMPONENTS;
+
 import android.annotation.SuppressLint;
-import android.content.Context;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
@@ -19,7 +20,6 @@ import androidx.annotation.WorkerThread;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -27,30 +27,27 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 
-import io.github.muntashirakon.AppManager.appops.AppOpsManager;
-import io.github.muntashirakon.AppManager.appops.AppOpsService;
+import io.github.muntashirakon.AppManager.compat.AppOpsManagerCompat;
 import io.github.muntashirakon.AppManager.compat.PackageManagerCompat;
 import io.github.muntashirakon.AppManager.rules.RuleType;
-import io.github.muntashirakon.AppManager.runner.Runner;
 import io.github.muntashirakon.AppManager.types.UserPackagePair;
-import io.github.muntashirakon.AppManager.utils.FileUtils;
 import io.github.muntashirakon.AppManager.utils.PackageUtils;
-
-import static io.github.muntashirakon.AppManager.utils.PackageUtils.flagDisabledComponents;
+import io.github.muntashirakon.io.Path;
+import io.github.muntashirakon.io.Paths;
 
 /**
  * Import components from external apps like Blocker, Watt
  */
 public class ExternalComponentsImporter {
-    public static void setModeToFilteredAppOps(@NonNull AppOpsService appOpsService,
+    public static void setModeToFilteredAppOps(@NonNull AppOpsManagerCompat appOpsManager,
                                                @NonNull UserPackagePair pair,
                                                int[] appOps,
-                                               @AppOpsManager.Mode int mode) throws RemoteException {
+                                               @AppOpsManagerCompat.Mode int mode) throws RemoteException {
         Collection<Integer> appOpList;
-        appOpList = PackageUtils.getFilteredAppOps(pair.getPackageName(), pair.getUserHandle(), appOps, mode);
-        try (ComponentsBlocker cb = ComponentsBlocker.getMutableInstance(pair.getPackageName(), pair.getUserHandle())) {
+        appOpList = PackageUtils.getFilteredAppOps(pair.getPackageName(), pair.getUserId(), appOps, mode);
+        try (ComponentsBlocker cb = ComponentsBlocker.getMutableInstance(pair.getPackageName(), pair.getUserId())) {
             for (int appOp : appOpList) {
-                appOpsService.setMode(appOp, PackageUtils.getAppUid(pair), pair.getPackageName(), mode);
+                appOpsManager.setMode(appOp, PackageUtils.getAppUid(pair), pair.getPackageName(), mode);
                 cb.setAppOp(appOp, mode);
             }
             cb.applyRules(true);
@@ -62,6 +59,7 @@ public class ExternalComponentsImporter {
     public static List<String> applyFromExistingBlockList(@NonNull List<String> packageNames, int userHandle) {
         List<String> failedPkgList = new ArrayList<>();
         HashMap<String, RuleType> components;
+        Path rulesPath = Paths.get(ComponentsBlocker.SYSTEM_RULES_PATH);
         for (String packageName : packageNames) {
             components = PackageUtils.getUserDisabledComponentsForPackage(packageName, userHandle);
             try (ComponentsBlocker cb = ComponentsBlocker.getMutableInstance(packageName, userHandle)) {
@@ -69,8 +67,10 @@ public class ExternalComponentsImporter {
                     cb.addComponent(componentName, components.get(componentName));
                 }
                 // Remove IFW blocking rules if exists
-                String ifwRuleFile = String.format("%s/%s*.xml", ComponentsBlocker.SYSTEM_RULES_PATH, packageName);
-                Runner.runCommand(new String[]{"rm", ifwRuleFile});
+                Path[] rulesFiles = rulesPath.listFiles((dir, name) -> name.startsWith(packageName) && name.endsWith("xml"));
+                for (Path rulesFile : rulesFiles) {
+                    rulesFile.delete();
+                }
                 cb.applyRules(true);
             } catch (Exception e) {
                 e.printStackTrace();
@@ -82,21 +82,16 @@ public class ExternalComponentsImporter {
 
     @WorkerThread
     @NonNull
-    public static List<String> applyFromBlocker(@NonNull Context context,
-                                                @NonNull List<Uri> uriList,
-                                                int[] userHandles) {
+    public static List<String> applyFromBlocker(@NonNull List<Uri> uriList, int[] userHandles) {
         List<String> failedFiles = new ArrayList<>();
         for (Uri uri : uriList) {
-            String filename = FileUtils.getFileName(context.getContentResolver(), uri);
+            String filename = Paths.get(uri).getName();
             try {
-                if (filename == null) {
-                    throw new FileNotFoundException("The requested content is not found.");
-                }
                 for (int userHandle : userHandles) {
-                    applyFromBlocker(context, uri, userHandle);
+                    applyFromBlocker(uri, userHandle);
                 }
             } catch (Exception e) {
-                failedFiles.add(filename == null ? uri.toString() : filename);
+                failedFiles.add(filename);
                 e.printStackTrace();
             }
         }
@@ -105,19 +100,17 @@ public class ExternalComponentsImporter {
 
     @WorkerThread
     @NonNull
-    public static List<String> applyFromWatt(@NonNull Context context, @NonNull List<Uri> uriList, int[] userHandles) {
+    public static List<String> applyFromWatt(@NonNull List<Uri> uriList, int[] userHandles) {
         List<String> failedFiles = new ArrayList<>();
         for (Uri uri : uriList) {
-            String filename = FileUtils.getFileName(context.getContentResolver(), uri);
+            Path path = Paths.get(uri);
+            String filename = path.getName();
             try {
-                if (filename == null) {
-                    throw new FileNotFoundException("The requested content is not found.");
-                }
                 for (int userHandle : userHandles) {
-                    applyFromWatt(context, FileUtils.trimExtension(filename), uri, userHandle);
+                    applyFromWatt(Paths.trimPathExtension(filename), path, userHandle);
                 }
             } catch (IOException e) {
-                failedFiles.add(filename == null ? uri.toString() : filename);
+                failedFiles.add(filename);
                 e.printStackTrace();
             }
         }
@@ -126,15 +119,11 @@ public class ExternalComponentsImporter {
 
     /**
      * Watt only supports IFW, so copy them directly
-     *
-     * @param context Application context
-     * @param fileUri File URI
      */
     @WorkerThread
-    private static void applyFromWatt(@NonNull Context context, String packageName, Uri fileUri, int userHandle)
+    private static void applyFromWatt(String packageName, Path path, int userHandle)
             throws IOException {
-        try (InputStream rulesStream = context.getContentResolver().openInputStream(fileUri)) {
-            if (rulesStream == null) throw new IOException("Failed to open input stream.");
+        try (InputStream rulesStream = path.openInputStream()) {
             try (ComponentsBlocker cb = ComponentsBlocker.getMutableInstance(packageName, userHandle)) {
                 HashMap<String, RuleType> components = ComponentUtils.readIFWRules(rulesStream,
                         packageName);
@@ -150,13 +139,12 @@ public class ExternalComponentsImporter {
     /**
      * Apply from blocker
      *
-     * @param context Application context
-     * @param uri     File URI
+     * @param uri File URI
      */
     @WorkerThread
     @SuppressLint("WrongConstant")
-    private static void applyFromBlocker(@NonNull Context context, Uri uri, int userHandle) throws Exception {
-        String jsonString = FileUtils.getFileContent(context.getContentResolver(), uri);
+    private static void applyFromBlocker(Uri uri, int userHandle) throws Exception {
+        String jsonString = Paths.get(uri).getContentAsString();
         HashMap<String, HashMap<String, RuleType>> packageComponents = new HashMap<>();
         HashMap<String, PackageInfo> packageInfoList = new HashMap<>();
         JSONObject jsonObject = new JSONObject(jsonString);
@@ -171,7 +159,8 @@ public class ExternalComponentsImporter {
                     packageInfoList.put(packageName, PackageManagerCompat.getPackageInfo(packageName,
                             PackageManager.GET_ACTIVITIES | PackageManager.GET_RECEIVERS
                                     | PackageManager.GET_PROVIDERS | PackageManager.GET_SERVICES
-                                    | flagDisabledComponents, userHandle));
+                                    | MATCH_DISABLED_COMPONENTS
+                                    | PackageManagerCompat.MATCH_STATIC_SHARED_AND_SDK_LIBRARIES, userHandle));
                 } catch (Exception e) {
                     // App not installed
                     uninstalledApps.add(packageName);

@@ -29,13 +29,12 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import io.github.muntashirakon.AppManager.BuildConfig;
 import io.github.muntashirakon.AppManager.R;
 import io.github.muntashirakon.AppManager.backup.BackupFlags;
 import io.github.muntashirakon.AppManager.backup.MetadataManager;
 import io.github.muntashirakon.AppManager.batchops.BatchOpsManager;
-import io.github.muntashirakon.AppManager.types.SearchableMultiChoiceDialogBuilder;
 import io.github.muntashirakon.AppManager.utils.UIUtils;
+import io.github.muntashirakon.dialog.SearchableFlagsDialogBuilder;
 
 public class RestoreSingleFragment extends Fragment {
     public static RestoreSingleFragment getInstance() {
@@ -61,7 +60,6 @@ public class RestoreSingleFragment extends Fragment {
         MaterialButton deleteButton = view.findViewById(R.id.action_delete);
         MaterialButton moreButton = view.findViewById(R.id.more);
 
-        recyclerView.setHasFixedSize(true);
         recyclerView.setLayoutManager(new LinearLayoutManager(mContext, LinearLayoutManager.VERTICAL, false));
         BackupAdapter adapter = new BackupAdapter(mContext, mViewModel.getBackupInfo().getBackups(),
                 (metadata, selectionCount, added) -> {
@@ -121,17 +119,14 @@ public class RestoreSingleFragment extends Fragment {
         List<Integer> supportedBackupFlags = BackupFlags.getBackupFlagsAsArray(flags.getFlags());
         // Inject no signatures
         supportedBackupFlags.add(BackupFlags.BACKUP_NO_SIGNATURE_CHECK);
-        if (BuildConfig.DEBUG) {
-            supportedBackupFlags.add(BackupFlags.BACKUP_CUSTOM_USERS);
-        }
+        supportedBackupFlags.add(BackupFlags.BACKUP_CUSTOM_USERS);
         List<Integer> disabledFlags = new ArrayList<>();
         if (!mViewModel.getBackupInfo().isInstalled()) {
             enabledFlags.addFlag(BackupFlags.BACKUP_APK_FILES);
             disabledFlags.add(BackupFlags.BACKUP_APK_FILES);
         }
-        new SearchableMultiChoiceDialogBuilder<>(mContext, supportedBackupFlags, BackupFlags.getFormattedFlagNames(mContext, supportedBackupFlags))
+        new SearchableFlagsDialogBuilder<>(mContext, supportedBackupFlags, BackupFlags.getFormattedFlagNames(mContext, supportedBackupFlags), enabledFlags.getFlags())
                 .setTitle(R.string.backup_options)
-                .addSelections(BackupFlags.getBackupFlagsAsArray(enabledFlags.getFlags()))
                 .addDisabledItems(disabledFlags)
                 .setPositiveButton(R.string.restore, (dialog, which, selections) -> {
                     int newFlags = 0;
@@ -172,7 +167,7 @@ public class RestoreSingleFragment extends Fragment {
 
     private static class BackupAdapter extends RecyclerView.Adapter<BackupAdapter.ViewHolder> {
         public interface OnSelectionListener {
-            void onSelectionChanged(MetadataManager.Metadata metadata, int selectionCount, boolean added);
+            void onSelectionChanged(@Nullable MetadataManager.Metadata metadata, int selectionCount, boolean added);
         }
 
         private final int mLayoutId;
@@ -189,8 +184,9 @@ public class RestoreSingleFragment extends Fragment {
         public BackupAdapter(@NonNull Context context, @NonNull List<MetadataManager.Metadata> backups,
                              @NonNull OnSelectionListener selectionListener) {
             mSelectionListener = selectionListener;
-            mLayoutId = MaterialAttributes.resolveInteger(context, R.attr.multiChoiceItemLayout,
-                    R.layout.mtrl_alert_select_dialog_multichoice);
+            mLayoutId = MaterialAttributes.resolveInteger(context, androidx.appcompat.R.attr.multiChoiceItemLayout,
+                    com.google.android.material.R.layout.mtrl_alert_select_dialog_multichoice);
+            mSelectionListener.onSelectionChanged(null, mSelectedPositions.size(), false);
             for (int i = 0; i < backups.size(); ++i) {
                 MetadataManager.Metadata backup = backups.get(i);
                 mBackups.add(backup);

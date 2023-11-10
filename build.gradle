@@ -1,19 +1,19 @@
 // SPDX-License-Identifier: Apache-2.0 AND GPL-3.0-or-later
 
 buildscript {
+    apply from: 'versions.gradle'
+
     repositories {
         google()
         mavenCentral()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:7.2.2'
-        classpath 'dev.rikka.tools.refine:gradle-plugin:3.0.3'
-        classpath "com.google.protobuf:protobuf-gradle-plugin:0.8.6"
+        classpath "com.android.tools.build:gradle:${agp_version}"
     }
 }
 
 wrapper {
-    distributionType = Wrapper.DistributionType.ALL
+    distributionType = Wrapper.DistributionType.BIN
 }
 
 allprojects {
@@ -23,23 +23,10 @@ allprojects {
         maven { url "https://jitpack.io" }
     }
     gradle.projectsEvaluated {
-        tasks.withType(JavaCompile) {
-            options.compilerArgs << "-Xlint:unchecked" << "-Xlint:deprecation"
+        tasks.withType(JavaCompile).tap {
+            configureEach {
+                options.compilerArgs << "-Xlint:unchecked" << "-Xlint:deprecation"
+            }
         }
     }
-}
-
-project.ext {
-    compileSdk = 32
-    buildTools = "33.0.0"
-    minSdk = 21
-    targetSdk = 32
-
-    libsu_version = "5.0.1"
-    room_version = "2.4.3"
-    annotation_version = "1.4.0"
-    appcompat_version = "1.5.1"
-    material_version = "1.7.0-rc01"
-    refine_version = "3.0.3"
-    splashscreen_version = "1.0.0"
 }

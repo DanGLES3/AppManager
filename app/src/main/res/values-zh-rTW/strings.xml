@@ -19,8 +19,6 @@
     <string name="share_apk">分享 APK</string>
     <string name="saved_successfully">已儲存</string>
     <string name="saving_failed">儲存失敗，請重試。</string>
-    <string name="failed_to_enable">無法啟用 <xliff:g id="app_name" example="App Manager">%1$s</xliff:g>.</string>
-    <string name="failed_to_disable">無法停用 <xliff:g id="app_name" example="App Manager">%1$s</xliff:g>.</string>
     <string name="uninstalled_successfully"><xliff:g id="app_name" example="App Manager">%1$s</xliff:g> 已被解除安裝。</string>
     <string name="failed_to_uninstall">無法解除安裝 <xliff:g id="app_name" example="App Manager">%1$s</xliff:g>.</string>
     <plurals name="main_list_date_days">
@@ -37,7 +35,6 @@
     </plurals>
     <string name="starting_activity">開始活動：<xliff:g id="activity_name" example=".main.MainActivity">%1$s</xliff:g></string>
     <string name="pref_about_msg">App Manager 版本，授權協議，致謝名單等。</string>
-    <string name="instructions">說明</string>
     <string name="flags">旗標</string>
     <string name="launch_mode">開啟方式</string>
     <string name="ssaid_info">SSAID（<tt> Settings.Secure.ANDROID_ID </tt>）是分配給每個應用程式的裝置標識字串（從 Android 8“ Oreo”開始）。應用程式廣泛使用它來追蹤使用者。</string>
@@ -64,9 +61,6 @@
     <plurals name="verified_with_warning">
         <item quantity="other">Verified with%d warning</item>
     </plurals>
-    <plurals name="alert_failed_to_enable">
-        <item quantity="other">無法啟用%1$d應用程式</item>
-    </plurals>
     <plurals name="alert_failed_to_set_app_ops">
         <item quantity="other">無法為 %1$d 應用設置應用操作</item>
     </plurals>
@@ -90,7 +84,6 @@
     </plurals>
     <string name="backup">備份</string>
     <string name="package_name_is_installed_successfully"><xliff:g id="app_name" example="App Manager">%1$s</xliff:g> 已安裝</string>
-    <string name="block_components_description">封鎖由給定簽名識別的所有元件</string>
     <string name="block_components_dots">封鎖元件…</string>
     <string name="block_unblock_trackers_description">封鎖或取消封鎖廣告並追蹤所有已安裝應用程式中的元件</string>
     <string name="pref_import_existing_msg">將其他應用程式停用的元件新增到 App Manager 。 使用此工具時要小心，因為可能會有很多誤報。僅選擇您確定的應用程式。</string>
@@ -118,9 +111,6 @@
     </plurals>
     <plurals name="alert_failed_to_uninstall">
         <item quantity="other">Could not uninstall%1$d app</item>
-    </plurals>
-    <plurals name="alert_failed_to_disable">
-        <item quantity="other">Could not disable%1$d app</item>
     </plurals>
     <plurals name="alert_failed_to_clear_data">
         <item quantity="other">Could not clear data from%1$d app</item>
@@ -250,7 +240,6 @@
     <string name="profile_clear_data_msg">資料將從應用程式中清除</string>
     <string name="profile_clear_cache_msg">快取將從應用程式中清除</string>
     <string name="profile_force_stop_msg">應用程式將被強制停止</string>
-    <string name="profile_disable_msg">據狀態值停用/啟用應用程式</string>
     <string name="allow_routine_ops_msg">允許在常規操作中使用配置檔案</string>
     <string name="profile_state">設定檔狀態</string>
     <string name="allow_routine_ops">允許例行操作</string>
@@ -264,7 +253,6 @@
     <string name="pref_encryption_msg">為備份加密。</string>
     <string name="encryption">加密</string>
     <string name="select_user">選擇使用者</string>
-    <string name="pref_show_users_in_installer_msg">顯示要安裝的外部應用程式之前要選擇的使用者清單。需要root或ADB。</string>
     <string name="pref_show_users_in_installer">在安裝程式中顯示使用者</string>
     <string name="failed_to_duplicate_profile">無法複製設定檔</string>
     <string name="duplicate">複製</string>
@@ -334,7 +322,6 @@
     <string name="apply_now">現在套用…</string>
     <string name="keystore">密鑰資源庫</string>
     <string name="no_profiles">沒有設定檔</string>
-    <string name="presets">預設值</string>
     <string name="profiles">設定檔</string>
     <string name="open_pgp_provider">OpenPGP提供者</string>
     <string name="systemless_app">無系統應用程式</string>
@@ -470,7 +457,6 @@
     <string name="components">成分</string>
     <string name="trackers">追蹤器</string>
     <string name="installed_version">安裝版本</string>
-    <string name="filter_disabled_apps">停用的應用程式</string>
     <string name="select_all">全選</string>
     <string name="filter_apps_with_rules">有規則的應用程式</string>
     <string name="filter_system_apps">系統應用程式</string>
@@ -555,7 +541,6 @@
     <string name="disable_background_run">防止後台操作</string>
     <string name="kill_process">殺</string>
     <string name="running_apps">正在執行的應用程式</string>
-    <string name="store">店鋪</string>
     <string name="apk_updater">APK 更新器</string>
     <string name="the_export_was_successful">已匯出</string>
     <string name="the_import_was_successful">匯入完成</string>
@@ -569,7 +554,6 @@
     </plurals>
     <string name="external_data_dir">外部資料目錄</string>
     <string name="sort_by_blocked_components">先封鎖</string>
-    <string name="sort_by_disabled_app">首先停用</string>
     <string name="exodus_link">εxodus鏈接</string>
     <string name="usage_yesterday">昨天</string>
     <string name="patch_level">Android 安全性更新</string>
@@ -745,12 +729,9 @@
     <string name="third_party">第三方資源庫和圖示</string>
     <string name="license">授權條款</string>
     <string name="icon_picker">圖示選擇器</string>
-    <string name="error_invalid_icon_format">無效的圖示格式</string>
-    <string name="error_invalid_icon_resource">無效的圖示資源</string>
     <string name="class_name">類別名稱</string>
     <string name="package_name">套件名稱</string>
     <string name="shortcut_name">捷徑名稱</string>
-    <string name="edit_shortcut">編輯捷徑</string>
     <string name="create_shortcut">建立捷徑</string>
     <string name="error_verbose_pin_shortcut">目前啟動器不支援PinShortcut。無法建立捷徑。</string>
     <string name="error_creating_shortcut">建立捷徑時發生錯誤</string>
@@ -917,7 +898,7 @@
     <string name="notification_title">正在記錄日誌</string>
     <string name="notification_ticker">日誌錄製開始</string>
     <string name="notification_subtext">按一下即可停止錄製</string>
-    <string name="no_saved_logs">找不到已儲存的日誌。</string>
+    <string name="no_saved_logs">找不到已儲存的記錄。</string>
     <string name="manage_saved_logs">管理已儲存的日誌</string>
     <string name="log_saved">已儲存日誌。</string>
     <string name="log_recording_started">日誌錄製已開始。</string>
@@ -940,7 +921,6 @@
     <string name="orientation_right_to_left">由右至左</string>
     <string name="orientation_left_to_right">由左至右</string>
     <string name="orientation_follow_locale">按照語言環境</string>
-    <string name="pref_layout_orientation">佈局方向</string>
     <plurals name="file_deletion_confirmation">
         <item quantity="other">%d 檔案將被刪除</item>
     </plurals>
@@ -961,11 +941,9 @@
     <string name="adb_connect_port_number_description">埠編號位於 <b> IP 位址 &amp; 連接埠 </b> 部分下方 <b> 裝置名稱 </b> 部分正下方。</string>
     <string name="port_number">連接埠</string>
     <string name="adb_connect">連線</string>
-    <string name="wireless_debugging_not_supported">此平臺不支援無線偵錯。</string>
     <string name="wireless_debugging">無線偵錯</string>
     <string name="community">社群</string>
     <string name="failed_to_prevent_background_run">無法防止 %1$s 在背景執行</string>
-    <string name="app_signing_signature_mismatch_for_data_only_app">由於簽名不相符而無法安裝應用程式。該應用程式在未清除其資料的情況下解除安裝。</string>
     <plurals name="alert_failed_to_import_backups">
         <item quantity="other">無法匯入 %1$d 備份</item>
     </plurals>
@@ -983,7 +961,6 @@
     <string name="permission_flags">權限標誌</string>
     <string name="saved_filters">已儲存的過濾器</string>
     <string name="error_with_details">錯誤: %s</string>
-    <string name="enable_disable">啟用/停用</string>
     <string name="notice">通知</string>
     <string name="notice_saf">與卷不同，所選目錄將用於儲存與 App Manager相關的所有檔案，包括已儲存的 APK 和備份。儲存空間存取框架 （SAF） 非常緩慢，因此，您只能在無法使用其他選項時使用此選項。</string>
     <string name="storage">儲存空間</string>
@@ -1148,7 +1125,7 @@
     <string name="pref_reload_apps">重新載入應用程式</string>
     <string name="pref_reload_apps_msg">重新載入儲存在 App Manager 資料庫中的應用程式清單，以防出現意外行為。</string>
     <string name="changelog_type_new">新增功能</string>
-    <string name="changelog_type_fix">修復</string>
+    <string name="changelog_type_fix">修正</string>
     <string name="changelog_type_improve">改進</string>
     <string name="restore_dots">還原…</string>
     <string name="unsupported_split_apk">不支援</string>
@@ -1165,4 +1142,51 @@
     <string name="am_command"><tt>am</tt> 命令</string>
     <string name="pref_sign_apk_error_signing_key_not_added">簽署 APK 檔案需要一個有效的簽署金鑰。</string>
     <string name="pref_sign_apk_no_signing_key">沒有簽署金鑰</string>
+    <string name="freeze_unfreeze">凍結/解凍</string>
+    <string name="profile_freeze_msg">基於狀態凍結或解凍應用程式</string>
+    <string name="hide_app">隱藏</string>
+    <string name="failed_to_freeze">無法凍結 <xliff:g id="app_name" example="App Manager">%1$s</xliff:g>.</string>
+    <string name="failed_to_unfreeze">無法解凍 <xliff:g id="app_name" example="App Manager">%1$s</xliff:g>.</string>
+    <string name="pref_default_freezing_method">預設凍結方法</string>
+    <plurals name="alert_failed_to_unfreeze">
+        <item quantity="other">無法解凍 %1$d 個應用程式</item>
+    </plurals>
+    <string name="fm_open_with_for_this_file_only">僅對此檔案</string>
+    <string name="file_creation_date">建立日期</string>
+    <string name="file_modification_date">修改日期</string>
+    <string name="file_accessed_date">存取日期</string>
+    <string name="file_open_with">開啟方式</string>
+    <string name="file_change_open_with">變更開啟方式</string>
+    <string name="fm_always_open_with">一律開啟</string>
+    <string name="file_open_as">開啟為…</string>
+    <string name="file_open_with_custom_activity">自訂</string>
+    <string name="file_properties">內容</string>
+    <string name="file_cut">剪下</string>
+    <string name="open_as_archive">壓縮檔</string>
+    <string name="open_as_text">文字</string>
+    <string name="open_as_folder">資料夾</string>
+    <string name="file_open_with_os_default_dialog">使用作業系統預設對話方塊開啟</string>
+    <string name="open_as_image">圖片</string>
+    <string name="open_as_video">影片</string>
+    <string name="open_as_other">其他</string>
+    <string name="delete_filename">刪除 %s</string>
+    <string name="on_unfreeze_open_application">解凍後開啟應用程式</string>
+    <string name="action_stop_service">停止</string>
+    <plurals name="alert_failed_to_freeze">
+        <item quantity="other">無法凍結 %1$d 個應用程式</item>
+    </plurals>
+    <string name="pref_privacy">隱私權</string>
+    <string name="pref_privacy_description">螢幕鎖定、授權等。</string>
+    <string name="user_manual">使用者手冊</string>
+    <string name="get_help">取得說明</string>
+    <string name="pref_version_changelog">版本/變更記錄</string>
+    <string name="file_shortcut_target_file">目標檔案</string>
+    <string name="confirm_file_deletion">確定，刪除</string>
+    <string name="tap_to_freeze_app">輕觸以凍結</string>
+    <string name="app_manager_build_expired">需要更新</string>
+    <string name="renamed_successfully">已重新命名</string>
+    <string name="selinux_context"/>
+    <string name="unix_file_permissions">模式</string>
+    <string name="sort_by_file_size">檔案大小</string>
+    <string name="sort_by_file_type">檔案類型</string>
 </resources>

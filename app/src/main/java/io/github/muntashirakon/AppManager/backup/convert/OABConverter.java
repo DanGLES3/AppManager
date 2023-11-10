@@ -2,11 +2,22 @@
 
 package io.github.muntashirakon.AppManager.backup.convert;
 
+import static io.github.muntashirakon.AppManager.backup.BackupManager.CERT_PREFIX;
+import static io.github.muntashirakon.AppManager.backup.BackupManager.DATA_PREFIX;
+import static io.github.muntashirakon.AppManager.backup.BackupManager.SOURCE_PREFIX;
+import static io.github.muntashirakon.AppManager.backup.BackupManager.getExt;
+import static io.github.muntashirakon.AppManager.utils.TarUtils.DEFAULT_SPLIT_SIZE;
+import static io.github.muntashirakon.AppManager.utils.TarUtils.TAR_BZIP2;
+import static io.github.muntashirakon.AppManager.utils.TarUtils.TAR_GZIP;
+import static io.github.muntashirakon.AppManager.utils.TarUtils.TAR_ZSTD;
+
 import android.annotation.UserIdInt;
 import android.os.UserHandleHidden;
 import android.text.TextUtils;
 
 import androidx.annotation.NonNull;
+
+import com.github.luben.zstd.ZstdOutputStream;
 
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
@@ -26,32 +37,28 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 import io.github.muntashirakon.AppManager.backup.BackupException;
 import io.github.muntashirakon.AppManager.backup.BackupFiles;
 import io.github.muntashirakon.AppManager.backup.BackupFlags;
+import io.github.muntashirakon.AppManager.backup.BackupUtils;
 import io.github.muntashirakon.AppManager.backup.CryptoUtils;
 import io.github.muntashirakon.AppManager.backup.MetadataManager;
 import io.github.muntashirakon.AppManager.crypto.Crypto;
 import io.github.muntashirakon.AppManager.logs.Log;
-import io.github.muntashirakon.AppManager.utils.AppPref;
+import io.github.muntashirakon.AppManager.self.filecache.FileCache;
+import io.github.muntashirakon.AppManager.settings.Prefs;
 import io.github.muntashirakon.AppManager.utils.ArrayUtils;
+import io.github.muntashirakon.AppManager.utils.ContextUtils;
 import io.github.muntashirakon.AppManager.utils.DigestUtils;
 import io.github.muntashirakon.AppManager.utils.ExUtils;
-import io.github.muntashirakon.AppManager.utils.FileUtils;
 import io.github.muntashirakon.AppManager.utils.TarUtils;
+import io.github.muntashirakon.io.IoUtils;
 import io.github.muntashirakon.io.Path;
 import io.github.muntashirakon.io.SplitOutputStream;
-
-import static io.github.muntashirakon.AppManager.backup.BackupManager.CERT_PREFIX;
-import static io.github.muntashirakon.AppManager.backup.BackupManager.DATA_PREFIX;
-import static io.github.muntashirakon.AppManager.backup.BackupManager.SOURCE_PREFIX;
-import static io.github.muntashirakon.AppManager.backup.BackupManager.getExt;
-import static io.github.muntashirakon.AppManager.utils.TarUtils.DEFAULT_SPLIT_SIZE;
-import static io.github.muntashirakon.AppManager.utils.TarUtils.TAR_BZIP2;
-import static io.github.muntashirakon.AppManager.utils.TarUtils.TAR_GZIP;
 
 /**
  * A documentation about OAndBackup is located at
@@ -132,7 +139,7 @@ public class OABConverter extends Converter {
                 mTempBackupPath = backupFile.getBackupPath();
                 mCrypto = ConvertUtils.setupCrypto(mDestMetadata);
                 try {
-                    mChecksum = new BackupFiles.Checksum(backupFile.getChecksumFile(CryptoUtils.MODE_NO_ENCRYPTION), "w");
+                    mChecksum = backupFile.getChecksum(CryptoUtils.MODE_NO_ENCRYPTION);
                 } catch (IOException e) {
                     throw new BackupException("Failed to create checksum file.", e);
                 }
@@ -183,8 +190,11 @@ public class OABConverter extends Converter {
                     mCrypto.close();
                 }
                 for (Path file : mDecryptedFiles) {
-                    Log.d(TAG, "Deleting " + file);
+                    Log.d(TAG, "Deleting %s", file);
                     file.delete();
+                }
+                if (backupSuccess) {
+                    BackupUtils.putBackupToDbAndBroadcast(ContextUtils.getContext(), mDestMetadata);
                 }
             }
             return;
@@ -204,7 +214,7 @@ public class OABConverter extends Converter {
     private void readLogFile() throws BackupException {
         try {
             Path logFile = mBackupLocation.findFile(mPackageName + ".log");
-            String jsonString = FileUtils.getFileContent(logFile);
+            String jsonString = logFile.getContentAsString();
             if (TextUtils.isEmpty(jsonString)) throw new JSONException("Empty JSON string.");
             JSONObject jsonObject = new JSONObject(jsonString);
             mSourceMetadata.label = jsonObject.getString("label");
@@ -252,9 +262,9 @@ public class OABConverter extends Converter {
             mSourceMetadata.userHandle = UserHandleHidden.myUserId();
             mSourceMetadata.dataDirs = ConvertUtils.getDataDirs(mPackageName, mUserId, mSourceMetadata.flags
                     .backupInternalData(), mSourceMetadata.flags.backupExternalData(), false);
-            mSourceMetadata.tarType = ConvertUtils.getTarTypeFromPref();
+            mSourceMetadata.tarType = Prefs.BackupRestore.getCompressionMethod();
             mSourceMetadata.keyStore = false;
-            mSourceMetadata.installer = (String) AppPref.get(AppPref.PrefKey.PREF_INSTALLER_INSTALLER_APP_STR);
+            mSourceMetadata.installer = Prefs.Installer.getInstallerPackageName();
             mSourceMetadata.version = 2;  // Old version is used so that we know that it needs permission fixes
         } catch (JSONException | IOException e) {
             ExUtils.rethrowAsBackupException("Could not parse JSON file.", e);
@@ -350,6 +360,8 @@ public class OABConverter extends Converter {
                     os = new GzipCompressorOutputStream(bos);
                 } else if (TAR_BZIP2.equals(mDestMetadata.tarType)) {
                     os = new BZip2CompressorOutputStream(bos);
+                } else if (TAR_ZSTD.equals(mDestMetadata.tarType)) {
+                    os = new ZstdOutputStream(bos);
                 } else {
                     throw new BackupException("Invalid compression type: " + mDestMetadata.tarType);
                 }
@@ -361,15 +373,12 @@ public class OABConverter extends Converter {
                         File tmpFile = null;
                         if (!zipEntry.isDirectory()) {
                             // We need to use a temporary file
-                            tmpFile = FileUtils.getTempFile();
+                            tmpFile = FileCache.getGlobalFileCache().createCachedFile(files[0].getExtension());
                             try (OutputStream fos = new FileOutputStream(tmpFile)) {
-                                FileUtils.copy(zis, fos);
-                            } catch (Throwable th) {
-                                tmpFile.delete();
-                                throw th;
+                                IoUtils.copy(zis, fos, -1, null);
                             }
                         }
-                        String fileName = zipEntry.getName().replaceFirst(mPackageName + "/", "");
+                        String fileName = zipEntry.getName().replaceFirst(Pattern.quote(mPackageName + "/"), "");
                         if (fileName.equals("")) continue;
                         // New tar entry
                         TarArchiveEntry tarArchiveEntry = new TarArchiveEntry(fileName);
@@ -380,9 +389,9 @@ public class OABConverter extends Converter {
                         if (tmpFile != null) {
                             // Copy from the temporary file
                             try (FileInputStream fis = new FileInputStream(tmpFile)) {
-                                FileUtils.copy(fis, tos);
+                                IoUtils.copy(fis, tos, -1, null);
                             } finally {
-                                tmpFile.delete();
+                                FileCache.getGlobalFileCache().delete(tmpFile);
                             }
                         }
                         tos.closeArchiveEntry();

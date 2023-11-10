@@ -2,6 +2,20 @@
 
 package io.github.muntashirakon.io;
 
+import static android.system.OsConstants.ENOSYS;
+import static android.system.OsConstants.O_APPEND;
+import static android.system.OsConstants.O_CREAT;
+import static android.system.OsConstants.O_RDONLY;
+import static android.system.OsConstants.O_RDWR;
+import static android.system.OsConstants.O_TRUNC;
+import static android.system.OsConstants.O_WRONLY;
+import static io.github.muntashirakon.io.FileSystemManager.MODE_APPEND;
+import static io.github.muntashirakon.io.FileSystemManager.MODE_CREATE;
+import static io.github.muntashirakon.io.FileSystemManager.MODE_READ_ONLY;
+import static io.github.muntashirakon.io.FileSystemManager.MODE_READ_WRITE;
+import static io.github.muntashirakon.io.FileSystemManager.MODE_TRUNCATE;
+import static io.github.muntashirakon.io.FileSystemManager.MODE_WRITE_ONLY;
+
 import android.annotation.SuppressLint;
 import android.os.Build;
 import android.system.ErrnoException;
@@ -23,27 +37,10 @@ import java.nio.file.OpenOption;
 import java.nio.file.StandardOpenOption;
 import java.util.Set;
 
-import static android.system.OsConstants.ENOSYS;
-import static android.system.OsConstants.O_APPEND;
-import static android.system.OsConstants.O_CREAT;
-import static android.system.OsConstants.O_RDONLY;
-import static android.system.OsConstants.O_RDWR;
-import static android.system.OsConstants.O_TRUNC;
-import static android.system.OsConstants.O_WRONLY;
-import static io.github.muntashirakon.io.FileSystemManager.MODE_APPEND;
-import static io.github.muntashirakon.io.FileSystemManager.MODE_CREATE;
-import static io.github.muntashirakon.io.FileSystemManager.MODE_READ_ONLY;
-import static io.github.muntashirakon.io.FileSystemManager.MODE_READ_WRITE;
-import static io.github.muntashirakon.io.FileSystemManager.MODE_TRUNCATE;
-import static io.github.muntashirakon.io.FileSystemManager.MODE_WRITE_ONLY;
-
 // Copyright 2022 John "topjohnwu" Wu
 @SuppressWarnings({"ConstantConditions", "JavaReflectionMemberAccess"})
 @SuppressLint("DiscouragedPrivateApi")
 class FileUtils {
-
-    private static final String REMOTE_ERR_MSG = "Exception thrown on remote process";
-
     private static Object os;
     private static Method splice;
     private static Method sendfile;
@@ -159,6 +156,7 @@ class FileUtils {
     }
 
     @SuppressWarnings("deprecation")
+    @SuppressLint("NewApi")
     static long sendfile(
             FileDescriptor outFd, FileDescriptor inFd,
             MutableLong inOffset, long byteCount) throws ErrnoException {
@@ -185,30 +183,6 @@ class FileUtils {
                 throw new ErrnoException("sendfile", ENOSYS);
             }
         }
-    }
-
-    static void checkException(ParcelValues values) throws IOException {
-        Throwable err = values.getTyped(0);
-        if (err != null) {
-            throw new IOException(REMOTE_ERR_MSG, err);
-        }
-    }
-
-    static void checkErrnoException(ParcelValues values) throws ErrnoException {
-        ErrnoException err = values.getTyped(0);
-        if (err != null) {
-            throw err;
-        }
-    }
-
-    static <T> T tryAndGet(ParcelValues values) throws IOException {
-        checkException(values);
-        return values.getTyped(1);
-    }
-
-    static <T> T tryErrnoAndGet(ParcelValues values) throws ErrnoException {
-        checkErrnoException(values);
-        return values.getTyped(1);
     }
 
     @SuppressWarnings("OctalInteger")

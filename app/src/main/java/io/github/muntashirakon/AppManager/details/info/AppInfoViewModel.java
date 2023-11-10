@@ -2,73 +2,89 @@
 
 package io.github.muntashirakon.AppManager.details.info;
 
+import android.annotation.UserIdInt;
 import android.app.ActivityManager;
 import android.app.Application;
 import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.content.pm.verify.domain.DomainVerificationUserState;
 import android.os.Build;
 import android.os.UserHandleHidden;
+import android.text.TextUtils;
 
+import androidx.annotation.AnyThread;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.WorkerThread;
+import androidx.core.util.Pair;
 import androidx.lifecycle.AndroidViewModel;
+import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
-import com.android.internal.util.TextUtils;
-
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.zip.ZipFile;
 
-import io.github.muntashirakon.AppManager.apk.ApkFile;
-import io.github.muntashirakon.AppManager.backup.MetadataManager;
+import io.github.muntashirakon.AppManager.StaticDataset;
+import io.github.muntashirakon.AppManager.apk.installer.PackageInstallerCompat;
+import io.github.muntashirakon.AppManager.apk.installer.PackageInstallerService;
+import io.github.muntashirakon.AppManager.backup.BackupUtils;
 import io.github.muntashirakon.AppManager.compat.ActivityManagerCompat;
 import io.github.muntashirakon.AppManager.compat.ApplicationInfoCompat;
+import io.github.muntashirakon.AppManager.compat.DeviceIdleManagerCompat;
+import io.github.muntashirakon.AppManager.compat.DomainVerificationManagerCompat;
+import io.github.muntashirakon.AppManager.compat.ManifestCompat;
 import io.github.muntashirakon.AppManager.compat.NetworkPolicyManagerCompat;
+import io.github.muntashirakon.AppManager.compat.PackageManagerCompat;
+import io.github.muntashirakon.AppManager.db.entity.Backup;
+import io.github.muntashirakon.AppManager.debloat.DebloatObject;
 import io.github.muntashirakon.AppManager.details.AppDetailsViewModel;
 import io.github.muntashirakon.AppManager.magisk.MagiskDenyList;
 import io.github.muntashirakon.AppManager.magisk.MagiskHide;
 import io.github.muntashirakon.AppManager.magisk.MagiskProcess;
 import io.github.muntashirakon.AppManager.magisk.MagiskUtils;
+import io.github.muntashirakon.AppManager.misc.OsEnvironment;
+import io.github.muntashirakon.AppManager.misc.XposedModuleInfo;
 import io.github.muntashirakon.AppManager.rules.RuleType;
 import io.github.muntashirakon.AppManager.rules.compontents.ComponentUtils;
 import io.github.muntashirakon.AppManager.rules.struct.ComponentRule;
-import io.github.muntashirakon.AppManager.runner.Runner;
-import io.github.muntashirakon.AppManager.servermanager.LocalServer;
+import io.github.muntashirakon.AppManager.self.SelfPermissions;
 import io.github.muntashirakon.AppManager.settings.FeatureController;
-import io.github.muntashirakon.AppManager.settings.Ops;
+import io.github.muntashirakon.AppManager.settings.Prefs;
 import io.github.muntashirakon.AppManager.ssaid.SsaidSettings;
 import io.github.muntashirakon.AppManager.types.PackageSizeInfo;
 import io.github.muntashirakon.AppManager.uri.UriManager;
 import io.github.muntashirakon.AppManager.usage.AppUsageStatsManager;
 import io.github.muntashirakon.AppManager.usage.UsageUtils;
-import io.github.muntashirakon.AppManager.utils.AppPref;
-import io.github.muntashirakon.AppManager.utils.ArrayUtils;
-import io.github.muntashirakon.AppManager.utils.FileUtils;
+import io.github.muntashirakon.AppManager.utils.ExUtils;
 import io.github.muntashirakon.AppManager.utils.KeyStoreUtils;
 import io.github.muntashirakon.AppManager.utils.PackageUtils;
-import io.github.muntashirakon.AppManager.utils.PermissionUtils;
-import io.github.muntashirakon.AppManager.utils.UiThreadHandler;
-import io.github.muntashirakon.AppManager.utils.Utils;
+import io.github.muntashirakon.AppManager.utils.ThreadUtils;
 import io.github.muntashirakon.io.Path;
 import io.github.muntashirakon.io.Paths;
 
 public class AppInfoViewModel extends AndroidViewModel {
-    private final MutableLiveData<CharSequence> packageLabel = new MutableLiveData<>();
-    private final MutableLiveData<TagCloud> tagCloud = new MutableLiveData<>();
-    private final MutableLiveData<AppInfo> appInfo = new MutableLiveData<>();
-    private final ExecutorService executor = Executors.newFixedThreadPool(4);
+    private final MutableLiveData<CharSequence> mAppLabel = new MutableLiveData<>();
+    private final MutableLiveData<TagCloud> mTagCloud = new MutableLiveData<>();
+    private final MutableLiveData<AppInfo> mAppInfo = new MutableLiveData<>();
+    private final MutableLiveData<Pair<Integer, CharSequence>> mInstallExistingResult = new MutableLiveData<>();
+    private final ExecutorService mExecutor = Executors.newFixedThreadPool(4);
+    private Future<?> mTagCloudFuture;
+    private Future<?> mAppInfoFuture;
     @Nullable
-    private AppDetailsViewModel mainModel;
+    private AppDetailsViewModel mMainModel;
 
     public AppInfoViewModel(@NonNull Application application) {
         super(application);
@@ -76,75 +92,103 @@ public class AppInfoViewModel extends AndroidViewModel {
 
     @Override
     protected void onCleared() {
-        executor.shutdownNow();
+        if (mTagCloudFuture != null) {
+            mTagCloudFuture.cancel(true);
+        }
+        if (mAppInfoFuture != null) {
+            mAppInfoFuture.cancel(true);
+        }
         super.onCleared();
     }
 
     public void setMainModel(@NonNull AppDetailsViewModel mainModel) {
-        this.mainModel = mainModel;
+        mMainModel = mainModel;
     }
 
-    public MutableLiveData<CharSequence> getPackageLabel() {
-        return packageLabel;
+    public LiveData<CharSequence> getAppLabel() {
+        return mAppLabel;
     }
 
-    public MutableLiveData<TagCloud> getTagCloud() {
-        return tagCloud;
+    public LiveData<TagCloud> getTagCloud() {
+        return mTagCloud;
     }
 
-    public MutableLiveData<AppInfo> getAppInfo() {
-        return appInfo;
+    public LiveData<AppInfo> getAppInfo() {
+        return mAppInfo;
     }
 
-    @WorkerThread
-    public void loadPackageLabel() {
-        if (mainModel != null) {
-            PackageInfo pi = mainModel.getPackageInfo();
-            if (pi != null) {
-                packageLabel.postValue(pi.applicationInfo.loadLabel(getApplication().getPackageManager()));
-            }
+    public LiveData<Pair<Integer, CharSequence>> getInstallExistingResult() {
+        return mInstallExistingResult;
+    }
+
+    @AnyThread
+    public void loadAppLabel(@NonNull ApplicationInfo applicationInfo) {
+        ThreadUtils.postOnBackgroundThread(() -> {
+            CharSequence appLabel = applicationInfo.loadLabel(getApplication().getPackageManager());
+            mAppLabel.postValue(appLabel);
+        });
+    }
+
+    @AnyThread
+    public void loadTagCloud(@NonNull PackageInfo packageInfo, boolean isExternalApk) {
+        if (mTagCloudFuture != null) {
+            mTagCloudFuture.cancel(true);
         }
+        mTagCloudFuture = ThreadUtils.postOnBackgroundThread(() -> loadTagCloudInternal(packageInfo, isExternalApk));
     }
 
     @WorkerThread
-    public void loadTagCloud() {
-        if (mainModel == null) return;
-        PackageInfo packageInfo = mainModel.getPackageInfo();
-        if (packageInfo == null) return;
+    private void loadTagCloudInternal(@NonNull PackageInfo packageInfo, boolean isExternalApk) {
+        if (mMainModel == null) return;
         String packageName = packageInfo.packageName;
+        int userId = mMainModel.getUserId();
         ApplicationInfo applicationInfo = packageInfo.applicationInfo;
         TagCloud tagCloud = new TagCloud();
         try {
-            HashMap<String, RuleType> trackerComponents = ComponentUtils
-                    .getTrackerComponentsForPackageInfo(packageInfo);
+            HashMap<String, RuleType> trackerComponents = ComponentUtils.getTrackerComponentsForPackage(packageInfo);
             tagCloud.trackerComponents = new ArrayList<>(trackerComponents.size());
             for (String component : trackerComponents.keySet()) {
-                ComponentRule componentRule = mainModel.getComponentRule(component);
+                ComponentRule componentRule = mMainModel.getComponentRule(component);
                 if (componentRule == null) {
                     componentRule = new ComponentRule(packageName, component, trackerComponents.get(component),
-                            AppPref.getDefaultComponentStatus());
+                            Prefs.Blocking.getDefaultBlockingMethod());
                 }
                 tagCloud.trackerComponents.add(componentRule);
                 tagCloud.areAllTrackersBlocked &= componentRule.isBlocked();
             }
-            tagCloud.isSystemApp = (applicationInfo.flags & ApplicationInfo.FLAG_SYSTEM) != 0;
-            tagCloud.isSystemlessPath = !mainModel.getIsExternalApk() && Ops.isRoot()
-                    && MagiskUtils.isSystemlessPath(PackageUtils.getHiddenCodePathOrDefault(packageName,
-                    applicationInfo.publicSourceDir));
+            if (ThreadUtils.isInterrupted()) {
+                return;
+            }
+            tagCloud.isSystemApp = ApplicationInfoCompat.isSystemApp(applicationInfo);
             tagCloud.isUpdatedSystemApp = (applicationInfo.flags & ApplicationInfo.FLAG_UPDATED_SYSTEM_APP) != 0;
-            tagCloud.splitCount = mainModel.getSplitCount();
+            String codePath = PackageUtils.getHiddenCodePathOrDefault(packageName, applicationInfo.publicSourceDir);
+            tagCloud.isSystemlessPath = !isExternalApk && MagiskUtils.isSystemlessPath(codePath);
+            if (!isExternalApk && android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
+                DomainVerificationUserState userState = DomainVerificationManagerCompat
+                        .getDomainVerificationUserState(packageName, userId);
+                if (userState != null) {
+                    tagCloud.canOpenLinks = userState.isLinkHandlingAllowed();
+                    if (!userState.getHostToStateMap().isEmpty()) {
+                        tagCloud.hostsToOpen = userState.getHostToStateMap();
+                    }
+                }
+            }
+            tagCloud.splitCount = mMainModel.getSplitCount();
             tagCloud.isDebuggable = (applicationInfo.flags & ApplicationInfo.FLAG_DEBUGGABLE) != 0;
-            tagCloud.isTestOnly = (applicationInfo.flags & ApplicationInfo.FLAG_TEST_ONLY) != 0;
+            tagCloud.isTestOnly = ApplicationInfoCompat.isTestOnly(applicationInfo);
             tagCloud.hasCode = (applicationInfo.flags & ApplicationInfo.FLAG_HAS_CODE) != 0;
             tagCloud.hasRequestedLargeHeap = (applicationInfo.flags & ApplicationInfo.FLAG_LARGE_HEAP) != 0;
-            tagCloud.runningServices = ActivityManagerCompat.getRunningServices(packageName, mainModel.getUserHandle());
-            tagCloud.isForceStopped = (applicationInfo.flags & ApplicationInfo.FLAG_STOPPED) != 0;
-            tagCloud.isAppEnabled = applicationInfo.enabled;
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                tagCloud.isAppSuspended = (applicationInfo.flags & ApplicationInfo.FLAG_SUSPENDED) != 0;
+            if (ThreadUtils.isInterrupted()) {
+                return;
             }
-            int privateFlags = ApplicationInfoCompat.getPrivateFlags(applicationInfo);
-            tagCloud.isAppHidden = (privateFlags & ApplicationInfoCompat.PRIVATE_FLAG_HIDDEN) != 0;
+            tagCloud.runningServices = ActivityManagerCompat.getRunningServices(packageName, userId);
+            tagCloud.isForceStopped = ApplicationInfoCompat.isStopped(applicationInfo);
+            tagCloud.isAppEnabled = applicationInfo.enabled;
+            tagCloud.isAppSuspended = ApplicationInfoCompat.isSuspended(applicationInfo);
+            tagCloud.isAppHidden = ApplicationInfoCompat.isHidden(applicationInfo);
+            if (ThreadUtils.isInterrupted()) {
+                return;
+            }
             tagCloud.magiskHiddenProcesses = MagiskHide.getProcesses(packageInfo);
             boolean magiskHideEnabled = false;
             for (MagiskProcess magiskProcess : tagCloud.magiskHiddenProcesses) {
@@ -155,7 +199,7 @@ public class AppInfoViewModel extends AndroidViewModel {
                     }
                 }
             }
-            tagCloud.isMagiskHideEnabled = !mainModel.getIsExternalApk() && magiskHideEnabled;
+            tagCloud.isMagiskHideEnabled = !isExternalApk && magiskHideEnabled;
             tagCloud.magiskDeniedProcesses = MagiskDenyList.getProcesses(packageInfo);
             boolean magiskDenyListEnabled = false;
             for (MagiskProcess magiskProcess : tagCloud.magiskDeniedProcesses) {
@@ -166,134 +210,153 @@ public class AppInfoViewModel extends AndroidViewModel {
                     }
                 }
             }
-            tagCloud.isMagiskDenyListEnabled = !mainModel.getIsExternalApk() && magiskDenyListEnabled;
-            tagCloud.hasKeyStoreItems = KeyStoreUtils.hasKeyStore(getApplication(), applicationInfo.uid);
-            tagCloud.hasMasterKeyInKeyStore = KeyStoreUtils.hasMasterKey(getApplication(), applicationInfo.uid);
-            tagCloud.usesPlayAppSigning = PackageUtils.usesPlayAppSigning(applicationInfo);
-            try {
-                tagCloud.backups = MetadataManager.getMetadata(packageName);
-            } catch (IOException e) {
-                tagCloud.backups = ArrayUtils.emptyArray(MetadataManager.Metadata.class);
+            tagCloud.isMagiskDenyListEnabled = !isExternalApk && magiskDenyListEnabled;
+            if (ThreadUtils.isInterrupted()) {
+                return;
             }
-            if (!mainModel.getIsExternalApk() && PermissionUtils.hasDumpPermission()) {
-                String targetString = "user," + packageName + "," + applicationInfo.uid;
-                Runner.Result result = Runner.runCommand(new String[]{"dumpsys", "deviceidle", "whitelist"});
-                tagCloud.isBatteryOptimized = !result.isSuccessful() || !result.getOutput().contains(targetString);
+            List<DebloatObject> debloatObjects = StaticDataset.getDebloatObjects();
+            for (DebloatObject debloatObject : debloatObjects) {
+                if (packageName.equals(debloatObject.packageName)) {
+                    tagCloud.isBloatware = true;
+                    break;
+                }
+            }
+            if (ThreadUtils.isInterrupted()) {
+                return;
+            }
+            try (ZipFile zipFile = new ZipFile(applicationInfo.publicSourceDir)) {
+                Boolean isXposedModule = XposedModuleInfo.isXposedModule(applicationInfo, zipFile);
+                if (!Boolean.FALSE.equals(isXposedModule)) {
+                    tagCloud.xposedModuleInfo = new XposedModuleInfo(applicationInfo, isXposedModule == null ? null : zipFile);
+                }
+            } catch (Throwable th) {
+                th.printStackTrace();
+            }
+            tagCloud.canWriteAndExecute = Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q
+                    && applicationInfo.targetSdkVersion < Build.VERSION_CODES.Q;
+            tagCloud.hasKeyStoreItems = KeyStoreUtils.hasKeyStore(applicationInfo.uid);
+            tagCloud.hasMasterKeyInKeyStore = KeyStoreUtils.hasMasterKey(applicationInfo.uid);
+            tagCloud.usesPlayAppSigning = PackageUtils.usesPlayAppSigning(applicationInfo);
+            if (ThreadUtils.isInterrupted()) {
+                return;
+            }
+            tagCloud.backups = BackupUtils.getBackupMetadataFromDbNoLockValidate(packageName);
+            if (!isExternalApk) {
+                tagCloud.isBatteryOptimized = DeviceIdleManagerCompat.isBatteryOptimizedApp(packageName);
             } else {
                 tagCloud.isBatteryOptimized = true;
             }
-            if (!mainModel.getIsExternalApk() && LocalServer.isAMServiceAlive()) {
-                tagCloud.netPolicies = NetworkPolicyManagerCompat.getUidPolicy(applicationInfo.uid);
+            if (!isExternalApk && SelfPermissions.checkSelfOrRemotePermission(ManifestCompat.permission.MANAGE_NETWORK_POLICY)) {
+                tagCloud.netPolicies = ExUtils.requireNonNullElse(() -> NetworkPolicyManagerCompat.getUidPolicy(applicationInfo.uid), 0);
             } else {
                 tagCloud.netPolicies = 0;
             }
-            if (Ops.isRoot() && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            if (!isExternalApk && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 try {
-                    tagCloud.ssaid = new SsaidSettings(packageName, applicationInfo.uid).getSsaid();
+                    tagCloud.ssaid = new SsaidSettings(userId)
+                            .getSsaid(packageName, applicationInfo.uid);
                     if (TextUtils.isEmpty(tagCloud.ssaid)) tagCloud.ssaid = null;
                 } catch (IOException ignore) {
                 }
             }
-            if (Ops.isRoot()) {
+            if (!isExternalApk) {
+                if (ThreadUtils.isInterrupted()) {
+                    return;
+                }
                 List<UriManager.UriGrant> uriGrants = new UriManager().getGrantedUris(packageName);
                 if (uriGrants != null) {
                     Iterator<UriManager.UriGrant> uriGrantIterator = uriGrants.listIterator();
                     UriManager.UriGrant uriGrant;
                     while (uriGrantIterator.hasNext()) {
                         uriGrant = uriGrantIterator.next();
-                        if (uriGrant.targetUserId != mainModel.getUserHandle()) {
+                        if (uriGrant.targetUserId != userId) {
                             uriGrantIterator.remove();
                         }
                     }
                     tagCloud.uriGrants = uriGrants;
                 }
             }
-            this.tagCloud.postValue(tagCloud);
+            if (ApplicationInfoCompat.isStaticSharedLibrary(applicationInfo)) {
+                if (ThreadUtils.isInterrupted()) {
+                    return;
+                }
+                List<String> staticSharedLibraryNames = new ArrayList<>();
+                // Check for packages by the same packagename
+                List<ApplicationInfo> appList;
+                try {
+                    appList = PackageManagerCompat.getInstalledApplications(PackageManagerCompat.MATCH_STATIC_SHARED_AND_SDK_LIBRARIES, userId);
+                    for (ApplicationInfo info : appList) {
+                        if (info.packageName.equals(packageName)) {
+                            staticSharedLibraryNames.add(info.processName);
+                        }
+                    }
+                } catch (Throwable ignore) {
+                    staticSharedLibraryNames.add(applicationInfo.processName);
+                }
+                tagCloud.staticSharedLibraryNames = staticSharedLibraryNames.toArray(new String[0]);
+            }
+            if (ThreadUtils.isInterrupted()) {
+                return;
+            }
+            mTagCloud.postValue(tagCloud);
         } catch (Throwable th) {
             // Unknown behaviour
-            UiThreadHandler.run(() -> {
+            ThreadUtils.postOnMainThread(() -> {
                 // Throw Runtime exception in main thread to crash the app
                 throw new RuntimeException(th);
             });
         }
     }
 
+    @AnyThread
+    public void loadAppInfo(@NonNull PackageInfo packageInfo, boolean isExternalApk) {
+        if (mAppInfoFuture != null) {
+            mAppInfoFuture.cancel(true);
+        }
+        mAppInfoFuture = ThreadUtils.postOnBackgroundThread(() -> loadAppInfoInternal(packageInfo, isExternalApk));
+    }
+
     @WorkerThread
-    public void loadAppInfo() {
-        if (mainModel == null) return;
-        PackageInfo packageInfo = mainModel.getPackageInfo();
-        if (packageInfo == null) return;
+    private void loadAppInfoInternal(@NonNull PackageInfo packageInfo, boolean isExternalApk) {
         String packageName = packageInfo.packageName;
         ApplicationInfo applicationInfo = packageInfo.applicationInfo;
-        int userHandle = UserHandleHidden.getUserId(applicationInfo.uid);
+        int userId = UserHandleHidden.getUserId(applicationInfo.uid);
         PackageManager pm = getApplication().getPackageManager();
-        boolean isExternalApk = mainModel.getIsExternalApk();
         AppInfo appInfo = new AppInfo();
-        // Set source dir
-        if (!isExternalApk) {
-            appInfo.sourceDir = new File(applicationInfo.publicSourceDir).getParent();
-        }
-        // Set split entries
-        ApkFile apkFile = ApkFile.getInstance(mainModel.getApkFileKey());
-        int countSplits = apkFile.getEntries().size() - 1;
-        appInfo.splitEntries = new ArrayList<>(countSplits);
-        // Base.apk is always on top, so count from 1
-        for (int i = 1; i <= countSplits; ++i) {
-            appInfo.splitEntries.add(apkFile.getEntries().get(i));
-        }
-        // Set data dirs
-        if (!isExternalApk) {
-            appInfo.dataDir = applicationInfo.dataDir;
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                appInfo.dataDeDir = applicationInfo.deviceProtectedDataDir;
-            }
-        }
-        appInfo.extDataDirs = new ArrayList<>();
-        if (!isExternalApk) {
-            File[] externalCacheDirs = getApplication().getExternalCacheDirs();
-            if (externalCacheDirs != null) {
-                String tmpDataDir;
-                for (File dataDir : externalCacheDirs) {
-                    if (dataDir == null) continue;
-                    tmpDataDir = dataDir.getParent();
-                    if (tmpDataDir != null) {
-                        tmpDataDir = new File(tmpDataDir).getParent();
-                    }
-                    if (tmpDataDir != null) {
-                        tmpDataDir = Utils.replaceOnce(tmpDataDir + File.separatorChar + packageName,
-                                "" + UserHandleHidden.myUserId(), "" + userHandle);
-                        if (Paths.get(tmpDataDir).exists()) {
-                            appInfo.extDataDirs.add(tmpDataDir);
-                        }
+        try {
+            if (!isExternalApk) {
+                // Set source dir
+                appInfo.sourceDir = new File(applicationInfo.publicSourceDir).getParent();
+                // Set data dirs
+                appInfo.dataDir = applicationInfo.dataDir;
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                    appInfo.dataDeDir = applicationInfo.deviceProtectedDataDir;
+                }
+                // Set directories
+                appInfo.extDataDirs = new ArrayList<>();
+                OsEnvironment.UserEnvironment ue = OsEnvironment.getUserEnvironment(userId);
+                Path[] externalDataDirs = ue.buildExternalStorageAppDataDirs(packageName);
+                for (Path externalDataDir : externalDataDirs) {
+                    Path accessiblePath = Paths.getAccessiblePath(externalDataDir);
+                    if (accessiblePath.exists()) {
+                        appInfo.extDataDirs.add(Objects.requireNonNull(accessiblePath.getFilePath()));
                     }
                 }
-            }
-        }
-        // Set JNI dir
-        if (!isExternalApk && new File(applicationInfo.nativeLibraryDir).exists()) {
-            appInfo.jniDir = applicationInfo.nativeLibraryDir;
-        }
-        // Net statistics
-        if (!isExternalApk) {
-            try {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                    if (FeatureController.isUsageAccessEnabled()) {
-                        appInfo.dataUsage = AppUsageStatsManager.getDataUsageForPackage(getApplication(),
-                                applicationInfo.uid, UsageUtils.USAGE_LAST_BOOT);
-                    }
-                } else {
-                    appInfo.dataUsage = getNetStats(applicationInfo.uid);
+                // Set JNI dir
+                if (Paths.exists(applicationInfo.nativeLibraryDir)) {
+                    appInfo.jniDir = applicationInfo.nativeLibraryDir;
                 }
-            } catch (Throwable e) {
-                e.printStackTrace();
-            }
-            // Set sizes
-            appInfo.sizeInfo = PackageUtils.getPackageSizeInfo(getApplication(), packageName, userHandle,
-                    Build.VERSION.SDK_INT >= Build.VERSION_CODES.O ? applicationInfo.storageUuid : null);
-            // Set installer app
-            try {
-                @SuppressWarnings("deprecation")
-                String installerPackageName = pm.getInstallerPackageName(packageName);
+                boolean hasUsageAccess = FeatureController.isUsageAccessEnabled() && SelfPermissions.checkUsageStatsPermission();
+                if (hasUsageAccess) {
+                    // Net statistics
+                    appInfo.dataUsage = AppUsageStatsManager.getDataUsageForPackage(getApplication(),
+                            applicationInfo.uid, UsageUtils.USAGE_LAST_BOOT);
+                    // Set sizes
+                    appInfo.sizeInfo = PackageUtils.getPackageSizeInfo(getApplication(), packageName, userId,
+                            Build.VERSION.SDK_INT >= Build.VERSION_CODES.O ? applicationInfo.storageUuid : null);
+                }
+                // Set installer app
+                String installerPackageName = PackageManagerCompat.getInstallerPackageName(packageName, userId);
                 if (installerPackageName != null) {
                     String applicationLabel;
                     try {
@@ -304,48 +367,49 @@ public class AppInfoViewModel extends AndroidViewModel {
                     }
                     appInfo.installerApp = applicationLabel;
                 }
-            } catch (IllegalArgumentException ignore) {
+                // Set main activity
+                appInfo.mainActivity = pm.getLaunchIntentForPackage(packageName);
+                // SELinux
+                appInfo.seInfo = ApplicationInfoCompat.getSeInfo(applicationInfo);
+                // Primary ABI
+                appInfo.primaryCpuAbi = ApplicationInfoCompat.getPrimaryCpuAbi(applicationInfo);
+                // zygotePreloadName
+                appInfo.zygotePreloadName = ApplicationInfoCompat.getZygotePreloadName(applicationInfo);
+                // hiddenApiEnforcementPolicy
+                appInfo.hiddenApiEnforcementPolicy = ApplicationInfoCompat.getHiddenApiEnforcementPolicy(applicationInfo);
             }
-            // Set main activity
-            appInfo.mainActivity = pm.getLaunchIntentForPackage(packageName);
-            // SELinux
-            appInfo.seInfo = ApplicationInfoCompat.getSeInfo(applicationInfo);
-            // Primary ABI
-            appInfo.primaryCpuAbi = ApplicationInfoCompat.getPrimaryCpuAbi(applicationInfo);
-            // zygotePreloadName
-            appInfo.zygotePreloadName = ApplicationInfoCompat.getZygotePreloadName(applicationInfo);
-            // hiddenApiEnforcementPolicy
-            appInfo.hiddenApiEnforcementPolicy = ApplicationInfoCompat.getHiddenApiEnforcementPolicy(applicationInfo);
+            mAppInfo.postValue(appInfo);
+        } catch (Throwable th) {
+            // Unknown behaviour
+            ThreadUtils.postOnMainThread(() -> {
+                // Throw Runtime exception in main thread to crash the app
+                throw new RuntimeException(th);
+            });
         }
-        this.appInfo.postValue(appInfo);
     }
 
+    public void installExisting(@NonNull String packageName, @UserIdInt int userId) {
+        mExecutor.submit(() -> {
+            PackageInstallerCompat installer = PackageInstallerCompat.getNewInstance();
+            installer.setOnInstallListener(new PackageInstallerCompat.OnInstallListener() {
+                @Override
+                public void onStartInstall(int sessionId, String packageName) {
+                }
 
-    private static final String UID_STATS_PATH = "/proc/uid_stat/";
-    private static final String UID_STATS_TX = "tcp_snd";
-    private static final String UID_STATS_RX = "tcp_rcv";
-
-    /**
-     * Get network stats.
-     *
-     * @param uid Application UID
-     * @return A tuple consisting of transmitted and received data
-     */
-    @NonNull
-    private AppUsageStatsManager.DataUsage getNetStats(int uid) {
-        long tx = 0L;
-        long rx = 0L;
-        Path uidStatsDir = Paths.get(UID_STATS_PATH + uid);
-        if (uidStatsDir.isDirectory()) {
-            try {
-                Path txFile = uidStatsDir.findFile(UID_STATS_TX);
-                Path rxFile = uidStatsDir.findFile(UID_STATS_RX);
-                tx = Long.parseLong(FileUtils.getFileContent(txFile, "0").trim());
-                rx = Long.parseLong(FileUtils.getFileContent(rxFile, "0").trim());
-            } catch (FileNotFoundException ignore) {
-            }
-        }
-        return new AppUsageStatsManager.DataUsage(tx, rx);
+                @Override
+                public void onFinishedInstall(int sessionId, String packageName, int result,
+                                              @Nullable String blockingPackage, @Nullable String statusMessage) {
+                    StringBuilder sb = new StringBuilder();
+                    sb.append(PackageInstallerService.getStringFromStatus(getApplication(), result,
+                            getAppLabel().getValue(), blockingPackage));
+                    if (statusMessage != null) {
+                        sb.append("\n\n").append(statusMessage);
+                    }
+                    mInstallExistingResult.postValue(new Pair<>(result, sb));
+                }
+            });
+            installer.installExisting(packageName, userId);
+        });
     }
 
     public static class TagCloud {
@@ -354,6 +418,12 @@ public class AppInfoViewModel extends AndroidViewModel {
         public boolean isSystemApp;
         public boolean isSystemlessPath;
         public boolean isUpdatedSystemApp;
+        public boolean canOpenLinks;
+        /**
+         * Hosts that can be opened by the app (Android 12+). State is one of {@link DomainVerificationUserState#DOMAIN_STATE_NONE},
+         * {@link DomainVerificationUserState#DOMAIN_STATE_SELECTED}, {@link DomainVerificationUserState#DOMAIN_STATE_VERIFIED}.
+         */
+        public Map<String, Integer> hostsToOpen;
         public int splitCount;
         public boolean isDebuggable;
         public boolean isTestOnly;
@@ -368,28 +438,33 @@ public class AppInfoViewModel extends AndroidViewModel {
         public boolean isAppSuspended;
         public boolean isMagiskHideEnabled;
         public boolean isMagiskDenyListEnabled;
+        public boolean isBloatware;
+        @Nullable
+        public XposedModuleInfo xposedModuleInfo;
+        public boolean canWriteAndExecute;
         public boolean hasKeyStoreItems;
         public boolean hasMasterKeyInKeyStore;
         public boolean usesPlayAppSigning;
-        public MetadataManager.Metadata[] backups;
+        public List<Backup> backups;
         public boolean isBatteryOptimized;
         public int netPolicies;
         @Nullable
         public String ssaid;
         @Nullable
         public List<UriManager.UriGrant> uriGrants;
+        @Nullable
+        public String[] staticSharedLibraryNames;
     }
 
     public static class AppInfo {
         // Paths & dirs
         @Nullable
         public String sourceDir;
-        public List<ApkFile.Entry> splitEntries;
         @Nullable
         public String dataDir;
         @Nullable
         public String dataDeDir;
-        public List<String> extDataDirs;
+        public List<String> extDataDirs = Collections.emptyList();
         @Nullable
         public String jniDir;
         // Data usage

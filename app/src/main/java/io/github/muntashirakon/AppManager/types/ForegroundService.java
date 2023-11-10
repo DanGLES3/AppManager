@@ -16,8 +16,9 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.UiThread;
 import androidx.annotation.WorkerThread;
+import androidx.core.os.BundleCompat;
 
-import io.github.muntashirakon.AppManager.utils.UiThreadHandler;
+import io.github.muntashirakon.AppManager.utils.ThreadUtils;
 
 public abstract class ForegroundService extends Service {
     public static class Binder extends android.os.Binder {
@@ -33,12 +34,12 @@ public abstract class ForegroundService extends Service {
         }
     }
 
-    private final String name;
-    private final IBinder binder = new Binder(this);
+    private final String mName;
+    private final IBinder mBinder = new Binder(this);
     @SuppressWarnings("FieldCanBeLocal")
-    private Looper serviceLooper;
-    private ServiceHandler serviceHandler;
-    private volatile boolean isWorking = false;
+    private Looper mServiceLooper;
+    private ServiceHandler mServiceHandler;
+    private volatile boolean mIsWorking = false;
 
     // Handler that receives messages from the thread
     private final class ServiceHandler extends Handler {
@@ -48,8 +49,8 @@ public abstract class ForegroundService extends Service {
 
         @Override
         public void handleMessage(Message msg) {
-            Intent intent = msg.getData().getParcelable("intent");
-            UiThreadHandler.run(() -> onStartIntent(intent));
+            Intent intent = BundleCompat.getParcelable(msg.getData(), "intent", Intent.class);
+            ThreadUtils.postOnMainThread(() -> onStartIntent(intent));
             onHandleIntent(intent);
             // It works because of Handler uses FIFO
             stopSelfResult(msg.arg1);
@@ -57,36 +58,36 @@ public abstract class ForegroundService extends Service {
     }
 
     protected ForegroundService(String name) {
-        this.name = name;
+        mName = name;
     }
 
     public final boolean isWorking() {
-        return isWorking;
+        return mIsWorking;
     }
 
     @Override
     public void onCreate() {
-        HandlerThread thread = new HandlerThread(name, Process.THREAD_PRIORITY_BACKGROUND);
+        HandlerThread thread = new HandlerThread(mName, Process.THREAD_PRIORITY_BACKGROUND);
         thread.start();
-        serviceLooper = thread.getLooper();
-        serviceHandler = new ServiceHandler(serviceLooper);
+        mServiceLooper = thread.getLooper();
+        mServiceHandler = new ServiceHandler(mServiceLooper);
     }
 
     @CallSuper
     @Override
     public int onStartCommand(@Nullable Intent intent, int flags, int startId) {
         // TODO: 15/6/21 Make it final, extended classes shouldn't need to use it
-        if (isWorking) {
+        if (mIsWorking) {
             // Service already running
             onQueued(intent);
         }
-        isWorking = true;
-        Message msg = serviceHandler.obtainMessage();
+        mIsWorking = true;
+        Message msg = mServiceHandler.obtainMessage();
         msg.arg1 = startId;
         Bundle args = new Bundle();
         args.putParcelable("intent", intent);
         msg.setData(args);
-        serviceHandler.sendMessage(msg);
+        mServiceHandler.sendMessage(msg);
         return START_NOT_STICKY;
     }
 
@@ -94,7 +95,7 @@ public abstract class ForegroundService extends Service {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        serviceLooper.quitSafely();
+        mServiceLooper.quitSafely();
     }
 
     /**
@@ -126,6 +127,6 @@ public abstract class ForegroundService extends Service {
     @NonNull
     @Override
     public IBinder onBind(Intent intent) {
-        return binder;
+        return mBinder;
     }
 }

@@ -25,15 +25,12 @@
         <item name="materialCalendarTheme">@style/Widget.AppTheme.MaterialCalendar</item>
         <item name="materialCardViewStyle">@style/Widget.AppTheme.CardView.Elevated</item>
         <item name="materialDividerStyle">@style/Widget.AppTheme.Divider</item>
-        <item name="popupMenuStyle">@style/Widget.AppTheme.PopupMenu</item>
-        <item name="listPopupWindowStyle">@style/Widget.AppTheme.PopupMenu.ListPopupWindow</item>
-        <item name="android:contextPopupMenuStyle" tools:targetApi="N">
-            @style/Widget.AppTheme.PopupMenu.ContextMenu
-        </item>
-        <item name="actionOverflowButtonStyle">@style/Widget.AppTheme.PopupMenu.OverflowButton</item>
-        <item name="actionOverflowMenuStyle">@style/Widget.AppTheme.PopupMenu.Overflow</item>
+        <item name="materialSwitchStyle">@style/Widget.AppTheme.MaterialSwitch.Large</item>
         <item name="searchViewStyle">@style/Widget.AppTheme.SearchView</item>
         <item name="textInputStyle">@style/Widget.AppTheme.TextInputLayout</item>
+        <item name="materialSpinnerStyle">@style/Widget.AppTheme.MaterialSpinner</item>
+        <item name="toolbarStyle">@style/Widget.AppTheme.MaterialToolbar</item>
+        <item name="multiSelectionActionsView">@style/Widget.AppTheme.MultiSelectionActionsView</item>
 
         <!-- Preferences -->
         <item name="preferenceStyle">@style/Preference.M3</item>
@@ -68,6 +65,21 @@
         <item name="listItemCornerRadius">24dp</item>
         <item name="listItemIndicatorWidth">9dp</item>
 
+        <!-- Dialog -->
+        <item name="materialAlertDialogListItemTextStyle">@style/MaterialAlertDialog.Material3.Body.Text.Large</item>
+
+        <!-- Popup Menu -->
+        <item name="popupMenuStyle">@style/Widget.AppTheme.PopupMenu</item>
+        <item name="listPopupWindowStyle">@style/Widget.AppTheme.PopupMenu.ListPopupWindow</item>
+        <item name="android:contextPopupMenuStyle" tools:targetApi="N">
+            @style/Widget.AppTheme.PopupMenu.ContextMenu
+        </item>
+        <item name="actionOverflowButtonStyle">@style/Widget.AppTheme.PopupMenu.OverflowButton</item>
+        <item name="actionOverflowMenuStyle">@style/Widget.AppTheme.PopupMenu.Overflow</item>
+        <item name="popupMenuBackground">@drawable/popup_menu_background</item>
+        <item name="listChoiceBackgroundIndicator">@drawable/popup_menu_item_background</item>
+        <item name="android:dropDownListViewStyle">@style/Widget.AppTheme.PopupMenu.DropDown</item>
+
         <!-- Misc -->
         <item name="android:windowActivityTransitions">true</item>
         <item name="android:windowContentTransitions">true</item>
@@ -100,12 +112,22 @@
         <item name="android:windowExitAnimation">@anim/fullscreen_dialog_exit</item>
     </style>
 
-    <!-- Spinner TODO: Replace with TextInputLayout-MaterialAutoCompleteTextView combo -->
-    <style name="AppTheme.Spinner">
-        <item name="android:gravity">center</item>
-        <item name="android:background">@drawable/spinner_rounded_border</item>
-        <item name="android:paddingStart">@dimen/padding_small</item>
-        <item name="android:paddingEnd">@dimen/padding_large</item>
+    <!-- MaterialSpinner -->
+    <style name="Widget.AppTheme.MaterialSpinner" parent="Widget.AppTheme.TextInputLayout.ExposedDropdownMenu">
+        <item name="boxStrokeWidth">0dp</item>
+    </style>
+
+    <style name="Widget.AppTheme.MaterialSpinner.Small" parent="Widget.AppTheme.TextInputLayout.ExposedDropdownMenu.Small">
+        <item name="boxStrokeWidth">0dp</item>
+    </style>
+
+    <style name="Widget.AppTheme.MaterialSpinner.Outlined" parent="Widget.AppTheme.TextInputLayout.ExposedDropdownMenu" />
+
+    <style name="Widget.AppTheme.MaterialSpinner.Outlined.Small" parent="Widget.AppTheme.TextInputLayout.ExposedDropdownMenu.Small" />
+
+    <!-- MaterialAlertDialog -->
+    <style name="MaterialAlertDialog.Material3.Body.Text.Large" parent="MaterialAlertDialog.Material3.Body.Text">
+        <item name="android:textAppearance">?attr/textAppearanceBodyLarge</item>
     </style>
 
     <!-- BottomSheetDialog -->
@@ -239,6 +261,23 @@
         <item name="shapeAppearanceMediumComponent">@style/ShapeAppearance.AppTheme.LargeComponent</item>
     </style>
 
+    <!-- MaterialSwitch -->
+    <style name="Widget.AppTheme.MaterialSwitch" parent="Widget.Material3.CompoundButton.MaterialSwitch">
+        <!-- Matches CheckBox -->
+        <item name="minHeight">32dp</item>
+        <item name="switchPadding">8dp</item>
+        <item name="android:thumb">@drawable/mtrl_switch_thumb_medium</item>
+        <item name="track">@drawable/mtrl_switch_track_medium</item>
+        <item name="trackDecoration">@drawable/mtrl_switch_track_decoration_medium</item>
+    </style>
+
+    <style name="Widget.AppTheme.MaterialSwitch.Large" parent="Widget.Material3.CompoundButton.MaterialSwitch" />
+
+    <!-- MaterialToolbar -->
+    <style name="Widget.AppTheme.MaterialToolbar" parent="Widget.Material3.Toolbar">
+        <item name="subtitleTextAppearance">@style/TextAppearance.AppTheme.BodyMedium</item>
+    </style>
+
     <!-- Menu -->
     <style name="Widget.AppTheme.PopupMenu" parent="Widget.Material3.PopupMenu" />
 
@@ -248,12 +287,36 @@
 
     <style name="Widget.AppTheme.PopupMenu.Overflow" parent="Widget.Material3.PopupMenu.Overflow" />
     <!-- Overflow menu button -->
-    <style name="Widget.AppTheme.PopupMenu.OverflowButton" parent="@style/Widget.AppCompat.ActionButton.Overflow">
+    <style name="Widget.AppTheme.PopupMenu.OverflowButton" parent="Widget.AppCompat.ActionButton.Overflow">
         <item name="android:src">@drawable/ic_more_vert</item>
+    </style>
+
+    <style name="Widget.AppTheme.PopupMenu.DropDown" parent="Widget.AppCompat.ListView.DropDown">
+        <item name="android:listSelector">@drawable/popup_menu_item_background</item>
+    </style>
+
+    <!-- MultiSelectionActionsView -->
+    <style name="Widget.AppTheme.MultiSelectionActionsView" parent="android:Widget">
+        <item name="android:background">@macro/m3_comp_navigation_bar_container_color</item>
+        <item name="backgroundTint">@null</item>
+        <item name="elevation">0dp</item>
+        <item name="itemTextAppearanceInactive">?attr/textAppearanceBodyMedium</item>
+        <item name="itemTextAppearanceActive">?attr/textAppearanceBodyMedium</item>
+        <item name="itemIconSize">@dimen/m3_comp_navigation_bar_icon_size</item>
+        <item name="itemIconTint">@color/m3_textfield_indicator_text_color</item>
+        <item name="itemTextColor">@color/m3_textfield_indicator_text_color</item>
+        <item name="enforceTextAppearance">true</item>
+        <item name="enforceMaterialTheme">true</item>
+        <item name="itemBackground">@null</item>
+        <item name="itemHorizontalTranslationEnabled">false</item>
     </style>
 
     <!-- ProgressIndicator -->
     <style name="Widget.AppTheme.LinearProgressIndicator" parent="Widget.Material3.LinearProgressIndicator" />
+    <style name="Widget.AppTheme.CircularProgressIndicator" parent="Widget.Material3.CircularProgressIndicator" />
+    <style name="Widget.AppTheme.CircularProgressIndicator.Medium" parent="Widget.Material3.CircularProgressIndicator.Medium" />
+    <style name="Widget.AppTheme.CircularProgressIndicator.Small" parent="Widget.Material3.CircularProgressIndicator.Small" />
+    <style name="Widget.AppTheme.CircularProgressIndicator.ExtraSmall" parent="Widget.Material3.CircularProgressIndicator.ExtraSmall" />
 
     <!-- SwipeRefreshLayout -->
     <style name="Widget.AppTheme.SwipeRefreshLayout" parent="android:Widget">
@@ -272,6 +335,8 @@
         <item name="android:backgroundTint">?attr/colorSurfaceVariant</item>
         <item name="android:textAppearance">?attr/textAppearanceBodyLarge</item>
         <item name="shapeAppearanceOverlay">@style/ShapeAppearance.AppTheme.LargeComponent</item>
+        <item name="android:popupBackground">?attr/popupMenuBackground</item>
+        <item name="android:dropDownSelector">?attr/listChoiceBackgroundIndicator</item>
     </style>
 
     <style name="Widget.AppTheme.SearchView.Small" parent="Widget.AppTheme.SearchView">
@@ -336,6 +401,7 @@
     <!-- TextInputLayout -->
     <style name="Widget.AppTheme.TextInputLayout" parent="Widget.Material3.TextInputLayout.OutlinedBox.Dense">
         <item name="shapeAppearanceOverlay">@style/ShapeAppearance.AppTheme.LargeComponent</item>
+        <item name="materialThemeOverlay">@style/ThemeOverlay.AppTheme.TextInputLayout</item>
     </style>
 
     <style name="Widget.AppTheme.TextInputLayout.Small" parent="Widget.AppTheme.TextInputLayout">
@@ -345,6 +411,7 @@
 
     <style name="Widget.AppTheme.TextInputLayout.ExposedDropdownMenu" parent="Widget.Material3.TextInputLayout.OutlinedBox.Dense.ExposedDropdownMenu">
         <item name="shapeAppearanceOverlay">@style/ShapeAppearance.AppTheme.LargeComponent</item>
+        <item name="materialThemeOverlay">@style/ThemeOverlay.AppTheme.TextInputLayout</item>
     </style>
 
     <style name="Widget.AppTheme.TextInputLayout.ExposedDropdownMenu.Small" parent="Widget.AppTheme.TextInputLayout.ExposedDropdownMenu">
@@ -352,13 +419,36 @@
         <item name="materialThemeOverlay">@style/ThemeOverlay.AppTheme.TextInputLayout.Small</item>
     </style>
 
+    <style name="ThemeOverlay.AppTheme.TextInputLayout" parent="">
+        <item name="autoCompleteTextViewStyle">@style/Widget.AppTheme.AutoCompleteTextView</item>
+        <item name="editTextStyle">@style/Widget.AppTheme.TextInputEditText</item>
+    </style>
+
     <style name="ThemeOverlay.AppTheme.TextInputLayout.Small" parent="">
-        <item name="autoCompleteTextViewStyle">@style/Widget.AppTheme.TextInputEditText.Small</item>
+        <item name="autoCompleteTextViewStyle">@style/Widget.AppTheme.AutoCompleteTextView.Small</item>
         <item name="editTextStyle">@style/Widget.AppTheme.TextInputEditText.Small</item>
+        <item name="endIconMinSize">18dp</item> <!-- 34 - 8*2 -->
     </style>
 
     <!-- TextInputEditText -->
-    <style name="Widget.AppTheme.TextInputEditText.Small" parent="Widget.Material3.TextInputEditText.OutlinedBox.Dense">
+    <style name="Widget.AppTheme.TextInputEditText" parent="Widget.Material3.TextInputEditText.OutlinedBox.Dense" />
+
+    <style name="Widget.AppTheme.TextInputEditText.Small" parent="Widget.AppTheme.TextInputEditText">
+        <item name="android:textAppearance">?attr/textAppearanceBodySmall</item>
+        <item name="android:paddingStart">12dp</item>
+        <item name="android:paddingEnd">12dp</item>
+        <item name="android:paddingTop">8dp</item>
+        <item name="android:paddingBottom">8dp</item>
+        <item name="android:minHeight">34dp</item>
+    </style>
+
+    <!-- AutoCompleteTextView -->
+    <style name="Widget.AppTheme.AutoCompleteTextView" parent="Widget.Material3.AutoCompleteTextView.OutlinedBox.Dense">
+        <item name="simpleItemLayout">@layout/auto_complete_dropdown_item</item>
+        <item name="android:dropDownSelector">?attr/listChoiceBackgroundIndicator</item>
+    </style>
+
+    <style name="Widget.AppTheme.AutoCompleteTextView.Small" parent="Widget.AppTheme.AutoCompleteTextView">
         <item name="android:textAppearance">?attr/textAppearanceBodySmall</item>
         <item name="android:paddingStart">12dp</item>
         <item name="android:paddingEnd">12dp</item>
@@ -387,6 +477,19 @@
     </style>
 
     <style name="Widget.AppTheme.Button.TextButton" parent="Widget.Material3.Button.TextButton" />
+
+    <style name="Widget.AppTheme.Button.TextIconButton" parent="Widget.AppTheme.Button.TextButton">
+        <item name="android:minWidth">120dp</item>
+        <item name="android:gravity">center</item>
+        <item name="android:padding">16dp</item>
+        <item name="android:textAppearance">?android:attr/textAppearanceListItem</item>
+        <item name="android:textColor">?attr/colorOnSurfaceVariant</item>
+        <item name="android:textSize">14sp</item>
+        <item name="iconGravity">textTop</item>
+        <item name="iconSize">30dp</item>
+        <item name="iconTint">?attr/colorOnSurfaceVariant</item>
+        <item name="shapeAppearanceOverlay">@style/ShapeAppearance.AppTheme.None</item>
+    </style>
 
     <style name="Widget.AppTheme.Button.TextButton.Icon" parent="Widget.Material3.Button.TextButton.Icon" />
 
@@ -471,8 +574,8 @@
     <style name="TextAppearance.AppTheme.TitleMedium" parent="TextAppearance.Material3.TitleMedium">
         <item name="android:letterSpacing">0</item>
         <item name="android:textSize">18sp</item>
-        <item name="android:fontFamily">@macro/m3_ref_typeface_brand_regular</item>
-        <item name="fontFamily">@macro/m3_ref_typeface_brand_regular</item>
+        <item name="android:fontFamily">@string/m3_ref_typeface_brand_regular</item>
+        <item name="fontFamily">@string/m3_ref_typeface_brand_regular</item>
     </style>
 
     <style name="TextAppearance.AppTheme.TitleSmall" parent="TextAppearance.Material3.TitleSmall" />

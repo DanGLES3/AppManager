@@ -2,7 +2,8 @@
 
 package io.github.muntashirakon.AppManager.backup.convert;
 
-import android.content.Context;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -15,15 +16,11 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import io.github.muntashirakon.AppManager.AppManager;
 import io.github.muntashirakon.AppManager.backup.BackupException;
-import io.github.muntashirakon.AppManager.utils.AppPref;
-import io.github.muntashirakon.AppManager.utils.FileUtils;
+import io.github.muntashirakon.AppManager.settings.Prefs;
 import io.github.muntashirakon.AppManager.utils.TarUtilsTest;
 import io.github.muntashirakon.io.Path;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
+import io.github.muntashirakon.io.Paths;
 
 @RunWith(RobolectricTestRunner.class)
 public class SBConverterTest {
@@ -34,13 +31,12 @@ public class SBConverterTest {
     private static final String PACKAGE_NAME_APK_OBB = "com.test.app";
 
     private final ClassLoader classLoader = getClass().getClassLoader();
-    private final Context context = AppManager.getContext();
     private File backupLocation;
 
     @Before
     public void setUp() {
-        AppPref.set(AppPref.PrefKey.PREF_BACKUP_VOLUME_STR, "/tmp");
-        FileUtils.deleteDir(new File("/tmp/AppManager"));
+        Prefs.Storage.setVolumePath("/tmp");
+        Paths.get("/tmp/AppManager").delete();
         assert classLoader != null;
         backupLocation = new File(classLoader.getResource("SwiftBackup").getFile());
     }
@@ -56,10 +52,10 @@ public class SBConverterTest {
         Collections.sort(internalStorage);
         Collections.sort(externalStorage);
 
-        Path xmlFile = new Path(context, new File(backupLocation, PACKAGE_NAME_FULL + ".xml"));
+        Path xmlFile = Paths.get(new File(backupLocation, PACKAGE_NAME_FULL + ".xml"));
         SBConverter sbConvert = new SBConverter(xmlFile);
         sbConvert.convert();
-        Path newBackupLocation = AppPref.getAppManagerDirectory().findFile(PACKAGE_NAME_FULL).findFile("0_SB");
+        Path newBackupLocation = Prefs.Storage.getAppManagerDirectory().findFile(PACKAGE_NAME_FULL).findFile("0_SB");
         // Verify source
         assertEquals(Collections.singletonList("base.apk"), TarUtilsTest.getFileNamesGZip(Collections.singletonList(
                 newBackupLocation.findFile("source.tar.gz.0"))));
@@ -77,10 +73,10 @@ public class SBConverterTest {
                 "shared_prefs/",
                 "shared_prefs/org.billthefarmer.editor_preferences.xml");
         Collections.sort(internalStorage);
-        Path xmlFile = new Path(context, new File(backupLocation, PACKAGE_NAME_APK_INT + ".xml"));
+        Path xmlFile = Paths.get(new File(backupLocation, PACKAGE_NAME_APK_INT + ".xml"));
         SBConverter sbConvert = new SBConverter(xmlFile);
         sbConvert.convert();
-        Path newBackupLocation = AppPref.getAppManagerDirectory().findFile(PACKAGE_NAME_APK_INT).findFile("0_SB");
+        Path newBackupLocation = Prefs.Storage.getAppManagerDirectory().findFile(PACKAGE_NAME_APK_INT).findFile("0_SB");
         // Verify source
         assertEquals(Collections.singletonList("base.apk"), TarUtilsTest.getFileNamesGZip(Collections.singletonList(
                 newBackupLocation.findFile("source.tar.gz.0"))));
@@ -92,10 +88,10 @@ public class SBConverterTest {
 
     @Test
     public void convertApkOnlyTest() throws BackupException, IOException {
-        Path xmlFile = new Path(context, new File(backupLocation, PACKAGE_NAME_APK + ".xml"));
+        Path xmlFile = Paths.get(new File(backupLocation, PACKAGE_NAME_APK + ".xml"));
         SBConverter sbConvert = new SBConverter(xmlFile);
         sbConvert.convert();
-        Path newBackupLocation = AppPref.getAppManagerDirectory().findFile(PACKAGE_NAME_APK).findFile("0_SB");
+        Path newBackupLocation = Prefs.Storage.getAppManagerDirectory().findFile(PACKAGE_NAME_APK).findFile("0_SB");
         // Verify source
         assertEquals(Collections.singletonList("base.apk"), TarUtilsTest.getFileNamesGZip(Collections.singletonList(
                 newBackupLocation.findFile("source.tar.gz.0"))));
@@ -110,10 +106,10 @@ public class SBConverterTest {
 //                "split_config.en.apk",
 //                "split_config.hdpi.apk");
 //        Collections.sort(expectedApkFiles);
-//        Path xmlFile = new Path(context, new File(backupLocation, PACKAGE_NAME_APK_SPLITS + ".xml"));
+//        Path xmlFile = Paths.get(new File(backupLocation, PACKAGE_NAME_APK_SPLITS + ".xml"));
 //        SBConverter sbConvert = new SBConverter(xmlFile);
 //        sbConvert.convert();
-//        Path newBackupLocation = AppPref.getAppManagerDirectory().findFile(PACKAGE_NAME_APK_SPLITS).findFile("0_SB");
+//        Path newBackupLocation = Prefs.Storage.getAppManagerDirectory().findFile(PACKAGE_NAME_APK_SPLITS).findFile("0_SB");
 //        // Verify source
 //        List<String> actualApkFiles = TarUtilsTest.getFileNamesGZip(Collections.singletonList(
 //                newBackupLocation.findFile("source.tar.gz.0")));
@@ -126,10 +122,10 @@ public class SBConverterTest {
 //
 //    @Test
 //    public void convertApkObbTest() throws BackupException, IOException {
-//        Path xmlFile = new Path(context, new File(backupLocation, PACKAGE_NAME_APK_OBB + ".xml"));
+//        Path xmlFile = Paths.get(new File(backupLocation, PACKAGE_NAME_APK_OBB + ".xml"));
 //        SBConverter sbConvert = new SBConverter(xmlFile);
 //        sbConvert.convert();
-//        Path newBackupLocation = AppPref.getAppManagerDirectory().findFile(PACKAGE_NAME_APK_OBB).findFile("0_SB");
+//        Path newBackupLocation = Prefs.Storage.getAppManagerDirectory().findFile(PACKAGE_NAME_APK_OBB).findFile("0_SB");
 //        // Verify source
 //        assertEquals(Collections.singletonList("base.apk"), TarUtilsTest.getFileNamesGZip(Collections.singletonList(
 //                newBackupLocation.findFile("source.tar.gz.0"))));

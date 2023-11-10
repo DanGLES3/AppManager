@@ -3,14 +3,18 @@
 package io.github.muntashirakon.AppManager.rules.struct;
 
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.robolectric.RobolectricTestRunner;
 
-import io.github.muntashirakon.AppManager.appops.AppOpsManager;
 import io.github.muntashirakon.AppManager.magisk.MagiskProcess;
 import io.github.muntashirakon.AppManager.rules.RuleType;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import android.app.AppOpsManager;
+
+@RunWith(RobolectricTestRunner.class)
 public class RuleEntryTest {
     private static final String PACKAGE_NAME = "sample.package";
 
@@ -26,8 +30,8 @@ public class RuleEntryTest {
     public void flattenProviderToString() {
         RuleEntry rule = new ComponentRule(PACKAGE_NAME, ".provider", RuleType.PROVIDER,
                 ComponentRule.COMPONENT_TO_BE_BLOCKED_IFW_DISABLE);
-        assertEquals(PACKAGE_NAME + "\t.provider\tPROVIDER\tfalse", rule.flattenToString(true));
-        assertEquals(".provider\tPROVIDER\tfalse", rule.flattenToString(false));
+        assertEquals(PACKAGE_NAME + "\t.provider\tPROVIDER\tdis_false", rule.flattenToString(true));
+        assertEquals(".provider\tPROVIDER\tdis_false", rule.flattenToString(false));
     }
 
     @Test
@@ -146,7 +150,7 @@ public class RuleEntryTest {
     @Test
     public void unflattenProviderFromString() {
         RuleEntry rule = new ComponentRule(PACKAGE_NAME, ".provider", RuleType.PROVIDER,
-                ComponentRule.COMPONENT_TO_BE_BLOCKED_IFW_DISABLE);
+                ComponentRule.COMPONENT_TO_BE_DISABLED);
         assertEquals(RuleEntry.unflattenFromString(null, PACKAGE_NAME + "\t.provider\tPROVIDER\tfalse", true), rule);
         assertEquals(RuleEntry.unflattenFromString(PACKAGE_NAME, PACKAGE_NAME + "\t.provider\tPROVIDER\tfalse", true), rule);
         assertEquals(RuleEntry.unflattenFromString(PACKAGE_NAME, ".provider\tPROVIDER\tfalse", false), rule);

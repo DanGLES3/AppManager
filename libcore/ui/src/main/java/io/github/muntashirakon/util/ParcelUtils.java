@@ -12,14 +12,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class ParcelUtils {
-    public static void writeBoolean(boolean b, @NonNull Parcel dest) {
-        dest.writeInt(b ? 1 : 0);
-    }
-
-    public static boolean readBoolean(@NonNull Parcel in) {
-        return in.readInt() != 0;
-    }
-
     /**
      * Write an array set to the parcel.
      *

@@ -21,7 +21,6 @@
     <string name="user">Utilizator</string>
     <string name="sdk_max">Țintă</string>
     <string name="class_name">Nume Clasă</string>
-    <string name="edit_shortcut">Editează Scurtătură</string>
     <string name="toggle_class_listing">Activează Listare Clase</string>
     <string name="uninstall">Dezinstalare</string>
     <string name="require_no_permission">Nu necesită permisiuni</string>
@@ -77,14 +76,11 @@
     <string name="date_updated">Dată Actualizare</string>
     <string name="main_activity">Activitate Principală</string>
     <string name="empty_package_name">Nume pachet lipsă</string>
-    <string name="instructions">Instrucțiuni</string>
     <string name="error_creating_shortcut">Eroare creare scurtătură</string>
     <string name="error_verbose_pin_shortcut">Aplicația curentă nu suportă PinShortcut. Nu s-a putut crea scurtătură.</string>
     <string name="create_shortcut">Crează Scurtătură</string>
     <string name="shortcut_name">Nume Scurtătură</string>
     <string name="package_name">Nume Pachet</string>
-    <string name="error_invalid_icon_resource">Resursă iconiță invalidă</string>
-    <string name="error_invalid_icon_format">Format iconiță invalid</string>
     <string name="icon_picker">Selectare Iconiță</string>
     <string name="license">Licență</string>
     <string name="third_party">Librării și Iconițe Terțe</string>
@@ -185,7 +181,6 @@
     <string name="filter_user_apps">Aplicații utilizator</string>
     <string name="no_apps">Fără aplicații</string>
     <string name="ecc">Criptografie în curbă eliptică</string>
-    <string name="pref_show_users_in_installer">Afișare utilizatori în programul de instalare</string>
     <string name="orientation_sensor_portrait">Senzor portret</string>
     <string name="import_failed">Importare eșuată!</string>
     <string name="clear_app_cache">Șterge memoria cache a aplicației</string>
@@ -210,7 +205,6 @@
     <string name="str_logo">Logo</string>
     <string name="sort_by_blocked_components">Blocat primul</string>
     <string name="sort_by_times_opened">Timpii de deschidere</string>
-    <string name="store">Magazin</string>
     <string name="running_apps">Aplicații în curs de execuție</string>
     <string name="kill_process">Ucide</string>
     <string name="backup_restore">Copie de rezervă/Restaurare</string>
@@ -265,7 +259,6 @@
     <string name="input_profile_name">Numele profilului</string>
     <string name="new_profile">Profil nou</string>
     <string name="duplicate">Duplicat</string>
-    <string name="pref_show_users_in_installer_msg">Afișează o listă de utilizatori care trebuie selectați înainte de a instala o aplicație externă. Necesită root sau ADB.</string>
     <string name="enabled">Activat</string>
     <string name="advanced">Avansat</string>
     <plurals name="alert_failed_to_disable_trackers">
@@ -368,7 +361,6 @@
     <string name="unblock_trackers">Deblocare urmăritori</string>
     <string name="allow_open_pgp_operation">Apasă pentru a permite App Manager să utilizeze OpenPGP</string>
     <string name="installer">Installer</string>
-    <string name="sort_by_disabled_app">Dezactivat primul</string>
     <string name="pid_and_ppid">ID proces: %1$d, ID proces părinte: %2$d</string>
     <string name="only_works_in_root_or_adb_mode">Funcționează numai în modul root sau ADB</string>
     <string name="features">Caracteristici</string>
@@ -400,7 +392,6 @@
     <string name="failed_to_enable_op">Nu s-a putut activa operațiunea de aplicație solicitată</string>
     <string name="orientation_reverse_portrait">Portret inversat</string>
     <string name="select_type">Selectează un tip</string>
-    <string name="failed_to_disable">Nu s-a putut dezactiva <xliff:g id="app_name" example="App Manager">%1$s</xliff:g>.</string>
     <string name="external_data_dir">Director de date externe</string>
     <string name="failed_to_deny_dangerous_perms">Nu s-au putut revoca toate permisiunile periculoase</string>
     <string name="failed_packages">Pachete eșuate</string>
@@ -435,8 +426,7 @@
     <string name="installer_error_incompatible">Aplicația este incompatibilă cu acest dispozitiv</string>
     <string name="input_backup_name_description">Numele backup-ului nu trebuie să înceapă cu o cifră și nici să conțină spații. Lăsați-l gol dacă doriți să utilizați data-ora curentă.</string>
     <string name="user_profile_with_id">Profil: %1$s (%2$d)</string>
-    <string name="community_links">Telegram: https://t.me/AppManagerChannel
-\nTwitter: https://twitter.com/AppManagerNews</string>
+    <string name="community_links"><a href="https://t.me/AppManagerChannel">Canal Telegram</a> • <a href="https://twitter.com/AppManagerNews">Twitter</a></string>
     <string name="unblock">Deblochează</string>
     <string name="sort_by_backup">Mai întâi copiile Backup</string>
     <string name="failed_to_grant_permission">Nu s-a putut acorda permisiunea</string>
@@ -460,11 +450,7 @@
     <string name="block_unblock_trackers_description">Blocare sau deblocare componente publicitare și de urmărire în toate aplicațiile instalate</string>
     <string name="state_session_leader">Liderul sesiunii</string>
     <string name="rsa_exponent">Exponent</string>
-    <string name="source_code_links">GitHub: https://github.com/MuntashirAkon/AppManager
-\nGitLab: https://gitlab.com/muntashir/AppManager
-\nRiseup: https://0xacab.org/muntashir/AppManager
-\nCodeberg: https://codeberg.org/muntashir/AppManager</string>
-    <string name="filter_disabled_apps">Aplicații dezactivate</string>
+    <string name="source_code_links"><a href="https://github.com/MuntashirAkon/AppManager">GitHub</a> • <a href="https://gitlab.com/muntashir/AppManager">GitLab</a> • <a href="https://0xacab.org/muntashir/AppManager">Riseup</a> • <a href="https://codeberg.org/muntashir/AppManager">Codeberg</a></string>
     <string name="blocking_rules">Reguli de blocare</string>
     <string name="orientation_unspecified">Nespecificat</string>
     <string name="apply_to_system_apps_question">Se aplică și la aplicațiile de sistem\? Selectează \"Nu\" dacă nu ești sigur.</string>
@@ -541,7 +527,6 @@
     <string name="databases">Baze de date</string>
     <string name="external_data">Date externe</string>
     <string name="export_icon">Pictograma Extragere</string>
-    <string name="presets">Presetări</string>
     <string name="orientation_full_user">Utilizator complet</string>
     <string name="usage_yesterday">Ieri</string>
     <string name="select_all">Selectează tot</string>
@@ -556,7 +541,6 @@
     <string name="save">Salvează</string>
     <string name="base_apk">APK de bază</string>
     <string name="state_locked_memory">Memorie blocată</string>
-    <string name="profile_disable_msg">Dezactivează sau activează aplicațiile pe baza stării</string>
     <string name="pref_global_blocking_enabled">Blocaj instantaneu al componentelor</string>
     <string name="process_state_with_extra">Stare: <xliff:g id="process_state" example="Sleeping">%1$s</xliff:g> (<xliff:g id="state_extra" example="High priority">%2$s</xliff:g>)</string>
     <string name="ago">în urmă</string>
@@ -571,7 +555,6 @@
     <string name="installer_error_session_commit">Nu s-au putut comite fișierele APK</string>
     <string name="sort_by_memory_usage">Utilizarea memoriei</string>
     <string name="battery_mode">Mod baterie</string>
-    <string name="block_components_description">Blochează toate componentele identificate prin semnăturile date</string>
     <string name="app_size">Aplicație</string>
     <string name="trackers">Urmăritori</string>
     <string name="run_in_termux">Rulează în Termux</string>
@@ -583,7 +566,6 @@
     <string name="navigation_dial_pad">Tastatura telefonică</string>
     <string name="apk_signing">Semnătura APK</string>
     <string name="type_long">Integer Lung</string>
-    <string name="failed_to_enable">Nu s-a putut activa <xliff:g id="app_name" example="App Manager">%1$s</xliff:g>.</string>
     <string name="pref_import_blocker">Import din Blocker</string>
     <string name="day">Zi</string>
     <string name="external_apk_no_app_op">APK extern nu are nicio aplicație de operare</string>
@@ -666,11 +648,6 @@
         <item quantity="few">Nu s-au putut importa %1$d fișiere.</item>
         <item quantity="other">Nu s-au putut importa %1$d fișiere.</item>
     </plurals>
-    <plurals name="alert_failed_to_disable">
-        <item quantity="one">Nu s-a putut dezactiva %1$d aplicație</item>
-        <item quantity="few">Nu s-au putut dezactiva %1$d aplicații</item>
-        <item quantity="other">Nu s-au putut dezactiva %1$d aplicații</item>
-    </plurals>
     <plurals name="alert_failed_to_uninstall">
         <item quantity="one">Nu s-a putut dezinstala %1$d aplicație</item>
         <item quantity="few">Nu s-au putut dezinstala %1$d aplicații</item>
@@ -701,11 +678,6 @@
     <string name="update_uninstalled_successfully">Actualizările pentru <xliff:g id="app_name" example="App Manager">%1$s</xliff:g> au fost dezinstalate.</string>
     <string name="send_selected">Trimite selectat</string>
     <string name="allow_routine_ops">Permite operații de rutină</string>
-    <plurals name="alert_failed_to_enable">
-        <item quantity="one">Nu s-a putut activa %1$d aplicație</item>
-        <item quantity="few">Nu s-au putut activa %1$d aplicații</item>
-        <item quantity="other">Nu s-au putut activa %1$d aplicații</item>
-    </plurals>
     <plurals name="alert_failed_to_clear_data">
         <item quantity="one">Nu s-au putut șterge datele din %1$d aplicație</item>
         <item quantity="few">Nu s-au putut șterge datele din %1$d aplicații</item>
@@ -752,4 +724,7 @@
     <string name="checksums">Checksums</string>
     <string name="app_signing_signature">Semnătură</string>
     <string name="on">Pornit</string>
+    <string name="this_action_cannot_be_undone">Această acțiune nu poate fi anulată.</string>
+    <string name="keep_data_and_app_signing_signatures">Păstrarea datelor și semnăturilor</string>
+    <string name="no_app_ops_permission">Nu aveți permisiunea de a afișa operațiunile aplicației</string>
 </resources>

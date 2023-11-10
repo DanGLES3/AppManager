@@ -1,15 +1,14 @@
-<?xml version="1.0" encoding="utf-8"?>
 <!-- SPDX-License-Identifier: GPL-3.0-or-later -->
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
 
     <item
         android:id="@+id/action_apply"
-        android:icon="@drawable/ic_clear"
+        android:icon="@drawable/ic_sync"
         android:title="@string/apply_now" />
 
     <item
         android:id="@+id/action_delete"
-        android:icon="@drawable/ic_power_settings"
+        android:icon="@drawable/ic_trash_can"
         android:title="@string/delete" />
 
     <item
@@ -21,6 +20,11 @@
         android:id="@+id/action_duplicate"
         android:icon="@drawable/ic_content_duplicate"
         android:title="@string/duplicate" />
+
+    <item
+        android:id="@+id/action_copy"
+        android:icon="@drawable/ic_content_copy"
+        android:title="@string/copy_profile_id" />
 
     <item
         android:id="@+id/action_export"

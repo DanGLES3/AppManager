@@ -2,29 +2,33 @@
 
 package io.github.muntashirakon.AppManager.rules;
 
+import android.annotation.UserIdInt;
 import android.app.Dialog;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.PowerManager;
 import android.os.UserHandleHidden;
-import android.widget.Toast;
 
 import androidx.annotation.IntDef;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.os.BundleCompat;
 import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.FragmentActivity;
 
-import com.google.android.material.dialog.MaterialAlertDialogBuilder;
-
 import java.io.IOException;
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 
 import io.github.muntashirakon.AppManager.R;
 import io.github.muntashirakon.AppManager.logs.Log;
 import io.github.muntashirakon.AppManager.settings.SettingsActivity;
+import io.github.muntashirakon.AppManager.utils.CpuUtils;
+import io.github.muntashirakon.AppManager.utils.ThreadUtils;
+import io.github.muntashirakon.AppManager.utils.UIUtils;
+import io.github.muntashirakon.dialog.SearchableMultiChoiceDialogBuilder;
 
 public class RulesTypeSelectionDialogFragment extends DialogFragment {
     public static final String TAG = "RulesTypeSelectionDialogFragment";
@@ -43,7 +47,7 @@ public class RulesTypeSelectionDialogFragment extends DialogFragment {
     public static final int MODE_IMPORT = 1;
     public static final int MODE_EXPORT = 2;
 
-    public static final RuleType[] types = new RuleType[]{
+    public static final RuleType[] RULE_TYPES = new RuleType[]{
             RuleType.ACTIVITY,
             RuleType.SERVICE,
             RuleType.RECEIVER,
@@ -52,73 +56,101 @@ public class RulesTypeSelectionDialogFragment extends DialogFragment {
             RuleType.PERMISSION,
     };
 
-    private FragmentActivity activity;
+    private FragmentActivity mActivity;
+    @Nullable
     private Uri mUri;
     private List<String> mPackages = null;
     private HashSet<RuleType> mSelectedTypes;
-    private int[] userHandles;
+    @UserIdInt
+    private int[] mUserIds;
 
     @NonNull
     @Override
     public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
-        activity = requireActivity();
+        mActivity = requireActivity();
         Bundle args = requireArguments();
         @Mode int mode = args.getInt(ARG_MODE, MODE_EXPORT);
         mPackages = args.getStringArrayList(ARG_PKG);
-        mUri = (Uri) args.get(ARG_URI);
-        userHandles = args.getIntArray(ARG_USERS);
-        if (userHandles == null) userHandles = new int[]{UserHandleHidden.myUserId()};
+        mUri = BundleCompat.getParcelable(args, ARG_URI, Uri.class);
+        mUserIds = args.getIntArray(ARG_USERS);
+        if (mUserIds == null) mUserIds = new int[]{UserHandleHidden.myUserId()};
         if (mUri == null) return super.onCreateDialog(savedInstanceState);
-        final boolean[] checkedItems = new boolean[6];
-        Arrays.fill(checkedItems, true);
-        mSelectedTypes = new HashSet<>(Arrays.asList(RuleType.values()));
-        return new MaterialAlertDialogBuilder(activity)
+        List<Integer> ruleIndexes = new ArrayList<>();
+        for (int i = 0; i < RULE_TYPES.length; ++i) {
+            ruleIndexes.add(i);
+        }
+        mSelectedTypes = new HashSet<>(RULE_TYPES.length);
+        return new SearchableMultiChoiceDialogBuilder<>(mActivity, ruleIndexes, R.array.rule_types)
                 .setTitle(mode == MODE_IMPORT ? R.string.import_options : R.string.export_options)
-                .setMultiChoiceItems(R.array.rule_types, checkedItems, (dialog, which, isChecked) -> {
-                    if (isChecked) mSelectedTypes.add(types[which]);
-                    else mSelectedTypes.remove(types[which]);
-                })
-                .setPositiveButton(getResources().getString(mode == MODE_IMPORT ?
-                        R.string.pref_import : R.string.pref_export), (dialog1, which) -> {
-                    Log.d("TestImportExport", "Types: " + mSelectedTypes.toString() + "\nURI: " + mUri.toString());
-                    if (activity instanceof SettingsActivity) {
-                        ((SettingsActivity) activity).progressIndicator.show();
-                    }
-                    if (mode == MODE_IMPORT) handleImport();
-                    else handleExport();
-                })
+                .addSelections(ruleIndexes)
+                .setPositiveButton(mode == MODE_IMPORT ? R.string.pref_import : R.string.pref_export,
+                        (dialog1, which, selections) -> {
+                            for (int i : selections) {
+                                mSelectedTypes.add(RULE_TYPES[i]);
+                            }
+                            Log.d("TestImportExport", "Types: %s\nURI: %s", mSelectedTypes, mUri);
+                            if (mActivity instanceof SettingsActivity) {
+                                ((SettingsActivity) mActivity).progressIndicator.show();
+                            }
+                            if (mode == MODE_IMPORT) {
+                                handleImport();
+                            } else handleExport();
+                        })
                 .setNegativeButton(getResources().getString(R.string.cancel), null)
                 .create();
     }
 
     private void handleExport() {
-        new Thread(() -> {
+        if (mUri == null) {
+            return;
+        }
+        WeakReference<FragmentActivity> activityRef = new WeakReference<>(mActivity);
+        ThreadUtils.postOnBackgroundThread(() -> {
+            PowerManager.WakeLock wakeLock = CpuUtils.getPartialWakeLock("rules_exporter");
+            wakeLock.acquire();
             try {
-                RulesExporter exporter = new RulesExporter(new ArrayList<>(mSelectedTypes), mPackages, userHandles);
+                RulesExporter exporter = new RulesExporter(new ArrayList<>(mSelectedTypes), mPackages, mUserIds);
                 exporter.saveRules(mUri);
-                activity.runOnUiThread(() -> Toast.makeText(activity, R.string.the_export_was_successful, Toast.LENGTH_LONG).show());
+                ThreadUtils.postOnMainThread(() -> UIUtils.displayShortToast(R.string.the_export_was_successful));
             } catch (IOException e) {
-                activity.runOnUiThread(() -> Toast.makeText(activity, R.string.export_failed, Toast.LENGTH_LONG).show());
+                ThreadUtils.postOnMainThread(() -> UIUtils.displayLongToast(R.string.export_failed));
+            } finally {
+                CpuUtils.releaseWakeLock(wakeLock);
             }
-            if (activity instanceof SettingsActivity) {
-                activity.runOnUiThread(() -> ((SettingsActivity) activity).progressIndicator.hide());
-            }
-        }).start();
+            hideProgressBar(activityRef);
+        });
     }
 
     private void handleImport() {
-        new Thread(() -> {
-            try (RulesImporter importer = new RulesImporter(new ArrayList<>(mSelectedTypes), userHandles)) {
+        if (mUri == null) {
+            return;
+        }
+        WeakReference<FragmentActivity> activityRef = new WeakReference<>(mActivity);
+        ThreadUtils.postOnBackgroundThread(() -> {
+            PowerManager.WakeLock wakeLock = CpuUtils.getPartialWakeLock("rules_exporter");
+            wakeLock.acquire();
+            try (RulesImporter importer = new RulesImporter(new ArrayList<>(mSelectedTypes), mUserIds)) {
                 importer.addRulesFromUri(mUri);
                 if (mPackages != null) importer.setPackagesToImport(mPackages);
                 importer.applyRules(true);
-                activity.runOnUiThread(() -> Toast.makeText(activity, R.string.the_import_was_successful, Toast.LENGTH_LONG).show());
+                ThreadUtils.postOnMainThread(() -> UIUtils.displayShortToast(R.string.the_import_was_successful));
             } catch (IOException e) {
-                activity.runOnUiThread(() -> Toast.makeText(activity, R.string.import_failed, Toast.LENGTH_LONG).show());
+                ThreadUtils.postOnMainThread(() -> UIUtils.displayLongToast(R.string.import_failed));
+            } finally {
+                CpuUtils.releaseWakeLock(wakeLock);
             }
-            if (activity instanceof SettingsActivity) {
-                activity.runOnUiThread(() -> ((SettingsActivity) activity).progressIndicator.hide());
-            }
-        }).start();
+            hideProgressBar(activityRef);
+        });
+    }
+
+    private void hideProgressBar(@NonNull WeakReference<FragmentActivity> activityRef) {
+        if (activityRef.get() instanceof SettingsActivity) {
+            ThreadUtils.postOnMainThread(() -> {
+                FragmentActivity activity = activityRef.get();
+                if (activity != null) {
+                    ((SettingsActivity) activity).progressIndicator.hide();
+                }
+            });
+        }
     }
 }

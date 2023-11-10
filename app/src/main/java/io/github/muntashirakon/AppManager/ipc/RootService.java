@@ -19,6 +19,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.topjohnwu.superuser.Shell;
+import com.topjohnwu.superuser.internal.UiThreadHandler;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -29,7 +30,6 @@ import io.github.muntashirakon.AppManager.runner.Runner;
 import io.github.muntashirakon.AppManager.servermanager.LocalServer;
 import io.github.muntashirakon.AppManager.settings.Ops;
 import io.github.muntashirakon.AppManager.utils.ContextUtils;
-import io.github.muntashirakon.AppManager.utils.UiThreadHandler;
 
 /**
  * A remote root service using native Android Binder IPC.
@@ -204,11 +204,11 @@ public abstract class RootService extends ContextWrapper {
                 if (Ops.isAdb()) {
                     // ADB must be checked at first
                     if (LocalServer.getInstance().runCommand(cmd).getStatusCode() != 0) {
-                        Log.e(TAG, "Couldn't start service.");
+                        Log.e(TAG, "Couldn't start service using ADB.");
                     }
                 } else if (Ops.isRoot()) {
                     if (!Runner.runCommand(cmd).isSuccessful()) {
-                        Log.e(TAG, "Couldn't start service.");
+                        Log.e(TAG, "Couldn't start service using root.");
                     }
                 }
             } catch (IOException | RemoteException e) {

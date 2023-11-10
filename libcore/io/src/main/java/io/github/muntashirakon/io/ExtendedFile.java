@@ -36,6 +36,7 @@ import java.net.URI;
  * all files returned in the array will also be using the same remote file system backend.
  */
 // Copyright 2022 John "topjohnwu" Wu
+// Copyright 2022 Muntashir Al-Islam
 public abstract class ExtendedFile extends File {
 
     /**
@@ -92,6 +93,13 @@ public abstract class ExtendedFile extends File {
      */
     public abstract boolean setUidGid(int uid, int gid) throws ErrnoException;
 
+    @Nullable
+    public abstract String getSelinuxContext();
+
+    public abstract boolean restoreSelinuxContext();
+
+    public abstract boolean setSelinuxContext(@NonNull String context);
+
     /**
      * @return true if the abstract pathname denotes a block device.
      */
@@ -116,6 +124,36 @@ public abstract class ExtendedFile extends File {
      * @return true if the abstract pathname denotes a socket file.
      */
     public abstract boolean isSocket();
+
+    /**
+     * Returns the time that the file denoted by this abstract pathname was created.
+     *
+     * @return A <code>long</code> value representing the time the file was
+     * created, measured in milliseconds since the epoch
+     * (00:00:00 GMT, January 1, 1970), or <code>0L</code> if the
+     * file does not exist or if an I/O error occurs
+     */
+    public abstract long creationTime();
+
+    /**
+     * Returns the time that the file denoted by this abstract pathname was last accessed.
+     *
+     * @return A <code>long</code> value representing the time the file was
+     * last accessed, measured in milliseconds since the epoch
+     * (00:00:00 GMT, January 1, 1970), or <code>0L</code> if the
+     * file does not exist or if an I/O error occurs
+     */
+    public abstract long lastAccess();
+
+    /**
+     * Set the time that the file denoted by this abstract pathname was last accessed.
+     *
+     * @param millis A <code>long</code> value representing the time the file was
+     *               last accessed, measured in milliseconds since the epoch
+     *               (00:00:00 GMT, January 1, 1970)
+     * @return {@code true} if and only if the operation succeeded; {@code false} otherwise.
+     */
+    public abstract boolean setLastAccess(long millis);
 
     /**
      * Creates a new hard link named by this abstract pathname of an existing file

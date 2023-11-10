@@ -17,9 +17,7 @@ import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.SocketTimeoutException;
 
-import io.github.muntashirakon.AppManager.AppManager;
 import io.github.muntashirakon.AppManager.BuildConfig;
-import io.github.muntashirakon.AppManager.IAMService;
 import io.github.muntashirakon.AppManager.ipc.LocalServices;
 import io.github.muntashirakon.AppManager.logs.Log;
 import io.github.muntashirakon.AppManager.misc.NoOps;
@@ -33,45 +31,35 @@ import io.github.muntashirakon.AppManager.utils.ContextUtils;
 // Copyright 2016 Zheng Li
 public class LocalServer {
     @GuardedBy("lockObject")
-    private static final Object lockObject = new Object();
+    private static final Object sLock = new Object();
 
     @SuppressLint("StaticFieldLeak")
-    private static LocalServer localServer;
-    private static IAMService amService;
+    private static LocalServer sLocalServer;
 
     @GuardedBy("lockObject")
     @WorkerThread
     @NoOps(used = true)
     public static LocalServer getInstance() throws RemoteException, IOException {
         // Non-null check must be done outside the synchronised block to prevent deadlock on ADB over TCP mode.
-        if (localServer != null) return localServer;
-        synchronized (lockObject) {
+        if (sLocalServer != null) return sLocalServer;
+        synchronized (sLock) {
             try {
                 Log.d("IPC", "Init: Local server");
-                localServer = new LocalServer();
+                sLocalServer = new LocalServer();
                 // This calls the AdbShell class which has dependencies on LocalServer which might cause deadlock
                 // if not careful (see comment above on non-null check)
-                launchAmService();
+                LocalServices.bindServicesIfNotAlready();
             } finally {
-                lockObject.notifyAll();
+                sLock.notifyAll();
             }
         }
-        return localServer;
-    }
-
-    @WorkerThread
-    @NoOps(used = true)
-    public static void launchAmService() throws RemoteException {
-        if (amService == null || !amService.asBinder().pingBinder()) {
-            amService = LocalServices.bindAmService();
-            LocalServices.bindFileSystemManager();
-        }
+        return sLocalServer;
     }
 
     @WorkerThread
     @NoOps
-    public static boolean isLocalServerAlive(Context context) {
-        if (localServer != null) {
+    public static boolean alive(Context context) {
+        if (sLocalServer != null) {
             return true;
         } else {
             try (ServerSocket socket = new ServerSocket()) {
@@ -84,13 +72,6 @@ public class LocalServer {
         }
     }
 
-    @AnyThread
-    @NoOps
-    public static boolean isAMServiceAlive() {
-        if (amService != null) return amService.asBinder().pingBinder();
-        else return false;
-    }
-
     @NonNull
     private final Context mContext;
     @NonNull
@@ -99,7 +80,7 @@ public class LocalServer {
     @WorkerThread
     @NoOps(used = true)
     private LocalServer() throws IOException {
-        mContext = ContextUtils.getDeContext(AppManager.getContext());
+        mContext = ContextUtils.getDeContext(ContextUtils.getContext());
         mLocalServerManager = LocalServerManager.getInstance(mContext);
         // Initialise necessary files and permissions
         ServerConfig.init(mContext, UserHandleHidden.myUserId());
@@ -109,33 +90,33 @@ public class LocalServer {
         checkConnect();
     }
 
-    private final Object connectLock = new Object();
-    private boolean connectStarted = false;
+    private final Object mConnectLock = new Object();
+    private boolean mConnectStarted = false;
 
     @GuardedBy("connectLock")
     @WorkerThread
     @NoOps(used = true)
     public void checkConnect() throws IOException {
-        synchronized (connectLock) {
-            if (connectStarted) {
+        synchronized (mConnectLock) {
+            if (mConnectStarted) {
                 try {
-                    connectLock.wait();
+                    mConnectLock.wait();
                 } catch (InterruptedException e) {
                     return;
                 }
             }
-            connectStarted = true;
+            mConnectStarted = true;
             try {
                 if (Ops.isPrivileged()) {
                     mLocalServerManager.start();
                 }
             } catch (IOException e) {
-                connectStarted = false;
-                connectLock.notify();
+                mConnectStarted = false;
+                mConnectLock.notify();
                 throw new IOException(e);
             }
-            connectStarted = false;
-            connectLock.notify();
+            mConnectStarted = false;
+            mConnectLock.notify();
         }
     }
 
@@ -188,11 +169,12 @@ public class LocalServer {
     @WorkerThread
     @NoOps(used = true)
     public static void restart() throws IOException, RemoteException {
-        if (localServer != null) {
-            LocalServerManager manager = localServer.mLocalServerManager;
+        if (sLocalServer != null) {
+            LocalServerManager manager = sLocalServer.mLocalServerManager;
             manager.closeBgServer();
             manager.stop();
             manager.start();
+            LocalServices.bindServicesIfNotAlready();
         } else {
             getInstance();
         }

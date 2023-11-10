@@ -2,7 +2,10 @@
 
 package io.github.muntashirakon.AppManager.logcat;
 
+import static io.github.muntashirakon.AppManager.logcat.LogViewerActivity.UPDATE_CHECK_INTERVAL;
+
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -20,15 +23,16 @@ import io.github.muntashirakon.AppManager.R;
 import io.github.muntashirakon.AppManager.logcat.helper.ServiceHelper;
 import io.github.muntashirakon.AppManager.logcat.struct.LogLine;
 import io.github.muntashirakon.AppManager.logs.Log;
-import io.github.muntashirakon.AppManager.utils.AppPref;
+import io.github.muntashirakon.AppManager.settings.Prefs;
+import io.github.muntashirakon.AppManager.utils.ContextUtils;
+import io.github.muntashirakon.AppManager.utils.ThreadUtils;
 import io.github.muntashirakon.AppManager.utils.UIUtils;
-import io.github.muntashirakon.reflow.ReflowMenuViewWrapper;
-
-import static io.github.muntashirakon.AppManager.logcat.LogViewerActivity.UPDATE_CHECK_INTERVAL;
+import io.github.muntashirakon.AppManager.utils.Utils;
+import io.github.muntashirakon.multiselection.MultiSelectionActionsView;
 
 // Copyright 2022 Muntashir Al-Islam
 public class LiveLogViewerFragment extends AbsLogViewerFragment implements LogViewerViewModel.LogLinesAvailableInterface,
-        ReflowMenuViewWrapper.OnItemSelectedListener, LogViewerActivity.SearchingInterface, Filter.FilterListener {
+        MultiSelectionActionsView.OnItemSelectedListener, LogViewerActivity.SearchingInterface, Filter.FilterListener {
     public static final String TAG = LiveLogViewerFragment.class.getSimpleName();
 
     private int mLogCounter = 0;
@@ -41,6 +45,7 @@ public class LiveLogViewerFragment extends AbsLogViewerFragment implements LogVi
             } else if (selectionCount == 0) {
                 mViewModel.resumeLogcat();
             }
+            return false;
         });
         mViewModel.startLogcat(new WeakReference<>(this));
     }
@@ -109,7 +114,7 @@ public class LiveLogViewerFragment extends AbsLogViewerFragment implements LogVi
 
     @Override
     public void onNewLogsAvailable(@NonNull List<LogLine> logLines) {
-        mActivity.getProgressBar().hide();
+        mActivity.hideProgressBar();
         for (LogLine logLine : logLines) {
             mLogListAdapter.addWithFilter(logLine, mQueryString, false);
             mActivity.addToAutocompleteSuggestions(logLine);
@@ -117,14 +122,14 @@ public class LiveLogViewerFragment extends AbsLogViewerFragment implements LogVi
         mLogListAdapter.notifyDataSetChanged();
 
         // How many logs to keep in memory, to avoid OutOfMemoryError
-        int maxNumLogLines = AppPref.getInt(AppPref.PrefKey.PREF_LOG_VIEWER_DISPLAY_LIMIT_INT);
+        int maxNumLogLines = Prefs.LogViewer.getDisplayLimit();
 
         // Check to see if the list needs to be truncated to avoid OutOfMemoryError
         ++mLogCounter;
         if (mLogCounter % UPDATE_CHECK_INTERVAL == 0 && mLogListAdapter.getRealSize() > maxNumLogLines) {
             int numItemsToRemove = mLogListAdapter.getRealSize() - maxNumLogLines;
             mLogListAdapter.removeFirst(numItemsToRemove);
-            Log.d(TAG, "Truncating " + numItemsToRemove + " lines from log list to avoid out of memory errors");
+            Log.d(TAG, "Truncating %d lines from log list to avoid out of memory errors", numItemsToRemove);
         }
 
         if (mAutoscrollToBottom) {
@@ -137,6 +142,11 @@ public class LiveLogViewerFragment extends AbsLogViewerFragment implements LogVi
         int id = item.getItemId();
         if (id == R.id.action_save) {
             displaySaveLogDialog(true);
+        } else if (id == R.id.action_copy) {
+            ThreadUtils.postOnBackgroundThread(() -> {
+                String logs = TextUtils.join("\n", getSelectedLogsAsStrings());
+                ThreadUtils.postOnMainThread(() -> Utils.copyToClipboard(ContextUtils.getContext(), "Logs", logs));
+            });
         } else if (id == R.id.action_export) {
             displaySaveDebugLogsDialog(false, true);
         } else if (id == R.id.action_share) {

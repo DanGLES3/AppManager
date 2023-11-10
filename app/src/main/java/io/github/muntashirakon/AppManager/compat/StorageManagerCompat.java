@@ -2,12 +2,14 @@
 
 package io.github.muntashirakon.AppManager.compat;
 
+import static io.github.muntashirakon.io.IoUtils.DEFAULT_BUFFER_SIZE;
+
 import android.content.Context;
 import android.os.Build;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.ParcelFileDescriptor;
-import android.os.UserHandleHidden;
+import android.os.Process;
 import android.os.storage.StorageManager;
 import android.os.storage.StorageManagerHidden;
 import android.os.storage.StorageVolume;
@@ -21,11 +23,10 @@ import androidx.annotation.NonNull;
 import java.io.IOException;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
+import java.util.Locale;
 
 import dev.rikka.tools.refine.Refine;
-import io.github.muntashirakon.AppManager.utils.PermissionUtils;
-
-import static io.github.muntashirakon.io.IoUtils.DEFAULT_BUFFER_SIZE;
+import io.github.muntashirakon.AppManager.self.SelfPermissions;
 
 // Copyright 2018 Fung Gwo <fythonx@gmail.com>
 // Copyright 2021 Muntashir Al-Islam
@@ -64,7 +65,7 @@ public final class StorageManagerCompat {
     @NonNull
     public static StorageVolume[] getVolumeList(@NonNull Context context, int userId, int flags)
             throws SecurityException {
-        if (userId != UserHandleHidden.myUserId() && !PermissionUtils.hasAccessToUsers()) {
+        if (!SelfPermissions.checkCrossUserPermission(userId, false, Process.myUid())) {
             return new StorageVolume[0];
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -85,7 +86,7 @@ public final class StorageManagerCompat {
         ParcelFileDescriptor[] pipe = ParcelFileDescriptor.createReliablePipe();
         if ((mode & ParcelFileDescriptor.MODE_READ_ONLY) != 0) {
             // Reading requested i.e. we have to read from our side and write it to the target
-            callback.handler.post(() -> {
+            callback.mHandler.post(() -> {
                 try (ParcelFileDescriptor.AutoCloseOutputStream os = new ParcelFileDescriptor.AutoCloseOutputStream(pipe[1])) {
                     long totalSize = callback.onGetSize();
                     long currOffset = 0;
@@ -95,8 +96,8 @@ public final class StorageManagerCompat {
                         os.write(buf, 0, size);
                         currOffset += size;
                     }
-                    if (totalSize > 0 && currOffset + 1 != totalSize) {
-                        throw new IOException("Could not read the whole resource");
+                    if (totalSize > 0 && currOffset != totalSize) {
+                        throw new IOException(String.format(Locale.ROOT, "Could not read the whole resource (total = %d, read = %d)", totalSize, currOffset));
                     }
                 } catch (IOException | ErrnoException e) {
                     Log.e(TAG, "Failed to read file.", e);
@@ -112,7 +113,7 @@ public final class StorageManagerCompat {
             return pipe[0];
         } else if ((mode & ParcelFileDescriptor.MODE_WRITE_ONLY) != 0) {
             // Writing requested i.e. we have to read from the target and write it to our side
-            callback.handler.post(() -> {
+            callback.mHandler.post(() -> {
                 try (ParcelFileDescriptor.AutoCloseInputStream is = new ParcelFileDescriptor.AutoCloseInputStream(pipe[0])) {
                     long currOffset = 0;
                     byte[] buf = new byte[DEFAULT_BUFFER_SIZE];
@@ -122,8 +123,8 @@ public final class StorageManagerCompat {
                         currOffset += size;
                     }
                     long totalSize = callback.onGetSize();
-                    if (totalSize > 0 && currOffset + 1 != totalSize) {
-                        throw new IOException("Could not write the whole resource");
+                    if (totalSize > 0 && currOffset != totalSize) {
+                        throw new IOException(String.format(Locale.ROOT, "Could not write the whole resource (total = %d, read = %d)", totalSize, currOffset));
                     }
                 } catch (IOException | ErrnoException e) {
                     Log.e(TAG, "Failed to write file.", e);
@@ -147,12 +148,12 @@ public final class StorageManagerCompat {
     }
 
     public static abstract class ProxyFileDescriptorCallbackCompat {
-        private final HandlerThread callbackThread;
-        private final Handler handler;
+        private final HandlerThread mCallbackThread;
+        private final Handler mHandler;
 
         public ProxyFileDescriptorCallbackCompat(HandlerThread callbackThread) {
-            this.callbackThread = callbackThread;
-            this.handler = new Handler(this.callbackThread.getLooper());
+            mCallbackThread = callbackThread;
+            mHandler = new Handler(mCallbackThread.getLooper());
         }
 
         /**
@@ -211,7 +212,7 @@ public final class StorageManagerCompat {
          * Invoked after the file is closed.
          */
         protected void onRelease() {
-            callbackThread.quitSafely();
+            mCallbackThread.quitSafely();
         }
     }
 }

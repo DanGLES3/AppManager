@@ -28,7 +28,6 @@ public class SwipeRefreshLayout extends androidx.swiperefreshlayout.widget.Swipe
 
     public SwipeRefreshLayout(@NonNull Context context, @Nullable AttributeSet attrs) {
         this(context, attrs, 0);
-
     }
 
     public SwipeRefreshLayout(@NonNull Context context, @Nullable AttributeSet attrs, @AttrRes final int defStyleAttr) {
@@ -49,7 +48,7 @@ public class SwipeRefreshLayout extends androidx.swiperefreshlayout.widget.Swipe
                 defStyleAttr, defStyleRes);
         try {
             setProgressBackgroundColorSchemeColor(a.getColor(R.styleable.SwipeRefreshLayout_progressBackgroundColor,
-                    MaterialColors.getColor(context, R.attr.colorSurface, -1)));
+                    MaterialColors.getColor(context, com.google.android.material.R.attr.colorSurface, -1)));
             setColorSchemeColors(loadIndicatorColors(context, a));
         } finally {
             a.recycle();
@@ -60,7 +59,7 @@ public class SwipeRefreshLayout extends androidx.swiperefreshlayout.widget.Swipe
     private static int[] loadIndicatorColors(@NonNull Context context, @NonNull TypedArray typedArray) {
         if (!typedArray.hasValue(R.styleable.SwipeRefreshLayout_indicatorColor)) {
             // Uses theme primary color for indicator if not provided in the attribute set.
-            return new int[]{MaterialColors.getColor(context, R.attr.colorPrimary, -1)};
+            return new int[]{MaterialColors.getColor(context, androidx.appcompat.R.attr.colorPrimary, -1)};
         }
 
         TypedValue indicatorColorValue = typedArray.peekValue(R.styleable.SwipeRefreshLayout_indicatorColor);

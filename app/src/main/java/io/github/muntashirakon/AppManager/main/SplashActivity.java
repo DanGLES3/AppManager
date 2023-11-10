@@ -28,11 +28,13 @@ import io.github.muntashirakon.AppManager.R;
 import io.github.muntashirakon.AppManager.crypto.ks.KeyStoreActivity;
 import io.github.muntashirakon.AppManager.crypto.ks.KeyStoreManager;
 import io.github.muntashirakon.AppManager.logs.Log;
+import io.github.muntashirakon.AppManager.self.life.BuildExpiryChecker;
 import io.github.muntashirakon.AppManager.settings.Ops;
+import io.github.muntashirakon.AppManager.settings.Prefs;
 import io.github.muntashirakon.AppManager.settings.SecurityAndOpsViewModel;
-import io.github.muntashirakon.AppManager.utils.AppPref;
 import io.github.muntashirakon.AppManager.utils.UIUtils;
 
+@SuppressLint("CustomSplashScreen")
 public class SplashActivity extends AppCompatActivity {
     public static final String TAG = SplashActivity.class.getSimpleName();
 
@@ -59,7 +61,7 @@ public class SplashActivity extends AppCompatActivity {
     @Override
     protected final void onCreate(@Nullable Bundle savedInstanceState) {
         // Set theme
-        setTheme(AppPref.isPureBlackTheme() ? R.style.AppTheme_Splash_Black : R.style.AppTheme_Splash);
+        setTheme(Prefs.Appearance.isPureBlackTheme() ? R.style.AppTheme_Splash_Black : R.style.AppTheme_Splash);
         super.onCreate(savedInstanceState);
         SplashScreen.installSplashScreen(this);
         DynamicColors.applyToActivityIfAvailable(this);
@@ -71,6 +73,11 @@ public class SplashActivity extends AppCompatActivity {
             Log.d(TAG, "Already authenticated.");
             startActivity(new Intent(this, MainActivity.class));
             finish();
+            return;
+        }
+        if (Boolean.TRUE.equals(BuildExpiryChecker.buildExpired())) {
+            // Build has expired
+            BuildExpiryChecker.getBuildExpiredDialog(this).show();
             return;
         }
         // Run authentication
@@ -100,11 +107,13 @@ public class SplashActivity extends AppCompatActivity {
                         Ops.pairAdbInput(this, mViewModel);
                         return;
                     } // fall-through
+                case Ops.STATUS_FAILURE_ADB_NEED_MORE_PERMS:
+                    Ops.displayIncompleteUsbDebuggingMessage(this);
                 case Ops.STATUS_SUCCESS:
                 case Ops.STATUS_FAILURE:
                     Log.d(TAG, "Authentication completed.");
                     mViewModel.setAuthenticating(false);
-                    Ops.setAuthenticated(true);
+                    Ops.setAuthenticated(this, true);
                     startActivity(new Intent(this, MainActivity.class));
                     finish();
             }
@@ -139,7 +148,7 @@ public class SplashActivity extends AppCompatActivity {
     }
 
     private void ensureSecurityAndModeOfOp() {
-        if (!AppPref.getBoolean(AppPref.PrefKey.PREF_ENABLE_SCREEN_LOCK_BOOL)) {
+        if (!Prefs.Privacy.isScreenLockEnabled()) {
             // No security enabled
             handleMigrationAndModeOfOp();
             return;
@@ -164,6 +173,8 @@ public class SplashActivity extends AppCompatActivity {
             mStateNameView.setText(R.string.initializing);
         }
         // Set mode of operation
-        mViewModel.setModeOfOps();
+        if (mViewModel != null) {
+            mViewModel.setModeOfOps();
+        }
     }
 }

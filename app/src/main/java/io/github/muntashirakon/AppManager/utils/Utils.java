@@ -2,7 +2,12 @@
 
 package io.github.muntashirakon.AppManager.utils;
 
+import static android.app.ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND;
+import static android.app.ActivityManager.RunningAppProcessInfo.IMPORTANCE_VISIBLE;
+
 import android.app.ActivityManager;
+import android.content.ClipData;
+import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
@@ -28,15 +33,9 @@ import androidx.annotation.StringRes;
 import androidx.core.content.pm.PermissionInfoCompat;
 import androidx.fragment.app.FragmentActivity;
 
-import org.w3c.dom.Document;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-import org.xml.sax.InputSource;
-
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.StringWriter;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.charset.StandardCharsets;
@@ -48,24 +47,9 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.transform.OutputKeys;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamResult;
-import javax.xml.xpath.XPath;
-import javax.xml.xpath.XPathConstants;
-import javax.xml.xpath.XPathFactory;
-
 import aosp.libcore.util.EmptyArray;
-import aosp.libcore.util.HexEncoding;
 import io.github.muntashirakon.AppManager.R;
-import io.github.muntashirakon.AppManager.logs.Log;
 import io.github.muntashirakon.AppManager.misc.OsEnvironment;
-
-import static android.app.ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND;
-import static android.app.ActivityManager.RunningAppProcessInfo.IMPORTANCE_VISIBLE;
 
 public class Utils {
     public static final String TERMUX_LOGIN_PATH = OsEnvironment.getDataDirectoryRaw() + "/data/com.termux/files/usr/bin/login";
@@ -87,7 +71,7 @@ public class Utils {
         String[] strings = str.split("\\s");
         StringBuilder builder = new StringBuilder();
         for (String s : strings) {
-            if (s.length() > 0) builder.append(s.charAt(0));
+            if (!s.isEmpty()) builder.append(s.charAt(0));
         }
         return builder.toString().toLowerCase(Locale.ROOT);
     }
@@ -95,7 +79,7 @@ public class Utils {
     // https://github.com/apache/commons-lang/blob/master/src/main/java/org/apache/commons/lang3/StringUtils.java#L7514
     @NonNull
     public static String[] splitByCharacterType(@NonNull String str, boolean camelCase) {
-        if (str.length() == 0) return EmptyArray.STRING;
+        if (str.isEmpty()) return EmptyArray.STRING;
         char[] c = str.toCharArray();
         List<String> list = new ArrayList<>();
         int tokenStart = 0;
@@ -272,7 +256,7 @@ public class Utils {
             builder.append("Mode changed, ");
         checkStringBuilderEnd(builder);
         String result = builder.toString();
-        return result.equals("") ? "null" : result;
+        return result.isEmpty() ? "null" : result;
     }
 
     // FIXME Add translation support
@@ -298,7 +282,7 @@ public class Utils {
         }
         checkStringBuilderEnd(builder);
         String result = builder.toString();
-        return TextUtils.isEmpty(result) ? "" : ("\u2691 " + result);
+        return TextUtils.isEmpty(result) ? "" : ("⚑ " + result);
     }
 
     // FIXME Add translation support
@@ -339,7 +323,7 @@ public class Utils {
             builder.append("NotNeeded, ");
         checkStringBuilderEnd(builder);
         String result = builder.toString();
-        return result.equals("") ? "\u2690" : "\u2691 " + result;
+        return result.isEmpty() ? "⚐" : "⚑ " + result;
     }
 
     // FIXME Add translation support
@@ -408,8 +392,8 @@ public class Utils {
         if ((flag & ConfigurationInfo.INPUT_FEATURE_FIVE_WAY_NAV) != 0)
             string += "Five way nav";
         if ((flag & ConfigurationInfo.INPUT_FEATURE_HARD_KEYBOARD) != 0)
-            string += (string.length() == 0 ? "" : "|") + "Hard keyboard";
-        return string.length() == 0 ? "null" : string;
+            string += (string.isEmpty() ? "" : "|") + "Hard keyboard";
+        return string.isEmpty() ? "null" : string;
     }
 
     @StringRes
@@ -471,21 +455,6 @@ public class Utils {
         return major + "." + minor;
     }
 
-    @NonNull
-    public static String bytesToHex(@NonNull byte[] bytes) {
-        return HexEncoding.encodeToString(bytes, false /* lowercase */);
-    }
-
-    @NonNull
-    public static byte[] longToBytes(long l) {
-        byte[] result = new byte[8];
-        for (int i = 7; i >= 0; i--) {
-            result[i] = (byte) (l & 0xFF);
-            l >>= 8;
-        }
-        return result;
-    }
-
     @CheckResult
     @NonNull
     public static byte[] charsToBytes(@NonNull char[] chars) {
@@ -541,44 +510,6 @@ public class Utils {
     }
 
     /**
-     * Format xml file to correct indentation ...
-     */
-    @NonNull
-    public static String getProperXml(@NonNull String dirtyXml) {
-        try {
-            Document document = DocumentBuilderFactory.newInstance()
-                    .newDocumentBuilder()
-                    .parse(new InputSource(new ByteArrayInputStream(dirtyXml.getBytes(StandardCharsets.UTF_8))));
-
-            XPath xPath = XPathFactory.newInstance().newXPath();
-            NodeList nodeList = (NodeList) xPath.evaluate("//text()[normalize-space()='']",
-                    document,
-                    XPathConstants.NODESET);
-
-            for (int i = 0; i < nodeList.getLength(); ++i) {
-                Node node = nodeList.item(i);
-                node.getParentNode().removeChild(node);
-            }
-
-            Transformer transformer = TransformerFactory.newInstance().newTransformer();
-            transformer.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
-            transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
-            transformer.setOutputProperty(OutputKeys.INDENT, "yes");
-            transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "4");
-
-            StringWriter stringWriter = new StringWriter();
-            StreamResult streamResult = new StreamResult(stringWriter);
-
-            transformer.transform(new DOMSource(document), streamResult);
-
-            return stringWriter.toString();
-        } catch (Exception e) {
-            Log.e("Utils", "Could not get proper XML.", e);
-            return dirtyXml;
-        }
-    }
-
-    /**
      * Replace the first occurrence of matched string
      *
      * @param text         The text where the operation will be carried out
@@ -588,7 +519,7 @@ public class Utils {
      */
     // Similar impl. of https://commons.apache.org/proper/commons-lang/apidocs/src-html/org/apache/commons/lang3/StringUtils.html#line.6418
     @NonNull
-    public static String replaceOnce(@NonNull final String text, @NonNull String searchString, @NonNull final String replacement) {
+    public static String replaceOnce(@NonNull String text, @NonNull CharSequence searchString, @NonNull CharSequence replacement) {
         if (TextUtils.isEmpty(text) || TextUtils.isEmpty(searchString)) {
             return text;
         }
@@ -641,6 +572,12 @@ public class Utils {
 
     public static int getTotalCores() {
         return Runtime.getRuntime().availableProcessors();
+    }
+
+    public static void copyToClipboard(@NonNull Context context, @Nullable CharSequence label, @NonNull CharSequence text) {
+        ClipboardManager clipboard = (ClipboardManager) context.getSystemService(Context.CLIPBOARD_SERVICE);
+        clipboard.setPrimaryClip(ClipData.newPlainText(label, text));
+        UIUtils.displayShortToast(R.string.copied_to_clipboard);
     }
 
     @Nullable
